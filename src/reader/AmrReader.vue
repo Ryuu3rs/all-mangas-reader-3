@@ -1589,7 +1589,8 @@ export default {
         /** Toggle dark / light theme and save option */
         toggleDark() {
             this.darkreader = !this.darkreader
-            this.$vuetify.theme.dark = this.darkreader
+            // Vuetify 3: use theme.global.name to toggle theme
+            this.$vuetify.theme.global.name = this.darkreader ? "dark" : "light"
             this.util.saveOption("darkreader", this.darkreader ? 1 : 0)
         },
         /** Display tips popup */
@@ -1701,36 +1702,87 @@ export default {
         },
         async DownloadChapter() {
             this.zip = true
-            const seriesName =
-                this.mangaInfos && this.mangaInfos.displayName ? this.mangaInfos.displayName : this.manga.name
-            const chapterName = this.pageData.currentChapter
-            const urls = this.$refs.reader.scansState.scans.map(ele => ele.scan.currentSrc)
+            const DOWNLOAD_TIMEOUT = 60000 // 60 second timeout per image
 
-            const blobWriter = new BlobWriter("application/zip")
-            const zipWriter = new ZipWriter(blobWriter)
-            for (const [i, url] of urls.entries()) {
-                let ext = "jpg"
-                const resp = await fetch(url)
+            try {
+                const seriesName =
+                    this.mangaInfos && this.mangaInfos.displayName ? this.mangaInfos.displayName : this.manga.name
+                const chapterName = this.pageData.currentChapter
+                const urls = this.$refs.reader.scansState.scans.map(ele => ele.scan.currentSrc)
 
-                const content = await resp.blob()
-                const mime = content.type
-                if (mime.indexOf("image") > -1) {
-                    if (mimedb[mime].extensions) {
-                        ext = mimedb[mime].extensions[0]
-                    } else {
-                        const match = url.match(/(\.\w{2,4})(?![^?])/)
-                        if (match) {
-                            ext = match[1].replace(".", "")
+                if (!urls || urls.length === 0) {
+                    this.$refs.wizdialog.temporary(
+                        this.i18n("reader_download_no_images") || "No images to download",
+                        3000
+                    )
+                    this.zip = false
+                    return
+                }
+
+                const blobWriter = new BlobWriter("application/zip")
+                const zipWriter = new ZipWriter(blobWriter)
+
+                for (const [i, url] of urls.entries()) {
+                    let ext = "jpg"
+
+                    // Fetch with timeout
+                    const controller = new AbortController()
+                    const timeoutId = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT)
+
+                    try {
+                        const resp = await fetch(url, { signal: controller.signal })
+                        clearTimeout(timeoutId)
+
+                        if (!resp.ok) {
+                            console.warn(`Failed to fetch image ${i + 1}: ${resp.status}`)
+                            continue
                         }
+
+                        const content = await resp.blob()
+                        const mime = content.type
+                        if (mime.indexOf("image") > -1) {
+                            if (mimedb[mime] && mimedb[mime].extensions) {
+                                ext = mimedb[mime].extensions[0]
+                            } else {
+                                const match = url.match(/(\.\w{2,4})(?![^?])/)
+                                if (match) {
+                                    ext = match[1].replace(".", "")
+                                }
+                            }
+                        }
+                        const name = `${String(i + 1).padStart(3, "0")}.${ext}`
+                        await zipWriter.add(name, new BlobReader(content))
+                    } catch (fetchError) {
+                        clearTimeout(timeoutId)
+                        if (fetchError.name === "AbortError") {
+                            console.warn(`Timeout fetching image ${i + 1}: ${url}`)
+                        } else {
+                            console.warn(`Error fetching image ${i + 1}: ${fetchError.message}`)
+                        }
+                        // Continue with next image instead of failing completely
                     }
                 }
-                const name = `${String(i + 1).padStart(3, "0")}.${ext}`
-                await zipWriter.add(name, new BlobReader(content))
-            }
-            const blob = await zipWriter.close()
 
-            saveAs(blob, `${seriesName} - ${chapterName}.cbz`)
-            this.zip = false
+                const blob = await zipWriter.close()
+
+                if (blob.size === 0) {
+                    this.$refs.wizdialog.temporary(
+                        this.i18n("reader_download_failed") || "Download failed - no images could be fetched",
+                        3000
+                    )
+                } else {
+                    saveAs(blob, `${seriesName} - ${chapterName}.cbz`)
+                    this.$refs.wizdialog.temporary(this.i18n("action_done") || "Download complete", 2000)
+                }
+            } catch (error) {
+                console.error("Download failed:", error)
+                this.$refs.wizdialog.temporary(
+                    this.i18n("reader_download_error") || `Download error: ${error.message}`,
+                    3000
+                )
+            } finally {
+                this.zip = false
+            }
         }
     }
 }
