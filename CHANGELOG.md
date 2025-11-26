@@ -17,6 +17,53 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [3.1.0] - 2024-11-26
+
+### 🚀 MAJOR VERSION: Complete Modernization
+
+This release represents a complete modernization of All Mangas Reader, bringing the codebase up to current web standards.
+
+### New Features
+
+-   **Vue 3**: Complete migration from Vue 2.7 to Vue 3.5 with Composition API support
+-   **Vuetify 3**: Full migration from Vuetify 2 to Vuetify 3.8 with Material Design 3
+-   **TypeScript**: Key modules converted to TypeScript for better type safety
+-   **Testing**: Added Vitest testing framework with 28+ unit tests
+-   **CI/CD**: Added GitHub Actions for automated testing and releases
+-   **MDI SVG Icons**: Icons now use SVG paths (no external font loading required)
+
+### Changed Features
+
+-   **Webpack 5**: Updated build system with better tree-shaking and performance
+-   **Code Splitting**: Large monolithic files split into focused modules
+    -   `mangas.js` (1338 lines) → 11 focused modules
+    -   `sync-manager.js` (502 lines) → 3 modules
+    -   Extracted keyboard shortcuts helper from AmrReader.vue
+-   **Vue 3 Syntax**: Updated all components for Vue 3 compatibility
+    -   `beforeDestroy` → `beforeUnmount`
+    -   `slot-scope` → `v-slot`
+    -   EventBus using `mitt` library
+-   **Vuetify 3 Syntax**: Updated all Vuetify components
+    -   `v-on="on"` → `v-bind="props"` for activator slots
+    -   `dense` → `density="compact"`
+    -   Updated color class syntax
+
+### Bug Fixes
+
+-   Fixed `newManga` variable used before declaration in mangas.js
+-   Fixed undefined `reject` in storedb.js
+-   Fixed memory leaks (missing clearInterval, removeEventListener)
+-   Fixed Vue 3 reactivity issues in reader state objects
+-   Fixed thin scan dialog being removed by DOM cleanup
+
+### Notes
+
+-   Node.js 18+ or 20+ required (dropped support for Node 14/16)
+-   If upgrading from V2: Export data first, install V3, then import
+-   Original V2 repository: https://github.com/alysson-souza/all-mangas-reader-2
+
+---
+
 ## [3.0.3] - 2024-08-25
 
 ### Bug Fixes

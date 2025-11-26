@@ -1,20 +1,19 @@
 <template>
     <div>
-        <v-tabs v-model="tabs" fixed-tabs color="transparent">
-            <v-tabs-slider></v-tabs-slider>
-            <v-tab href="#import" class="primary--text">
+        <v-tabs v-model="tabs" color="primary">
+            <v-tab value="import" class="text-primary">
                 {{ i18n("ie_import") }}
             </v-tab>
-            <v-tab href="#export" class="primary--text">
+            <v-tab value="export" class="text-primary">
                 {{ i18n("ie_export") }}
             </v-tab>
         </v-tabs>
-        <v-tabs-items v-model="tabs">
+        <v-window v-model="tabs">
             <!-- Import tab -->
-            <v-tab-item value="import">
+            <v-window-item value="import">
                 <v-container fluid>
                     <label class="file-select">
-                        <v-btn @click.native="onFocus" color="primary">{{ i18n("ie_import_pickfile") }}</v-btn>
+                        <v-btn @click="onFocus" color="primary">{{ i18n("ie_import_pickfile") }}</v-btn>
                         <input ref="fileInput" type="file" @change="handleFileChange" />
                     </label>
                     <v-textarea
@@ -55,15 +54,15 @@
                         {{ donemessage }}
                     </p>
                 </v-container>
-            </v-tab-item>
+            </v-window-item>
             <!-- Export tab -->
-            <v-tab-item value="export">
+            <v-window-item value="export">
                 <v-container fluid>
                     <!-- Export options -->
                     <div class="subtitle">{{ i18n("ie_export_mangas_viewable_desc") }}</div>
                     <v-checkbox v-model="viewable" :label="i18n('ie_export_mangas_viewable')"></v-checkbox>
                     <div class="subtitle">{{ i18n("ie_export_content") }}</div>
-                    <v-radio-group v-model="exportMode" column>
+                    <v-radio-group v-model="exportMode">
                         <v-radio :label="i18n('ie_export_manga_all')" :value="1"></v-radio>
                         <v-radio :label="i18n('ie_export_manga_noreading')" :value="2"></v-radio>
                     </v-radio-group>
@@ -75,8 +74,8 @@
                         class="txtfield"></v-text-field>
                     <v-btn @click="exportFile()" color="primary">{{ i18n("ie_export_btn") }}</v-btn>
                 </v-container>
-            </v-tab-item>
-        </v-tabs-items>
+            </v-window-item>
+        </v-window>
     </div>
 </template>
 <script>
@@ -181,7 +180,9 @@ export default {
                     try {
                         if (mg.listChaps.find(ele => ele[1] == mg.lastChapterReadURL) > 0)
                             res.cn = mg.listChaps.find(ele => ele[1] == mg.lastChapterReadURL)
-                    } catch (e) {}
+                    } catch (e) {
+                        // Intentionally swallowed - listChaps may not exist or be malformed
+                    }
                     if (mg.read !== 0) res.r = mg.read
                     if (mg.update !== 1) res.p = mg.update
                     if (mg.display !== 0) res.d = mg.display
@@ -352,14 +353,17 @@ export default {
 .import-text textarea {
     font-size: 0.85rem;
 }
+
 .txtfield {
     padding-top: 18px;
 }
+
 .subtitle {
     font-size: 1.25rem !important;
     line-height: 24px !important;
     letter-spacing: normal !important;
 }
+
 .file-select input[type="file"] {
     display: none;
 }

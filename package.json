@@ -1,13 +1,21 @@
 {
-    "name": "all-mangas-reader",
-    "version": "3.0.3",
-    "description": "All Mangas Reader",
-    "author": "Pierre-Louis Duhoux <pl.duhoux@gmail.com>",
+    "name": "all-mangas-reader-3",
+    "version": "3.1.0",
+    "description": "All Mangas Reader V3 - Modernized browser extension for reading manga (Vue 3 + Vuetify 3)",
+    "author": "Ryuu3rs",
+    "contributors": [
+        "Pierre-Louis Duhoux <pl.duhoux@gmail.com>",
+        "alysson-souza"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Ryuu3rs/all-mangas-reader-3.git"
+    },
     "lint-staged": {
         "**/*": "prettier --write --ignore-unknown"
     },
     "engines": {
-        "node": ">= 18.0.0 < 19.0.0 || >= 20.0.0 < 21.0.0"
+        "node": ">= 18.0.0 < 19.0.0 || >= 20.0.0 < 21.0.0 || >= 22.0.0 < 23.0.0"
     },
     "scripts": {
         "build": "cross-env NODE_ENV=production webpack --config webpack.config.js --progress",
@@ -23,7 +31,13 @@
         "discord:beta": "node scripts/discord-notify.js --channel \"Beta\"",
         "discord:alpha": "node scripts/discord-notify.js --channel \"Alpha\"",
         "prepare": "husky install",
-        "server:start": "node src_web/express.js"
+        "server:start": "node src_web/express.js",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "lint": "eslint src --ext .js,.ts,.vue",
+        "lint:fix": "eslint src --ext .js,.ts,.vue --fix",
+        "type-check": "tsc --noEmit"
     },
     "dependencies": {
         "@zip.js/zip.js": "^2.7.30",
@@ -34,16 +48,17 @@
         "crypto-js": "^4.2.0",
         "ejs": "^3.1.9",
         "mime-db": "^1.52.0",
+        "mitt": "^3.0.1",
+        "pinia": "^3.0.4",
         "stream-browserify": "^3.0.0",
         "streamsaver": "^2.0.5",
-        "v-clipboard": "^2.2.3",
-        "vue": "^2.7.14",
-        "vue-gallery": "^2.0.1",
+        "vue": "^3.5.25",
+        "vue-easy-lightbox": "^1.19.0",
         "vue-scrollto": "^2.20.0",
-        "vuetify": "^2.4.2",
-        "vuex": "^3.6.0",
+        "vuetify": "^3.11.0",
+        "vuex": "^4.1.0",
         "web-streams-polyfill": "^3.2.1",
-        "webextension-polyfill": "^0.10.0"
+        "webextension-polyfill": "^0.12.0"
     },
     "devDependencies": {
         "@mdi/js": "^6.9.96",
@@ -53,6 +68,8 @@
         "@types/offscreencanvas": "^2019.7.3",
         "@typescript-eslint/eslint-plugin": "^6.13.1",
         "@typescript-eslint/parser": "^6.13.1",
+        "@vitejs/plugin-vue": "^5.2.4",
+        "@vue/test-utils": "^2.4.6",
         "circular-dependency-plugin": "^5.2.2",
         "clean-webpack-plugin": "^4.0.0",
         "copy-webpack-plugin": "^7.0.0",
@@ -61,9 +78,10 @@
         "eslint": "^8.54.0",
         "eslint-config-prettier": "^9.0.0",
         "eslint-plugin-vue": "^9.19.2",
-        "eslint-plugin-vuetify": "^1.1.0",
+        "eslint-plugin-vuetify": "^2.5.3",
         "express": "5.0.0-beta.3",
         "husky": "^8.0.3",
+        "jsdom": "^27.2.0",
         "lint-staged": "^15.1.0",
         "prettier": "^2.8.8",
         "sass": "~1.32",
@@ -74,8 +92,8 @@
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.1",
         "typescript": "^5.3.2",
-        "vue-loader": "^15.10.1",
-        "vuetify-loader": "^1.9.2",
+        "vitest": "^0.34.6",
+        "vue-loader": "^17.4.2",
         "web-ext": "^7.8.0",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",

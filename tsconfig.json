@@ -7,11 +7,12 @@
         "sourceMap": true,
         "allowSyntheticDefaultImports": true,
         "allowJs": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "skipLibCheck": true
     },
     "include": ["src", "index.d.ts"],
     "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "dist/**/*", "build/**/*"],
     "vueCompilerOptions": {
-        "target": 2.7
+        "target": 3
     }
 }

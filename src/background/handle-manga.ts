@@ -283,7 +283,9 @@ export class HandleManga {
                 try {
                     // @ts-ignore
                     cover.parentNode.remove(cover)
-                } catch (e) {}
+                } catch (e) {
+                    // Intentionally swallowed - DOM cleanup failure is non-critical
+                }
             }, 5000)
 
             return {

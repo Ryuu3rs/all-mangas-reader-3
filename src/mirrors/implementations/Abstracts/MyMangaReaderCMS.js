@@ -12,15 +12,18 @@ globalThis["MyMangaReaderCMS"] = function (options) {
     this.canListFullMangas = false
 
     this.getMangaList = async function (search) {
-        let res = []
+        const res = []
         if (!this.canListFullMangas) {
-            let json = await amr.loadJson(this.options.base_url + "/search?query=" + search, { nocache: true })
+            const json = await amr.loadJson(this.options.base_url + "/search?query=" + search, { nocache: true })
             var sugs = json.suggestions
-            for (let obj of sugs) {
+            for (const obj of sugs) {
                 res[res.length] = [obj.value, this.options.base_url + "/manga/" + obj.data]
             }
         } else {
-            let doc = await amr.loadPage(this.options.base_url + "/manga-list", { nocache: true, preventimages: true })
+            const doc = await amr.loadPage(this.options.base_url + "/manga-list", {
+                nocache: true,
+                preventimages: true
+            })
             $("h5.media-heading > a[href*='/manga/']", doc).each(function () {
                 res.push([$(this).text().trim(), $(this).attr("href")])
             })
@@ -29,8 +32,8 @@ globalThis["MyMangaReaderCMS"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let res = []
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const res = []
         $(this.options.chapters_element, doc).each(function () {
             res.push([$(this).text(), $(this).attr("href")])
         })
@@ -55,7 +58,7 @@ globalThis["MyMangaReaderCMS"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let self = this
+        const self = this
         var res = []
         $("img", $(".viewer-cnt #ppp", doc).prev()).each(function () {
             var src = $(this).attr(self.options.img_src)

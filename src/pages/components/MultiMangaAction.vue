@@ -2,35 +2,35 @@
     <!-- Manage manga categories -->
     <div style="position: fixed; z-index: 10; top: 30%; left: 35%" class="pr-4" v-show="selectable">
         <v-card elevation="12" class="pa-3" ref="draggableContainer">
-            <v-row class="mb-3 secondary" @mousedown="dragMouseDown">
-                <v-btn class="ml-auto no-bg-hover" @click="unselect()" text x-small>
+            <v-row class="mb-3 bg-secondary" @mousedown="dragMouseDown">
+                <v-btn class="ml-auto no-bg-hover" @click="unselect()" variant="text" size="x-small">
                     <v-icon color="gray"> mdi-close </v-icon>
                 </v-btn>
             </v-row>
             <div class="d-flex align-center my-3">
-                <v-chip color="gray" label small>
+                <v-chip color="gray" label size="small">
                     {{ selected.length + "/" + total }}
                 </v-chip>
-                <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn text x-small class="no-bg-hover" v-bind="attrs" v-on="on" @click="selectAll()">
-                            <v-icon color="gray" left> mdi-checkbox-multiple-marked-outline </v-icon>
+                <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                        <v-btn variant="text" size="x-small" class="no-bg-hover" v-bind="props" @click="selectAll()">
+                            <v-icon color="gray" start> mdi-checkbox-multiple-marked-outline </v-icon>
                         </v-btn>
                     </template>
                     <span>{{ i18n("button_multi_manga_select_all") }}</span>
                 </v-tooltip>
-                <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn text x-small class="no-bg-hover" v-bind="attrs" v-on="on" @click="clearSelect()">
-                            <v-icon color="gray" left> mdi-close-box-multiple-outline </v-icon>
+                <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                        <v-btn variant="text" size="x-small" class="no-bg-hover" v-bind="props" @click="clearSelect()">
+                            <v-icon color="gray" start> mdi-close-box-multiple-outline </v-icon>
                         </v-btn>
                     </template>
                     <span>{{ i18n("button_multi_manga_unselect_all") }}</span>
                 </v-tooltip>
-                <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn text x-small class="no-bg-hover" v-bind="attrs" v-on="on" @click="selectUnread()">
-                            <v-icon color="gray" left> mdi-playlist-check </v-icon>
+                <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
+                        <v-btn variant="text" size="x-small" class="no-bg-hover" v-bind="props" @click="selectUnread()">
+                            <v-icon color="gray" start> mdi-playlist-check </v-icon>
                         </v-btn>
                     </template>
                     <span>{{ i18n("button_multi_manga_select_unread") }}</span>
@@ -41,16 +41,16 @@
                     <v-btn
                         @click="openLatest()"
                         :disabled="!selected.length || selected.length > 15"
-                        outlined
-                        small
+                        variant="outlined"
+                        size="small"
                         color="info">
                         {{ i18n("button_multi_manga_open_latest") }}
                     </v-btn>
                     <v-btn
                         @click="openNew()"
                         :disabled="!selected.length || selected.length > 15"
-                        outlined
-                        small
+                        variant="outlined"
+                        size="small"
                         color="info">
                         {{ i18n("button_multi_manga_open_new") }}
                     </v-btn>
@@ -59,18 +59,18 @@
                 <v-col cols="12" lg="6">
                     <v-select
                         :items="categories"
-                        dense
-                        outlined
+                        density="compact"
+                        variant="outlined"
                         v-model="selectedCategory"
-                        item-text="name"
+                        item-title="name"
                         item-value="name"
                         :label="i18n('list_multi_action_select_category')"></v-select>
                     <!-- Actions buttons -->
                     <div v-if="selectedCategory">
-                        <v-btn @click="addCategory()" class="green" small>
+                        <v-btn @click="addCategory()" class="bg-green" size="small">
                             {{ i18n("button_add") }}
                         </v-btn>
-                        <v-btn @click="deleteCategory()" class="red" small>
+                        <v-btn @click="deleteCategory()" class="bg-red" size="small">
                             {{ i18n("button_remove") }}
                         </v-btn>
                     </div>

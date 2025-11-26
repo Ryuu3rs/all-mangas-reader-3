@@ -1,8 +1,8 @@
 {
-    "name": "All Mangas Reader",
+    "name": "All Mangas Reader V3",
     "description": "__MSG_description__",
-    "author": "",
-    "version": "3.0.3",
+    "author": "Ryuu3rs",
+    "version": "3.1.0",
     "manifest_version": 3,
     "default_locale": "en",
     "icons": {
@@ -18,7 +18,7 @@
         "page": "pages/options/options.html"
     },
     "background": {
-        "service_worker": "background-worker.js"
+        "scripts": ["background-worker.js"]
     },
     "permissions": [
         "tabs",

@@ -1,5 +1,5 @@
 module.exports = {
-    extends: ["plugin:vue/essential", "plugin:vuetify/recommended", "prettier"],
+    extends: ["plugin:vue/vue3-essential", "plugin:vuetify/recommended", "prettier"],
     parser: "vue-eslint-parser",
     parserOptions: {
         parser: "@typescript-eslint/parser",
@@ -7,6 +7,10 @@ module.exports = {
     },
     plugins: ["@typescript-eslint"],
     rules: {
-        "prefer-const": "warn"
+        "prefer-const": "warn",
+        // Allow single-word component names for existing components
+        "vue/multi-word-component-names": "off",
+        // Allow v-model with arguments (Vue 3 syntax)
+        "vue/no-v-model-argument": "off"
     }
 }

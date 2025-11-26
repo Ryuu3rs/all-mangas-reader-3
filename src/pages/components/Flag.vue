@@ -1,7 +1,7 @@
 <template>
-    <v-tooltip v-if="country" top class="flag-container">
-        <template v-slot:activator="{ on }">
-            <i v-on="on" :class="'flag flag-' + country + isBig + isDisabled" @click="toggleLanguageSelection" />
+    <v-tooltip v-if="country" location="top" class="flag-container">
+        <template v-slot:activator="{ props }">
+            <i v-bind="props" :class="'flag flag-' + country + isBig + isDisabled" @click="toggleLanguageSelection" />
         </template>
         <span>{{ i18n("language_" + country) }}</span>
     </v-tooltip>

@@ -1,0 +1,282 @@
+JQMIGRATE: Migrate is installed, version 3.4.1 jquery-migrate.min.js:2:981
+Current URL: https://www.mangaread.org/manga/worlds-best-assassin/chapter-48/?style=list script.js:42:9
+Mirror implementation Manga Read loaded in page. init-reading.js:2:2882305
+Informations for https://www.mangaread.org/manga/worlds-best-assassin/chapter-48/?style=list loaded : init-reading.js:2:2654980
+Object { name: "Worlds Best Assassin", currentMangaURL: "https://www.mangaread.org/manga/worlds-best-assassin/", currentChapterURL: "https://www.mangaread.org/manga/worlds-best-assassin/chapter-48?style=list" }
+init-reading.js:2:2655061
+https://www.mangaread.org/manga/worlds-best-assassin/chapter-48/?style=list --> 8 images to load init-reading.js:2:2655142
+[DEBUG] Reader.pages computed
+Object { loaded: false, book: true, scansLength: 8, regroupablePagesLength: 0 }
+init-reading.js:2:2673212
+[DEBUG] Reader.pages returning single pages: 8 init-reading.js:2:2673668
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: false }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: showing yesno dialog init-reading.js:2:2859862
+[DEBUG] WizDialog.open() called
+Object { title: "Thin long scans detected", currentDialogOpen: false, currentImportant: false }
+init-reading.js:2:2685165
+[DEBUG] WizDialog.open(): dialog opened with options
+Object { persistent: true, important: true }
+init-reading.js:2:2685647
+[DEBUG] WizDialog.dialog changed: false -> true dialog@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2683953
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+xr/s.call@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988647
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989656
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098
+_n@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943518
+Kn@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1947033
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1950683
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1981683
+open@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2685545
+yesno@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2684946
+handleThinScan@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2859983
+created/<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2844147
+emit/<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2652014
+emit@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2651997
+$emit@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2652156
+initWithProvider/n.onloadscan@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2652700
+load/t</<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2653231
+async*load/t<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2653186
+load@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2653179
+init@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2652987
+loadInReader@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2655292
+globalThis.amrLoadMirror@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2882440
+async*@sandbox eval code:1:32
+@sandbox eval code:1:50
+init-reading.js:2:2683903
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] handleThinScan called
+Object { thinscan: 0, book: true, resize: "width", thinScanDialogPending: true }
+init-reading.js:2:2859418
+[DEBUG] handleThinScan: dialog already pending, skipping init-reading.js:2:2859598
+[DEBUG] Reader.pages computed
+Object { loaded: true, book: true, scansLength: 8, regroupablePagesLength: 0 }
+init-reading.js:2:2673212
+[DEBUG] Reader.pages returning single pages: 8 init-reading.js:2:2673668
+All 8 scans have been loaded init-reading.js:2:2653390
+[DEBUG] chapter-loaded event received init-reading.js:2:2844459
+[DEBUG] chapter-loaded handler completed init-reading.js:2:2844618
+[DEBUG] Reader.pages computed
+Object { loaded: true, book: true, scansLength: 8, regroupablePagesLength: 4 }
+init-reading.js:2:2673212
+[DEBUG] Reader.pages returning regroupablePages: 4 init-reading.js:2:2673474
+Loading next chapter https://www.mangaread.org/manga/worlds-best-assassin/chapter-49?style=list init-reading.js:2:2647446
+https://www.mangaread.org/manga/worlds-best-assassin/chapter-49?style=list --> 9 images to load in background init-reading.js:2:2654734
+All 9 scans have been loaded init-reading.js:2:2653390
+[DEBUG] WizDialog.agree() called init-reading.js:2:2686008
+[DEBUG] WizDialog.agree() completed, dialog = false init-reading.js:2:2686088
+[DEBUG] handleThinScan: dialog result = true init-reading.js:2:2860103
+[DEBUG] adjustThinScan called, setting book=false, current resize: width init-reading.js:2:2860485
+[DEBUG] adjustThinScan completed init-reading.js:2:2860725
+[DEBUG] handleThinScan: completed successfully init-reading.js:2:2860220
+[DEBUG] WizDialog.dialog changed: true -> false dialog@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2683953
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+xr/s.call@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988647
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989656
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098
+_n@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943518
+Kn@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1947033
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1950683
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1981683
+agree@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2686065
+click@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2684934
+clickButton@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2684550
+onClick@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2687711
+EA/e/</<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027429
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958673
+e@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027278
+EventListener.handleEvent*CA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2026843
+EA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027509
+wA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2028477
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997046
+b@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996657
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996082
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000843
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+P@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2001209
+V@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999462
+D@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999234
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996107
+k@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997615
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1998977
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+k@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997615
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996923
+b@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996657
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996082
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000843
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+P@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2001209
+V@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999462
+D@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999234
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996107
+k@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997615
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1998977
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+k@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997615
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996923
+init-reading.js:2:2683903
+[DEBUG] Reader.pages computed
+Object { loaded: true, book: false, scansLength: 8, regroupablePagesLength: 4 }
+init-reading.js:2:2673212
+[DEBUG] Reader.pages returning single pages: 8 init-reading.js:2:2673668
+[DEBUG] WizDialog.open() called
+Object { title: undefined, currentDialogOpen: false, currentImportant: true }
+init-reading.js:2:2685165
+[DEBUG] WizDialog.open(): dialog opened with options
+Object { persistent: false, important: false }
+init-reading.js:2:2685647
+[DEBUG] WizDialog.dialog changed: false -> true dialog@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2683953
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+xr/s.call@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988647
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989656
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098
+_n@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943518
+Kn@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1947033
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1950683
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1981683
+resetOptionsToDefault@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2857702
+EA/e/</<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027429
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958673
+e@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027278
+EventListener.handleEvent*CA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2026843
+EA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027509
+wA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2028477
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997046
+b@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996657
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996082
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000843
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+P@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2001209
+V@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999462
+D@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999234
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996107
+U@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2003742
+O@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002173
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999121
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+U@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002604
+O@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002173
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999121
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000367
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+runIfDirty@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943156
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098
+init-reading.js:2:2683903
+[DEBUG] Reader.pages computed
+Object { loaded: true, book: true, scansLength: 8, regroupablePagesLength: 4 }
+init-reading.js:2:2673212
+[DEBUG] Reader.pages returning regroupablePages: 4 init-reading.js:2:2673474
+[DEBUG] WizDialog.agree() called init-reading.js:2:2686008
+[DEBUG] WizDialog.agree() completed, dialog = false init-reading.js:2:2686088
+[DEBUG] WizDialog.dialog changed: true -> false dialog@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2683953
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+xr/s.call@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988647
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989656
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098
+_n@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943518
+Kn@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1947033
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1950683
+set@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1981683
+agree@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2686065
+temporary/<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2685958
+setTimeout handler*temporary@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2685938
+resetOptionsToDefault@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2857954
+EA/e/</<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027429
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958495
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958567
+he@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958673
+e@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027278
+EventListener.handleEvent*CA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2026843
+EA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2027509
+wA@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2028477
+y@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1997046
+b@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996657
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996082
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000843
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+P@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2001209
+V@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999462
+D@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999234
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996107
+U@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2003742
+O@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002173
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999121
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+U@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002604
+O@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2002173
+z@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1999121
+x@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1996044
+l@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:2000367
+run@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1942844
+runIfDirty@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943156
+Ee@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1958503
+Te@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1960244
+promise callback*ze@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959556
+Fe@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1959525
+xr/s.scheduler@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1988758
+xr/m.scheduler<@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1989748
+trigger@moz-extension://8fb3721a-2269-4471-9ef4-65b49dc01793/reader/init-reading.js:2:1943098

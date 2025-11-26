@@ -1,9 +1,14 @@
 <template>
     <v-menu :close-on-content-click="false" v-model="menu">
-        <template #activator="{ on: onMenu }">
-            <v-tooltip top>
-                <template #activator="{ on: onTooltip }">
-                    <v-btn v-on="{ ...onMenu, ...onTooltip }" text small :ripple="false" class="no-bg-hover">
+        <template #activator="{ props: menuProps }">
+            <v-tooltip location="top">
+                <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                        v-bind="{ ...menuProps, ...tooltipProps }"
+                        variant="text"
+                        size="small"
+                        :ripple="false"
+                        class="no-bg-hover">
                         <v-icon> mdi-format-list-bulleted-type </v-icon>
                     </v-btn>
                 </template>
@@ -12,21 +17,21 @@
         </template>
         <v-card>
             <v-row no-gutters>
-                <v-btn color="gray" @click="menu = false" class="ml-auto no-bg-hover" text>
+                <v-btn color="gray" @click="menu = false" class="ml-auto no-bg-hover" variant="text">
                     <v-icon> mdi-close </v-icon>
                 </v-btn>
             </v-row>
             <v-row no-gutters class="px-4">
                 <!-- Eye button to include all / do not care about all -->
-                <v-tooltip v-if="!staticCats && !allincluded" top content-class="icon-ttip">
-                    <template v-slot:activator="{ on }">
-                        <v-icon class="cat-act" @click.stop="stateAll('include')" v-on="on">mdi-eye</v-icon>
+                <v-tooltip v-if="!staticCats && !allincluded" location="top" content-class="icon-ttip">
+                    <template v-slot:activator="{ props }">
+                        <v-icon class="cat-act" @click.stop="stateAll('include')" v-bind="props">mdi-eye</v-icon>
                     </template>
                     <span>{{ i18n("list_cat_include_all") }}</span>
                 </v-tooltip>
-                <v-tooltip v-if="!staticCats && allincluded" top content-class="icon-ttip">
-                    <template v-slot:activator="{ on }">
-                        <v-icon class="cat-act" @click.stop="stateAll('')" v-on="on">mdi-eye-off</v-icon>
+                <v-tooltip v-if="!staticCats && allincluded" location="top" content-class="icon-ttip">
+                    <template v-slot:activator="{ props }">
+                        <v-icon class="cat-act" @click.stop="stateAll('')" v-bind="props">mdi-eye-off</v-icon>
                     </template>
                     <span>{{ i18n("list_cat_donotcare_all") }}</span>
                 </v-tooltip>
@@ -39,11 +44,11 @@
                     <!-- Category name and tooltip -->
                     <v-tooltip
                         v-if="!staticCats && cat.type !== 'language'"
-                        top
+                        location="top"
                         content-class="icon-ttip"
                         class="cat-name">
-                        <template v-slot:activator="{ on }">
-                            <span class="cat-name" v-on="on">{{
+                        <template v-slot:activator="{ props }">
+                            <span class="cat-name" v-bind="props">{{
                                 cat.type === "native" ? i18n(cat.name) : cat.name
                             }}</span>
                         </template>
@@ -60,40 +65,40 @@
                     <Flag v-if="!staticCats && cat.type === 'language'" :value="cat.name" />
                     <span v-if="staticCats" class="cat-name">{{ cat }}</span>
                     <!-- Icon only me -->
-                    <v-tooltip v-if="!staticCats" top content-class="icon-ttip">
-                        <template v-slot:activator="{ on }">
-                            <v-icon class="cat-act" @click.stop="onlyMe(cat)" v-on="on">mdi-eye</v-icon>
+                    <v-tooltip v-if="!staticCats" location="top" content-class="icon-ttip">
+                        <template v-slot:activator="{ props }">
+                            <v-icon class="cat-act" @click.stop="onlyMe(cat)" v-bind="props">mdi-eye</v-icon>
                         </template>
                         <span>{{ i18n("list_cat_only") }}</span>
                     </v-tooltip>
                     <!-- Trash icon -->
-                    <v-tooltip top content-class="icon-ttip">
-                        <template v-slot:activator="{ on }">
+                    <v-tooltip location="top" content-class="icon-ttip">
+                        <template v-slot:activator="{ props }">
                             <v-icon
                                 v-if="cat.type !== 'native' && cat.type !== 'language'"
                                 class="cat-act"
                                 @click.stop="deleteCat(cat)"
-                                v-on="on"
+                                v-bind="props"
                                 >mdi-close</v-icon
                             >
                         </template>
                         <span>{{ i18n("list_cat_delete") }}</span>
                     </v-tooltip>
                     <!-- Edit icon -->
-                    <v-tooltip top content-class="icon-ttip">
-                        <template v-slot:activator="{ on }">
+                    <v-tooltip location="top" content-class="icon-ttip">
+                        <template v-slot:activator="{ props }">
                             <v-icon
                                 v-if="cat.type !== 'native' && cat.type !== 'language'"
                                 class="cat-act"
                                 @click.stop="displayEditCategoryModal(cat)"
-                                v-on="on"
+                                v-bind="props"
                                 >mdi-pencil</v-icon
                             >
                         </template>
                         <span>{{ i18n("list_cat_edit") }}</span>
                     </v-tooltip>
                     <!-- badge nb mangas -->
-                    <span v-if="countUsed(cat) > 0" class="cat-badge grey darken-1">{{ countUsed(cat) }}</span>
+                    <span v-if="countUsed(cat) > 0" class="cat-badge bg-grey-darken-1">{{ countUsed(cat) }}</span>
                 </div>
             </v-row>
             <v-row no-gutters class="pa-5">
@@ -101,7 +106,7 @@
                     <!-- Input text to add a category -->
                     <v-text-field
                         v-if="!staticCats"
-                        dense
+                        density="compact"
                         v-model="newCat"
                         :placeholder="i18n('list_cat_add')"
                         class="cat-add"
@@ -114,10 +119,10 @@
                     <v-card-text>{{ i18n("list_cat_delete_desc", countUsed(catToDelete)) }}</v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="red darken-1" text @click.native="reallyDeleteCat()">{{
+                        <v-btn color="red-darken-1" variant="text" @click="reallyDeleteCat()">{{
                             i18n("button_yes")
                         }}</v-btn>
-                        <v-btn color="grey darken-1" text @click.native="deleteCatDialog = false">{{
+                        <v-btn color="grey-darken-1" variant="text" @click="deleteCatDialog = false">{{
                             i18n("button_no")
                         }}</v-btn>
                     </v-card-actions>
@@ -130,20 +135,20 @@
                     <v-card-text>
                         <label>
                             {{ i18n("list_cat_edit_desc", countUsed(catToEdit)) }} <br />
-                            <v-text-field solo outlined dense v-model="updateCatName" />
+                            <v-text-field variant="solo" density="compact" v-model="updateCatName" />
                         </label>
                     </v-card-text>
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn
-                            color="red darken-1"
+                            color="red-darken-1"
                             :disabled="!isValidEditName"
-                            text
-                            @click.native="submitEditCategory()">
+                            variant="text"
+                            @click="submitEditCategory()">
                             {{ i18n("button_yes") }}
                         </v-btn>
-                        <v-btn color="grey darken-1" text @click.native="editCatDialog = false">{{
+                        <v-btn color="grey-darken-1" variant="text" @click="editCatDialog = false">{{
                             i18n("button_no")
                         }}</v-btn>
                     </v-card-actions>

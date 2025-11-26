@@ -12,10 +12,10 @@ globalThis["MangaStream_1_1_4Abs"] = function (options) {
     this.canListFullMangas = false
 
     this.getMangaList = async function (search) {
-        let res = []
-        let urlManga = this.options.base_url + "?s=" + search
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let self = this
+        const res = []
+        const urlManga = this.options.base_url + "?s=" + search
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const self = this
 
         $(this.options.series_list_selector, doc).each(function (index) {
             res.push([$(this).find(".tt").text().trim(), self.options.urlProcessorSeries($(this).attr("href"))])
@@ -24,9 +24,9 @@ globalThis["MangaStream_1_1_4Abs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let res = []
-        let self = this
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const res = []
+        const self = this
         $(this.options.chapter_list_selector, doc).each(function (index) {
             res.push([$(".chapternum", this).text().trim(), self.options.urlProcessorChapter($(this).attr("href"))])
         })
@@ -43,10 +43,10 @@ globalThis["MangaStream_1_1_4Abs"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let res = []
-        let regex = /ts_reader\.run\((.*?)\);/g
-        let parts = doc.innerText.match(regex)
-        let json = JSON.parse(parts[0].replace("ts_reader.run(", "").replace(");", ""))
+        const res = []
+        const regex = /ts_reader\.run\((.*?)\);/g
+        const parts = doc.innerText.match(regex)
+        const json = JSON.parse(parts[0].replace("ts_reader.run(", "").replace(");", ""))
 
         json.sources.forEach(source => {
             source.images.forEach(image => {

@@ -1,6 +1,6 @@
 <template>
     <v-app>
-        <v-app-bar app max-height="64">
+        <v-app-bar height="64">
             <img src="/icons/icon_32.png" alt="All Mangas Reader" />
             <v-toolbar-title>{{ title }}</v-toolbar-title>
             <v-spacer></v-spacer>
@@ -21,8 +21,11 @@
                             getStats.oldMirrorCount
                         }}). Disabled mirrors {{ getStats.disabledMirrorCount }}
 
-                        <v-icon small>mdi-settings</v-icon>
-                        <v-progress-linear height="20" color="success" :value="migrationProgress"></v-progress-linear>
+                        <v-icon size="small">mdi-settings</v-icon>
+                        <v-progress-linear
+                            height="20"
+                            color="success"
+                            :model-value="migrationProgress"></v-progress-linear>
                     </div>
                     <div v-if="showMigrations">
                         <v-row v-for="(mirrorToMigrate, index) in getStats.mirrorsToMigrate" :key="index" class="ma-1">
@@ -30,7 +33,7 @@
                                 <img :src="mirrorToMigrate.mirrorIcon" :alt="mirrorToMigrate.mirrorName" />
                                 <a :href="mirrorToMigrate.home" target="_blank">{{ mirrorToMigrate.mirrorName }}</a>
                                 - ({{ mirrorToMigrate.abstract || "Individual" }})
-                                <v-icon small v-if="mirrorToMigrate.disabled">mdi-stop</v-icon>
+                                <v-icon size="small" v-if="mirrorToMigrate.disabled">mdi-stop</v-icon>
                             </v-col>
                         </v-row>
                     </div>
@@ -42,14 +45,14 @@
                         <v-col cols="6">
                             <v-row>
                                 <v-col cols="3">
-                                    <v-subheader>Mirrors : </v-subheader>
+                                    <v-label>Mirrors : </v-label>
                                 </v-col>
                                 <v-col cols="9">
                                     <v-select
                                         v-model="current"
                                         :items="mirrors"
                                         item-value="mirrorName"
-                                        item-text="mirrorName"
+                                        item-title="mirrorName"
                                         :menu-props="{ auto: true }"
                                         :rules="mirrorRules"
                                         required></v-select>
@@ -59,7 +62,7 @@
                         <v-col cols="6">
                             <v-row>
                                 <v-col cols="4">
-                                    <v-subheader>Search field : </v-subheader>
+                                    <v-label>Search field : </v-label>
                                 </v-col>
                                 <v-col cols="8">
                                     <v-text-field v-model="search" :rules="searchRules" required></v-text-field>
@@ -86,7 +89,7 @@
                         <v-col cols="9">
                             Test {{ currentTest + 1 }} / {{ nbtests }} ({{ nbfailed }} failed)
                             <v-progress-linear
-                                :value="((currentTest + 1) / nbtests) * 100"
+                                :model-value="((currentTest + 1) / nbtests) * 100"
                                 :color="nbfailed > 0 ? 'red' : 'green'"></v-progress-linear>
                         </v-col>
                     </v-row>
@@ -149,13 +152,16 @@
                                     </div>
                                     <div v-if="out.buttons && out.buttons.length > 0">
                                         <div v-for="(but, indd) in out.buttons" :key="indd" class="result-button">
-                                            <v-btn v-if="but === 'gotourl'" @click="goToUrl(out.currentValue)" small
+                                            <v-btn
+                                                v-if="but === 'gotourl'"
+                                                @click="goToUrl(out.currentValue)"
+                                                size="small"
                                                 >Go to url</v-btn
                                             >
                                             <v-btn
                                                 v-if="but === 'reloadtestforvalue'"
                                                 @click="reloadNextWith(out.name, out.currentValue)"
-                                                small
+                                                size="small"
                                                 >Reload following tests with the selected value</v-btn
                                             >
                                         </div>
@@ -170,10 +176,10 @@
                 </v-form>
             </v-container>
         </v-main>
-        <v-dialog v-model="options" fullscreen transition="dialog-bottom-transition" :overlay="false" scrollable>
-            <v-card tile>
-                <v-toolbar flat dark color="primary">
-                    <v-btn icon @click.native="options = false" dark>
+        <v-dialog v-model="options" fullscreen transition="dialog-bottom-transition" scrollable>
+            <v-card rounded="0">
+                <v-toolbar variant="flat" color="primary">
+                    <v-btn icon @click="options = false">
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                     <v-toolbar-title>Settings</v-toolbar-title>
@@ -188,7 +194,7 @@
 import Options from "../components/Options"
 import tests from "./tests"
 import browser from "webextension-polyfill"
-import Vue from "vue"
+import { reactiveSet } from "../../shared/vue-compat"
 import { getMirrorHelper } from "../../mirrors/MirrorHelper"
 import { getMirrorLoader } from "../../mirrors/MirrorLoader"
 import { MigrationService } from "../../shared/migration/MigrationService"
@@ -421,7 +427,7 @@ export default {
                         }
                     }
                     // global object containing tests results
-                    Vue.set(this.testsResults, this.currentTest, {
+                    reactiveSet(this.testsResults, this.currentTest, {
                         passed: passed, // result of the test
                         results: results, // list of text unit results
                         output: testouts // array of outputs
@@ -431,7 +437,7 @@ export default {
                     }
                 } catch (e) {
                     console.error(e)
-                    Vue.set(this.testsResults, this.currentTest, {
+                    reactiveSet(this.testsResults, this.currentTest, {
                         passed: false, // result of the test
                         results: ["<span style='color:red'><strong>" + e.message + "</strong></span>"], // list of text unit results
                         output: []
@@ -533,28 +539,35 @@ export default {
 .v-dialog .v-card__text {
     padding: 4px 16px;
 }
+
 .v-dialog .v-card__title {
     padding-top: 10px;
 }
+
 * {
     font-size: 1rem;
 }
+
 .test-icon {
     vertical-align: middle;
     margin-right: 10px;
 }
+
 .dom-elt img {
     height: 200px;
 }
+
 .list-results {
     display: inline-block;
     vertical-align: middle;
     margin-left: 10px;
     width: auto;
 }
+
 .list-results .input-group__details {
     min-height: auto;
 }
+
 .result-button {
     display: inline-block;
 }

@@ -1,8 +1,8 @@
 <template>
     <v-dialog v-model="dialog" :max-width="800" @keydown.esc="dialog = false" v-bind:style="{ zIndex: 5 }">
         <v-card>
-            <v-toolbar dark color="primary" dense flat>
-                <v-toolbar-title class="white--text">{{ i18n("reader_shortcuts_title") }}</v-toolbar-title>
+            <v-toolbar color="primary" density="compact" variant="flat">
+                <v-toolbar-title class="text-white">{{ i18n("reader_shortcuts_title") }}</v-toolbar-title>
             </v-toolbar>
             <v-card-text text-no-wrap>
                 <div class="text-h6 py-3">{{ i18n("reader_shortcuts_section_chapters") }}</div>
@@ -16,7 +16,7 @@
             </v-card-text>
             <v-card-actions class="pt-0">
                 <v-spacer></v-spacer>
-                <v-btn color="grey" text @click.native="dialog = false">
+                <v-btn color="grey" variant="text" @click="dialog = false">
                     {{ i18n("button_close") }}
                 </v-btn>
             </v-card-actions>

@@ -1,13 +1,11 @@
 import browser from "webextension-polyfill"
-import Vue from "vue"
-import Vuex from "vuex"
-import mangas from "./modules/mangas"
+import { createStore } from "vuex"
+import mangas from "./modules/mangas/index"
 import mirrors from "./modules/mirrors"
 import options from "./modules/options"
 import bookmarks from "./modules/bookmarks"
 import importexport from "./modules/importexport"
 import VuexMutationSharer from "./sharer/VuexMutationSharer"
-Vue.use(Vuex)
 
 /**
  * This store exposes the object to vue (both in popup and background)
@@ -18,7 +16,7 @@ Vue.use(Vuex)
  * Every instance of the store is kept synchronized with the others using vuex-shared-mutations which
  * triggers events in the different environments through localStorage
  */
-export default new Vuex.Store({
+export default createStore({
     modules: {
         mangas,
         mirrors,

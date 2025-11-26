@@ -1,4 +1,3 @@
-import Vue from "vue"
 import storedb from "../../amr/storedb"
 import Manga, { MANGA_READ_STOP, MANGA_UPDATE_STOP } from "../../amr/manga"
 import { getNotificationManager } from "../../amr/notifications"
@@ -23,6 +22,7 @@ import { mdFixLang, mdFixLangKey, mdFixLangsListPrefix } from "../../shared/mang
 import { Alarm, clearAlarm, createAlarm } from "../../shared/AlarmService"
 import { shouldDelayUpdate } from "../../shared/chapterUpdaterUtil"
 import { getSyncOptions } from "../../shared/Options"
+import { reactiveSet, reactiveDelete } from "../../shared/vue-compat"
 
 let syncManager
 // @TODO replace with actual error
@@ -143,7 +143,7 @@ const actions = {
         const temporarySyncManager = getSyncManager(getters.syncOptions, rootState, dispatch)
         const payload = []
         for (const oldManga of mgs) {
-            const key = mdFixLangKey(newManga.key)
+            const key = mdFixLangKey(oldManga.key)
             const newManga = new Manga(oldManga, key)
             newManga.language = mdFixLang(newManga.language)
             newManga.languages = mdFixLang(newManga.languages)
@@ -1319,13 +1319,13 @@ const mutations = {
     },
     onSelectChange(state, mangaKey) {
         if (state.selected[mangaKey]) {
-            Vue.delete(state.selected, mangaKey)
+            reactiveDelete(state.selected, mangaKey)
         } else {
-            Vue.set(state.selected, mangaKey, true)
+            reactiveSet(state.selected, mangaKey, true)
         }
     },
     clearSelection(state) {
-        Vue.set(state, "selected", {})
+        reactiveSet(state, "selected", {})
     }
 }
 

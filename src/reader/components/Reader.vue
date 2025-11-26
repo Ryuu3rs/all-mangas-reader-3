@@ -28,8 +28,8 @@
                 @become-current="becomeCurrent" />
         </table>
         <!-- Pages navigator -->
-        <v-hover v-if="options.bottomNavigationEnabled">
-            <div class="amr-pages-nav" :class="{ display: hover, 'shrink-draw': drawer }" slot-scope="{ hover }">
+        <v-hover v-if="options.bottomNavigationEnabled" v-slot="{ isHovering: hover }">
+            <div class="amr-pages-nav" :class="{ display: hover, 'shrink-draw': drawer }">
                 <!-- Current page state + previous next buttons -->
                 <PageNavigator
                     :current-page="currentPage"
@@ -161,10 +161,18 @@ export default {
                 // Rely on scansState.loaded
                 const pageNavigator = this.$refs["page-navigator"]
                 if (!pageNavigator) {
+                    currentlyThumbsScrolling = false
                     return
                 }
 
-                const $el = pageNavigator.$refs.thumbnail[nVal].$el
+                // Guard against thumbnail not being available
+                const thumbnail = pageNavigator.$refs.thumbnail?.[nVal]
+                if (!thumbnail?.$el) {
+                    currentlyThumbsScrolling = false
+                    return
+                }
+
+                const $el = thumbnail.$el
                 const offset = -(window.innerWidth - (this.drawer ? 300 : 0)) + $el.clientWidth
 
                 thumbsScroller($el, this.animationDuration, {
@@ -207,7 +215,9 @@ export default {
             if (nVal.length === oVal.length) return // pages didn't change that much :)
             let furl // url of the first viewable scan on currentpage
             if (nVal.length < oVal.length) {
-                furl = this.scansState.scans[this.currentPage].url // retrieve it from images cause old book value was false, so one page per image
+                // Guard against undefined scans access
+                const currentScan = this.scansState.scans[this.currentPage]
+                furl = currentScan?.url // retrieve it from images cause old book value was false, so one page per image
             } else {
                 if (this.regroupablePages[this.currentPage] && this.regroupablePages[this.currentPage].length > 0) {
                     furl = this.regroupablePages[this.currentPage][0].src // retrieve it from rearrange pages cause old book value was true
@@ -248,9 +258,20 @@ export default {
         /* Current displayed pages */
         pages() {
             /* First, list of pages is single scan pages with all the chapter's scans */
-            if (!this.scansState.loaded || !this.book) {
-                return this.scansState.scans.map((sc, i) => [{ src: sc.url, name: "" + (i + 1) }])
+            console.log("[DEBUG] Reader.pages computed", {
+                loaded: this.scansState.loaded,
+                book: this.book,
+                scansLength: this.scansState.scans?.length,
+                regroupablePagesLength: this.regroupablePages?.length
+            })
+            // If not loaded, not in book mode, OR regroupablePages hasn't been populated yet,
+            // fall back to single page layout
+            if (!this.scansState.loaded || !this.book || this.regroupablePages.length === 0) {
+                const result = this.scansState.scans.map((sc, i) => [{ src: sc.url, name: "" + (i + 1) }])
+                console.log("[DEBUG] Reader.pages returning single pages:", result.length)
+                return result
             } else {
+                console.log("[DEBUG] Reader.pages returning regroupablePages:", this.regroupablePages?.length)
                 return this.regroupablePages
             }
         },
@@ -636,7 +657,9 @@ export default {
                                 // go to previous scan
                                 try {
                                     this.goPreviousScan(doubletap)
-                                } catch (e) {} // prevent default in any case
+                                } catch (e) {
+                                    // Intentionally swallowed - prevent default in any case
+                                }
                             }
                             prevent()
                         }
@@ -649,7 +672,9 @@ export default {
                             } else {
                                 try {
                                     this.goNextScan(doubletap)
-                                } catch (e) {} // prevent default in any case
+                                } catch (e) {
+                                    // Intentionally swallowed - prevent default in any case
+                                }
                             }
                             prevent()
                         }
@@ -663,7 +688,9 @@ export default {
                                     try {
                                         this.autoNextChapter = false
                                         EventBus.$emit("go-next-chapter")
-                                    } catch (e) {}
+                                    } catch (e) {
+                                        // Intentionally swallowed - prevent default in any case
+                                    }
                                 } else {
                                     // Prepare for next chapter
                                     this.autoNextChapter = true
@@ -782,11 +809,13 @@ export default {
     min-height: 100vh;
     width: 100%;
 }
+
 .amr-scan-container td {
     padding-bottom: 4px;
     padding-top: 4px;
     line-height: 0;
 }
+
 .amr-scan-container-webtoon td {
     padding-bottom: 0px;
     padding-top: 0px;
@@ -798,19 +827,23 @@ export default {
     padding-bottom: 0px;
     padding-top: 0px;
 }
+
 .no-full-chapter,
 .no-full-chapter > table {
     height: 100%;
 }
+
 .amr-scan-container td {
     text-align: center;
     vertical-align: middle;
 }
+
 /** Create an horizontal scrollbar overflowing the side drawer when necessary (resize=none) */
 html {
     max-height: 100vh;
     overflow: auto;
 }
+
 /** Pages navigator */
 .amr-page-next-prev .v-toolbar {
     opacity: 0.8;
@@ -827,11 +860,15 @@ html {
     padding-top: 5px;
     opacity: 0;
 }
+
 .amr-pages-nav.shrink-draw {
-    width: calc(100% - 300px); /* Adjust size of navigator if drawer is opened */
+    width: calc(100% - 300px);
+    /* Adjust size of navigator if drawer is opened */
 }
+
 .amr-pages-nav.display {
-    opacity: 1; /* display navigator when hovered */
+    opacity: 1;
+    /* display navigator when hovered */
 }
 
 .amr-pages-nav,
@@ -843,13 +880,16 @@ html {
 .amr-bookmarked-scan {
     cursor: pointer;
 }
+
 .amr-bookmarked-scans-cont {
     max-width: 400px;
 }
+
 .amr-bookmarked-scans-cont > .layout {
     align-items: center;
     justify-content: center;
 }
+
 /* do not force 50% width on thumbs so we don't have vast spaces with background if scans are not the same width */
 .amr-pages-nav td.scanContainer.xs6 {
     width: auto;

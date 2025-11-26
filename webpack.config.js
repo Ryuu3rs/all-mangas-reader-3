@@ -4,9 +4,8 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 const WebpackShellPluginNext = require("webpack-shell-plugin-next")
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
-const VueLoaderPlugin = require("vue-loader/lib/plugin")
+const { VueLoaderPlugin } = require("vue-loader")
 const CircularDependencyPlugin = require("circular-dependency-plugin")
-const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin")
 const ejs = require("ejs")
 
 const AMR_BROWSER = process.env.AMR_BROWSER
@@ -33,7 +32,7 @@ const config = {
     },
     resolve: {
         alias: {
-            vue$: "vue/dist/vue.runtime.esm.js"
+            vue$: "vue/dist/vue.esm-bundler.js"
         },
         extensions: ["*", ".ts", ".js", ".vue", ".json"],
         fallback: {
@@ -54,10 +53,7 @@ const config = {
             },
             {
                 test: /\.vue$/,
-                loader: "vue-loader",
-                options: {
-                    esModule: true
-                }
+                loader: "vue-loader"
             },
             // Allow to load images directly
             {
@@ -83,7 +79,11 @@ const config = {
     },
     plugins: [
         new VueLoaderPlugin(),
-        new VuetifyLoaderPlugin(),
+        new webpack.DefinePlugin({
+            __VUE_OPTIONS_API__: true,
+            __VUE_PROD_DEVTOOLS__: false,
+            __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false
+        }),
         new CopyWebpackPlugin({
             patterns: [
                 { from: "icons", to: "icons", globOptions: { ignore: ["icon.xcf"] } },

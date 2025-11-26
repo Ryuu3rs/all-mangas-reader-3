@@ -102,7 +102,7 @@ class StoreDB {
     storeWebsite(mirrorObj) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mirrors"], "readwrite")
 
                 transaction.onerror = function (event) {

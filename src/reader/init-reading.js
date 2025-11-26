@@ -3,20 +3,19 @@
  * Content script included in every website matching a manga site
  */
 
-import Vue from "vue"
-import Vuetify from "vuetify/lib"
-import vuetifyOptions from "../pages/vuetifyOptions"
+import { createApp } from "vue"
+import { createVuetify } from "vuetify"
+import * as components from "vuetify/components"
+import * as directives from "vuetify/directives"
+import { aliases, mdi } from "vuetify/iconsets/mdi-svg"
 import VueScrollTo from "vue-scrollto"
-import Clipboard from "v-clipboard"
+import "vuetify/styles"
 
 import AmrReader from "./AmrReader.vue"
 
 import browser from "webextension-polyfill"
 import options from "./state/options"
 import ChapterLoader from "./helpers/ChapterLoader"
-
-// Forves embedded svg font for reader, we use the cdn based one for the popup still
-vuetifyOptions.icons.iconfont = "mdiSvg"
 
 const ourCss = ["https://fonts.googleapis.com/css?family=Roboto:300,400,500,700"]
 
@@ -80,7 +79,7 @@ function initReader(mirror, title) {
 
     document.body.innerHTML = "" //empty the dom page
     const amrdiv = document.createElement("div")
-    amrdiv.id = "app"
+    amrdiv.id = "amrapp" // Must match the check in removeJsAddedStuff
     document.body.appendChild(amrdiv)
 
     removeStyles(true, 5)
@@ -102,18 +101,25 @@ function initReader(mirror, title) {
 
     for (const css of ourCss) loadCss(css)
 
-    // Load vue
-    Vue.config.productionTip = false
-    Vue.use(Vuetify)
-    vuetifyOptions.theme.dark = options.darkreader === 1
-    Vue.use(VueScrollTo)
-    Vue.use(Clipboard)
-    new Vue({
-        el: amrdiv,
-        propsData: { mirror },
-        vuetify: new Vuetify(vuetifyOptions),
-        render: h => h(AmrReader, { props: { mirror } })
+    // Create Vuetify instance
+    const vuetify = createVuetify({
+        components,
+        directives,
+        icons: {
+            defaultSet: "mdi",
+            aliases,
+            sets: { mdi }
+        },
+        theme: {
+            defaultTheme: options.darkreader === 1 ? "dark" : "light"
+        }
     })
+
+    // Create Vue app
+    const app = createApp(AmrReader, { mirror })
+    app.use(vuetify)
+    app.use(VueScrollTo)
+    app.mount(amrdiv)
 
     setTimeout(removeJsAddedStuff, 1500)
 }
@@ -127,7 +133,14 @@ function removeJsAddedStuff(times = 10) {
     document.body.style.setProperty("width", "auto", "important")
 
     for (const child of document.body.children) {
-        if (child.getAttribute("id") !== "amrapp") child.remove()
+        const id = child.getAttribute("id")
+        const className = child.className || ""
+        // Keep our app container and Vuetify's overlay container (used for dialogs, menus, etc.)
+        const isAmrApp = id === "amrapp"
+        const isVuetifyOverlay = className.includes("v-overlay-container")
+        if (!isAmrApp && !isVuetifyOverlay) {
+            child.remove()
+        }
     }
 
     if (times > 0) {

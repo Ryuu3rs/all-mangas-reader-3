@@ -1,13 +1,15 @@
 <template>
     <v-container fluid>
-        <gallery
-            :images="scans"
-            :index="curScan"
-            @close="curScan = null"
-            :options="{ closeOnSlideClick: true }"></gallery>
+        <vue-easy-lightbox
+            :visible="curScan !== null"
+            :imgs="scans"
+            :index="curScan || 0"
+            @hide="curScan = null"
+            :moveDisabled="false"
+            :scrollDisabled="true"></vue-easy-lightbox>
         <v-row>
             <v-col cols="12" sm="6" :lg="getSize()" v-for="bm in sortBookmarkList" :key="bm.key">
-                <v-card tile>
+                <v-card rounded="0">
                     <BookmarkScan
                         v-if="bm.type == 'scan'"
                         :bookmark="bm"
@@ -20,10 +22,10 @@
                                 <img :src="getIcon(bm.mirror)" />
                                 {{ bm.name }} - {{ bm.chapName }}
                             </div>
-                            <p class="grey--text mb-0 text-subtitle-2" v-if="bm.scanUrl">
+                            <p class="text-grey mb-0 text-subtitle-2" v-if="bm.scanUrl">
                                 {{ i18n("bookmarks_scan_number", bm.scanName) }}
                             </p>
-                            <p class="grey--text mb-0 text-caption">{{ bm.note }}</p>
+                            <p class="text-grey mb-0 text-caption">{{ bm.note }}</p>
                         </v-col>
                         <v-col cols="auto">
                             <v-card-actions>
@@ -55,8 +57,10 @@
                 }}</v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="red darken-1" text @click.native="reallyDeleteBm()">{{ i18n("button_yes") }}</v-btn>
-                    <v-btn color="grey darken-1" text @click.native="deleteBookmarkDialog = false">{{
+                    <v-btn color="red-darken-1" variant="text" @click="reallyDeleteBm()">{{
+                        i18n("button_yes")
+                    }}</v-btn>
+                    <v-btn color="grey-darken-1" variant="text" @click="deleteBookmarkDialog = false">{{
                         i18n("button_no")
                     }}</v-btn>
                 </v-card-actions>
@@ -85,10 +89,12 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary darken-1" text @click.native="editBookmarkDialog = false">{{
+                    <v-btn color="primary-darken-1" variant="text" @click="editBookmarkDialog = false">{{
                         i18n("button_cancel")
                     }}</v-btn>
-                    <v-btn color="primary darken-1" text @click.native="reallyEditBm">{{ i18n("button_save") }}</v-btn>
+                    <v-btn color="primary-darken-1" variant="text" @click="reallyEditBm">{{
+                        i18n("button_save")
+                    }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -96,10 +102,10 @@
 </template>
 <script>
 import i18n from "../../amr/i18n"
-import VueGallery from "vue-gallery"
+import VueEasyLightbox from "vue-easy-lightbox"
 import BookmarkScan from "./BookmarkScan"
 import browser from "webextension-polyfill"
-import Vue from "vue"
+import { reactiveSet } from "../../shared/vue-compat"
 
 export default {
     data() {
@@ -175,12 +181,12 @@ export default {
         /** Called when BookmarkScan updates the url to display */
         changeUrl({ url, key }) {
             const nbm = this.bookmarkList.find(bm => bm.key === key)
-            Vue.set(nbm, "displayedUrl", url)
+            reactiveSet(nbm, "displayedUrl", url)
         }
     },
 
     components: {
-        gallery: VueGallery,
+        VueEasyLightbox,
         BookmarkScan
     }
 }

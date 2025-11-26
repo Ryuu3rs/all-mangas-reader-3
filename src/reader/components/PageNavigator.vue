@@ -1,11 +1,16 @@
 <template>
     <v-row class="amr-page-next-prev">
         <v-col class="my-2" cols="12">
-            <v-toolbar flat>
+            <v-toolbar variant="flat">
                 <!-- Backward button -->
-                <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                        <v-btn v-show="showBackwardButton" v-on="on" class="btn-huge" icon @click.stop="goPreviousScan">
+                <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            v-show="showBackwardButton"
+                            v-bind="props"
+                            class="btn-huge"
+                            icon
+                            @click.stop="goPreviousScan">
                             <v-icon>{{ icons.mdiChevronLeft }}</v-icon>
                         </v-btn>
                     </template>
@@ -23,9 +28,9 @@
                     }}
                 </div>
                 <!-- Forward button -->
-                <v-tooltip bottom>
-                    <template v-slot:activator="{ on }">
-                        <v-btn v-show="showForwardButton" v-on="on" class="btn-huge" icon @click.stop="goNextScan">
+                <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                        <v-btn v-show="showForwardButton" v-bind="props" class="btn-huge" icon @click.stop="goNextScan">
                             <v-icon>{{ icons.mdiChevronRight }} </v-icon>
                         </v-btn>
                     </template>

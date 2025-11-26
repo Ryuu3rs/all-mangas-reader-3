@@ -1,3 +1,4 @@
+import { reactive } from "vue"
 import EventBus from "./EventBus"
 import browser from "webextension-polyfill"
 import pageData from "../state/pagedata"
@@ -7,21 +8,23 @@ import pageData from "../state/pagedata"
  * and keeps the state of the current chapter scans
  */
 
-/** Current chapter's scans state */
+/** Current chapter's scans state - wrapped in reactive() for Vue 3 */
 export const scansProvider = {
     /** Current shared state of scans */
-    state: {
+    state: reactive({
         scans: [], // list of scans [{url, loading, error, doublepage, scan HTMLImage}]
         progress: 0, // percentage (0 - 100) loaded of the whole chapter
         loaded: false // top indicating all scans are loaded
-    },
+    }),
 
     /**
      * Init current state with a ScansProvider
      * @param {} scp the scans provider to load in current state
      */
     initWithProvider(scp) {
-        this.state.scans = scp.scans
+        // Clear existing scans and push new ones to maintain reactivity
+        this.state.scans.length = 0
+        this.state.scans.push(...scp.scans)
         // Listen to state change
         scp.onloadchapter = () => EventBus.$emit("chapter-loaded")
         scp.onloadscan = () => {
@@ -34,8 +37,7 @@ export const scansProvider = {
                 EventBus.$emit("thin-scan")
             }
         }
-        // initailize state with provider values
-        this.state.scans = scp.scans
+        // initialize state with provider values (scans already set above)
         this.state.progress = scp.progress
         this.state.loaded = scp.loaded
         if (this.state.loaded) {

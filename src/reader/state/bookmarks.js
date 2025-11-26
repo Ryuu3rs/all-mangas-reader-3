@@ -2,16 +2,17 @@
  * State of bookmarks linked to the current chapter
  * Helpers to load / save / delete bookmarks
  */
+import { reactive } from "vue"
 import browser from "webextension-polyfill"
 
 import pageData from "./pagedata"
 
 export default {
-    state: {
+    state: reactive({
         booked: false, // true if chapter is booked
         note: undefined, // note of current chapter
         scans: [] // list of scans [{url, name, note, booked}]
-    },
+    }),
 
     mirror: {
         mirrorName: ""
@@ -22,7 +23,8 @@ export default {
         this.mirror = mirror
         // initialize chapter
         this.loadBookmark()
-        // initialize scans
+        // Clear existing scans and push new ones to maintain reactivity
+        this.state.scans.length = 0
         this.state.scans.push(
             ...scansUrl.map((url, i) => {
                 return {

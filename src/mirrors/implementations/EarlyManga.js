@@ -9,9 +9,12 @@ if (typeof registerMangaObject === "function") {
         chapter_url: /^\/manga\/.*\/.+$/g,
 
         getMangaList: async function (search) {
-            let doc = await amr.loadPage(this.home + "/search?search=" + search, { nocache: true, preventimages: true })
-            let res = []
-            let self = this
+            const doc = await amr.loadPage(this.home + "/search?search=" + search, {
+                nocache: true,
+                preventimages: true
+            })
+            const res = []
+            const self = this
 
             $("a.manga_title", doc).each(function (index) {
                 res.push([$(this).text(), self.home + $(this).attr("href")])
@@ -20,12 +23,12 @@ if (typeof registerMangaObject === "function") {
         },
 
         getListChaps: async function (urlManga) {
-            let doc = await amr.loadPage(urlManga, {
+            const doc = await amr.loadPage(urlManga, {
                 nocache: true,
                 preventimages: true
             })
-            let res = []
-            let self = this
+            const res = []
+            const self = this
 
             $("#chapters .col-lg-5 a[style!='display:none']:contains('Chapter'):not('.d-none')", doc).each(function (
                 index
@@ -36,7 +39,7 @@ if (typeof registerMangaObject === "function") {
             })
 
             if ($("ul.pagination", doc).length && $('ul.pagination .page-item:last a[href!=""]', doc).length) {
-                let nextPage = $($('ul.pagination .page-item:last a[href!=""]', doc)[0]).attr("href")
+                const nextPage = $($('ul.pagination .page-item:last a[href!=""]', doc)[0]).attr("href")
                 res.push(...(await self.getListChaps(nextPage)))
             }
 
@@ -44,7 +47,7 @@ if (typeof registerMangaObject === "function") {
         },
 
         getInformationsFromCurrentPage: async function (doc, curUrl) {
-            let mg = $($("ul.navigation a:first", doc)[0])
+            const mg = $($("ul.navigation a:first", doc)[0])
             return {
                 name: mg.text().trim(),
                 currentMangaURL: this.home + mg.attr("href"),
@@ -53,8 +56,8 @@ if (typeof registerMangaObject === "function") {
         },
 
         getListImages: async function (doc, curUrl) {
-            let res = []
-            let self = this
+            const res = []
+            const self = this
             $(".chapter-images-container-up img", doc).each(function (index) {
                 res.push(self.home + $(this).attr("src"))
             })

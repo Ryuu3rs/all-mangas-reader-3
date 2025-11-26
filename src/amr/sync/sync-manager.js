@@ -2,9 +2,10 @@ import { ThrottleError } from "../storage/error/ToManyRequests"
 import GistStorage from "../storage/gist-storage"
 import BrowserStorage from "../storage/browser-storage"
 import { createLocalStorage } from "../storage/local-storage"
-import * as syncUtils from "./utils"
 import { getAppLogger } from "../../shared/AppLogger"
 import { SyncTracker } from "./SyncTracker"
+import { shouldSkipSync, shouldSyncToLocal, processUpdatesToLocal, processUpdatesToRemote } from "./sync-operations"
+import { deleteMangaFromRemote, setToRemote, fixLang } from "./sync-remote-actions"
 
 const remoteStorages = {
     GistStorage,
@@ -152,8 +153,8 @@ class SyncManager {
         const localList = await this.localStorage.loadMangaList()
         const remoteList = await storage.getAll()
         this.logger.debug(`[SYNC-${storage.name}] Comparing local and remote list`)
-        const incoming = await this.processUpdatesToLocal(localList, remoteList)
-        const outgoing = await this.processUpdatesToRemote(localList, remoteList, storage)
+        const incoming = await processUpdatesToLocal(this.localStorage, localList, remoteList)
+        const outgoing = await processUpdatesToRemote(this.logger, localList, remoteList, storage)
         this.logger.debug(`[SYNC-${storage.name}] Completed sync data check`)
         return { incoming, outgoing }
     }
@@ -197,282 +198,47 @@ class SyncManager {
         }
     }
     /**
-     * Checks if entry is deleted or corrupted
-     * @param {Manga} manga
-     * @returns {boolean}
+     * Get context object for remote actions
+     * @private
      */
-    shouldSkipSync(manga) {
-        return manga.deleted === syncUtils.DELETED || manga.key === syncUtils.FAIL_KEY
-    }
-    /**
-     * Compare remote and local version of manga list
-     * updates each entries when it's needed
-     *
-     * @param {Manga[]} localList
-     * @param {Manga[]} remoteList
-     * @returns {Promise<{local: Manga[], remote: Manga[]}>}
-     */
-    async processUpdatesToLocal(localList, remoteList) {
-        const localUpdates = []
-        for (const remoteManga of remoteList) {
-            const localManga = localList.find(m => m.key === remoteManga.key)
-            if (localManga) {
-                if (remoteManga.deleted === syncUtils.DELETED) {
-                    await this.localStorage.dispatch("deleteManga", localManga, true)
-                    continue
-                }
-                if (remoteManga.tsOpts > localManga.tsOpts) {
-                    if (localManga.read !== remoteManga.read)
-                        await this.localStorage.dispatch("setMangaReadTop", remoteManga, true)
-                    if (localManga.update !== remoteManga.update)
-                        await this.localStorage.dispatch("setMangaUpdateTop", remoteManga, true)
-                    if (localManga.display !== remoteManga.display)
-                        await this.localStorage.dispatch("setMangaDisplayMode", remoteManga, true)
-                    if (localManga.layout !== remoteManga.layout)
-                        await this.localStorage.dispatch("setMangaLayoutMode", remoteManga, true)
-                    if (localManga.webtoon !== remoteManga.webtoon)
-                        await this.localStorage.dispatch("setMangaWebtoonMode", remoteManga, true)
-                    if (localManga.zoom !== remoteManga.zoom)
-                        await this.localStorage.dispatch("setMangaZoomMode", remoteManga, true)
-                    if (localManga.displayName !== remoteManga.displayName)
-                        await this.localStorage.dispatch("setMangaDisplayName", remoteManga, true)
-                }
-                if (remoteManga.ts > localManga.ts) {
-                    this.localStorage.syncLocal(remoteManga)
-                }
-                localUpdates.push(remoteManga)
-            } else {
-                if (remoteManga.deleted !== syncUtils.DELETED) {
-                    localUpdates.push(remoteManga)
-                    this.localStorage.syncLocal(remoteManga)
-                }
-            }
+    _getContext() {
+        return {
+            remoteStorages: this.remoteStorages,
+            vuexStore: this.vuexStore,
+            syncTracker: this.syncTracker,
+            logger: this.logger
         }
-        return localUpdates
-    }
-    /**
-     * @param {[]} localList
-     * @param {[]} remoteList
-     * @param {Storage} remoteStorage
-     */
-    async processUpdatesToRemote(localList, remoteList, remoteStorage) {
-        const remoteUpdates = []
-        for (const local of localList) {
-            if (!this.shouldSkipSync(local)) {
-                const remoteManga = remoteList.find(m => m.key === local.key)
-                if (!remoteManga) {
-                    remoteUpdates.push({ ...local, listChaps: [] })
-                    continue
-                }
-                let save = false
-                if (remoteManga.ts < local.ts) {
-                    save = true
-                    remoteManga.lastChapterReadURL = local.lastChapterReadURL
-                    remoteManga.lastChapterReadName = local.lastChapterReadName
-                    remoteManga.ts = local.ts
-                }
-                if (remoteManga.tsOpts < local.tsOpts) {
-                    save = true
-                    remoteManga.tsOpts = local.tsOpts
-                    if (local.read !== remoteManga.read) remoteManga.read = local.read
-                    if (local.update !== remoteManga.update) remoteManga.update = local.update
-                    if (local.display !== remoteManga.display) remoteManga.display = local.display
-                    if (local.layout !== remoteManga.layout) remoteManga.layout = local.layout
-                    if (local.webtoon !== remoteManga.webtoon) remoteManga.webtoon = local.webtoon
-                    if (local.zoom !== remoteManga.zoom) remoteManga.zoom = local.zoom
-                    if (local.displayName !== remoteManga.displayName) remoteManga.displayName = local.displayName
-                }
-                if (save) remoteUpdates.push({ ...remoteManga, listChaps: [] })
-            }
-        }
-        if (remoteUpdates.length) {
-            try {
-                if (remoteStorage.isdb) {
-                    await remoteStorage.saveAll(remoteUpdates)
-                } else {
-                    const updatesMap = new Map(remoteUpdates.map(u => [u.key, u]))
-                    const updates = remoteList.map(r => {
-                        const update = updatesMap.get(r.key)
-                        if (update) {
-                            updatesMap.delete(r.key)
-                            return update
-                        }
-                        return { ...r, listChaps: [] }
-                    })
-                    await remoteStorage.saveAll([...updates, ...Array.from(updatesMap.values())])
-                }
-            } catch (e) {
-                this.logger.debug(
-                    `[SYNC-${remoteStorage.constructor.name.replace("Storage", "")}] Failed to sync keys to storage: ${
-                        e.message
-                    }`,
-                    e
-                )
-                throw e
-            }
-        } else {
-            this.logger.debug(`[SYNC-${remoteStorage.constructor.name.replace("Storage", "")}] Nothing to update.`)
-        }
-        return remoteUpdates
-    }
-
-    /**
-     * Don't have local copy and remote manga is not skipped
-     * or remote manga have newer timestamp
-     *
-     * @param {Manga} localManga
-     * @param {Manga} remoteManga
-     * @return {boolean}
-     */
-    shouldSyncToLocal(localManga, remoteManga) {
-        // Don't have local copy, but remote manga is skipped.
-        // Should not sync as there are no reason to added *new* deleted entry,
-        // that will try to delete non existing local entry forever.
-        if (!localManga && this.shouldSkipSync(remoteManga)) {
-            return false
-        }
-
-        // Don't have it or remote manga have newer timestamp
-        return !localManga || localManga.ts < remoteManga.ts
     }
 
     /**
      * Can't actually delete it due to sync, need to mark it as deleted
+     * Delegates to sync-remote-actions module
      * @param {string} key
      * @return {Promise<void>}
      */
     async deleteManga(key) {
-        for (const storage of this.remoteStorages) {
-            await storage
-                .delete(key, {
-                    key,
-                    ts: Math.round(Date.now() / 1000),
-                    deleted: syncUtils.DELETED
-                })
-                .catch(e => {
-                    this.syncTracker.triggerLastSyncError(e)
-                    if (e instanceof ThrottleError) {
-                        storage.retryDate = e.getRetryAfterDate()
-                        const later = storage.retryDate.getTime() - Date.now() + 2000
-                        setTimeout(() => {
-                            this.deleteManga(key)
-                        }, later)
-                    } else if (e instanceof Error) {
-                        this.logger.debug(`[SYNC-${storage.constructor.name.replace("Storage", "")}] ${e.message}`)
-                    }
-                })
-        }
+        return deleteMangaFromRemote(this._getContext(), key)
     }
+
     /**
      * Change the value of a specified key
-     *
+     * Delegates to sync-remote-actions module
      * @param {Manga} localManga
      * @param {string} mutatedKey
+     * @param {Storage} remoteStorage
      * @return {Promise<void>}
      */
     async setToRemote(localManga, mutatedKey, remoteStorage) {
-        if (this.vuexStore.options.isSyncing && !remoteStorage) {
-            // retry in 5s if we are already syncing-in
-            setTimeout(() => {
-                this.setToRemote(localManga, mutatedKey, remoteStorage)
-            }, 1000 * 5)
-            return
-        }
-        if (remoteStorage) {
-            this.setToRemoteInternal(localManga, mutatedKey, remoteStorage)
-        } else {
-            for (const storage of this.remoteStorages) {
-                this.setToRemoteInternal(localManga, mutatedKey, storage)
-            }
-        }
+        return setToRemote(this._getContext(), localManga, mutatedKey, remoteStorage)
     }
-    async setToRemoteInternal(localManga, mutatedKey, storage) {
-        // get remote Manga
-        const remoteList = await storage.getAll()
-        const remoteManga = remoteList.find(m => m.key === localManga.key)
-        if (!remoteManga) {
-            remoteList.push({ ...localManga, listChaps: [] })
-        } else {
-            if (mutatedKey === "ts") {
-                // No remote manga (new manga to add)
-                if (remoteManga.ts < localManga.ts) {
-                    // Mutations for:
-                    // resetManga, updateMangaLastChapter
-                    remoteManga.lastChapterReadURL = localManga.lastChapterReadURL
-                    remoteManga.lastChapterReadName = localManga.lastChapterReadName
-                    remoteManga.ts = localManga.ts
-                }
-            } else if (remoteManga[mutatedKey] !== localManga[mutatedKey]) {
-                // Mutations for:
-                // setMangaDisplayMode, setMangaLayoutMode, setMangaWebtoonMode
-                // setMangaDisplayName, setMangaReadTop, setMangaUpdateTop, setMangaZoomMode
-                remoteManga[mutatedKey] = localManga[mutatedKey]
-                remoteManga.tsOpts = localManga.tsOpts
-            } else {
-                // skip if there's nothing to update
-                return
-            }
-            // if manga was deleted and re-added it needs to be repopulated
-            if (remoteManga.deleted === syncUtils.DELETED) {
-                for (const rm in localManga) {
-                    remoteManga[rm] = localManga[rm]
-                }
-                delete remoteManga.deleted
-                remoteManga.listChaps = []
-            }
-        }
-        // save changes
-        if (storage.isdb) {
-            storage.set(remoteManga)
-        } else {
-            await storage.saveAll(remoteList).catch(e => {
-                this.syncTracker.triggerLastSyncError(e)
-                if (e instanceof ThrottleError) {
-                    storage.retryDate = e.getRetryAfterDate()
-                    const later = storage.retryDate.getTime() - Date.now() + 2000
-                    setTimeout(() => {
-                        this.setToRemote(localManga, mutatedKey)
-                    }, later)
-                } else if (e instanceof Error) {
-                    this.logger.debug(`[SYNC-${storage.constructor.name.replace("Storage", "")}] ${e.message}`)
-                }
-            })
-        }
-    }
+
     /**
-     *
+     * Fix language keys in remote storage
+     * Delegates to sync-remote-actions module
      * @param {{oldManga: Manga, newManga: Manga}[]} payload
      */
     async fixLang(payload) {
-        for (const storage of this.remoteStorages) {
-            const remoteList = await storage.getAll()
-            /** Delete mangas with "wrong" keys */
-            const updated = remoteList
-                .map(mg => {
-                    const find = payload.find(p => p.oldManga.key === mg.key)
-                    if (!find) return mg
-                    return {
-                        key: mg.key,
-                        ts: Math.round(Date.now() / 1000),
-                        deleted: syncUtils.DELETED
-                    }
-                })
-                /** Re-add them with the "fixed" key */
-                .concat(payload.map(p => p.newManga))
-
-            storage.saveAll(updated).catch(e => {
-                this.syncTracker.triggerLastSyncError(e)
-                if (e instanceof ThrottleError) {
-                    storage.retryDate = e.getRetryAfterDate()
-                    const later = storage.retryDate.getTime() - Date.now() + 2000
-                    setTimeout(() => {
-                        this.fixLang(payload)
-                    }, later)
-                } else if (e instanceof Error) {
-                    this.logger.debug(`[SYNC-${storage.constructor.name.replace("Storage", "")}] ${e.message}`)
-                }
-            })
-        }
+        return fixLang(this._getContext(), payload)
     }
 }
 

@@ -1,7 +1,10 @@
 <template>
     <v-app id="amrapp">
         <!-- Global cover for loading when transition from a chapter to another one -->
-        <div v-show="loading" class="amr-transition-cover" :class="darkreader ? 'grey darken-4' : 'grey lighten-5'">
+        <div
+            v-show="loading"
+            class="amr-transition-cover"
+            :class="darkreader ? 'bg-grey-darken-4' : 'bg-grey-lighten-5'">
             <v-progress-circular indeterminate color="primary" :size="128" :width="12"></v-progress-circular>
         </div>
         <!-- Global component to show confirmation dialogs, alert dialogs / other -->
@@ -11,46 +14,47 @@
         <!-- Popup displaying shortcuts -->
         <ShortcutsPopup ref="shortcuts"></ShortcutsPopup>
         <!-- Global always visible buttons -->
-        <v-hover>
-            <div class="d-flex flex-column fab-container" slot-scope="{ hover }">
+        <v-hover v-slot="{ isHovering: hover }">
+            <div class="d-flex flex-column fab-container">
                 <!-- Button to open side drawer -->
                 <v-btn
                     :class="`elevation-${hover ? 12 : 2} opacity-${hover || drawer ? 'full' : 'transparent'}`"
-                    color="red darken-2"
-                    dark
-                    small
-                    fab
+                    color="red-darken-2"
+                    size="small"
+                    icon
                     @click="drawer = !drawer">
-                    <v-icon> {{ icons.mdiMenu }}</v-icon>
+                    <v-icon :icon="icons.mdiMenu"></v-icon>
                 </v-btn>
                 <!-- Quick button to go to next chapter -->
-                <v-tooltip left>
-                    <template v-slot:activator="{ on }">
+                <v-tooltip location="start">
+                    <template v-slot:activator="{ props }">
                         <v-progress-circular
-                            v-on="on"
+                            v-bind="props"
                             class="mt-2 amr-floting-progress"
                             :rotate="90"
                             :size="42"
                             :width="3"
-                            :value="nextchapProgress"
-                            color="green lighten-2"
+                            :model-value="nextchapProgress"
+                            color="green-lighten-2"
                             v-show="!lastChapter && nextchapLoading && !drawer && hover">
-                            <v-btn small fab @click.stop="goNextChapter" class="green--text">
-                                <v-icon>{{ shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight }}</v-icon>
+                            <v-btn size="small" icon @click.stop="goNextChapter" class="text-green">
+                                <v-icon
+                                    :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight"></v-icon>
                             </v-btn>
                         </v-progress-circular>
                         <v-progress-circular
-                            v-on="on"
+                            v-bind="props"
                             class="mt-2 amr-floting-progress"
                             :rotate="90"
                             :size="42"
                             :width="3"
-                            :value="nextchapProgress"
+                            :model-value="nextchapProgress"
                             indeterminate
-                            color="red darken-2"
+                            color="red-darken-2"
                             v-show="!lastChapter && !nextchapLoading && !drawer && hover">
-                            <v-btn small fab @click.stop="goNextChapter" class="red--text">
-                                <v-icon>{{ shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight }}</v-icon>
+                            <v-btn size="small" icon @click.stop="goNextChapter" class="text-red">
+                                <v-icon
+                                    :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight"></v-icon>
                             </v-btn>
                         </v-progress-circular>
                     </template>
@@ -59,32 +63,31 @@
                         {{ nextchapLoading ? i18n("reader_loading", Math.floor(nextchapProgress)) : "" }}</span
                     >
                 </v-tooltip>
-                <v-tooltip left>
-                    <template v-slot:activator="{ on }">
+                <v-tooltip location="start">
+                    <template v-slot:activator="{ props }">
                         <v-btn
-                            v-on="on"
-                            small
+                            v-bind="props"
+                            size="small"
                             class="mt-2"
-                            fab
+                            icon
                             v-show="hover && !drawer && lastChapter"
-                            color="orange--text">
-                            <v-icon>{{ icons.mdiAlert }}</v-icon>
+                            color="orange">
+                            <v-icon :icon="icons.mdiAlert"></v-icon>
                         </v-btn>
                     </template>
                     <span>{{ i18n("content_nav_last_chap") }}</span>
                 </v-tooltip>
                 <!-- Quick button to add a manga to reading list -->
-                <v-tooltip left>
-                    <template v-slot:activator="{ on }">
+                <v-tooltip location="start">
+                    <template v-slot:activator="{ props }">
                         <v-btn
-                            v-on="on"
-                            small
-                            class="mt-2"
-                            fab
+                            v-bind="props"
+                            size="small"
+                            class="mt-2 text-green"
+                            icon
                             v-show="!mangaExists && options.addauto === 0 && hover && !drawer"
-                            color="green--text"
                             @click.stop="addManga">
-                            <v-icon>{{ icons.mdiPlus }} </v-icon>
+                            <v-icon :icon="icons.mdiPlus"></v-icon>
                         </v-btn>
                     </template>
                     <span>{{ i18n("content_nav_add_list") }}</span>
@@ -94,30 +97,27 @@
         <!-- AMR Reader side bar -->
         <v-navigation-drawer
             v-model="drawer"
-            clipped
-            right
-            fixed
-            app
+            location="right"
             :class="'amr-drawer ' + backcolor()"
             ref="navdrawer"
             width="300">
-            <v-card tile :color="backcolor()" class="white--text">
+            <v-card rounded="0" :color="backcolor()" class="text-white">
                 <!-- Manga Title -->
-                <v-card-title class="white--text amr-manga-title">
+                <v-card-title class="text-white amr-manga-title">
                     <div class="text-subtitle-1">
-                        <v-tooltip bottom v-if="mirrorDesc">
-                            <template v-slot:activator="{ on }">
-                                <a v-on="on" :href="mirrorDesc.home" target="_blank">
+                        <v-tooltip location="bottom" v-if="mirrorDesc">
+                            <template v-slot:activator="{ props }">
+                                <a v-bind="props" :href="mirrorDesc.home" target="_blank">
                                     <!-- Mirror icon -->
                                     <img :src="mirrorDesc.mirrorIcon" />
                                 </a>
                             </template>
                             <span>{{ i18n("reader_click_go_mirror") }}</span>
                         </v-tooltip>
-                        <v-tooltip bottom>
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="bottom">
+                            <template v-slot:activator="{ props }">
                                 <!-- Manga name -->
-                                <a v-on="on" :href="manga.currentMangaURL" target="_blank">{{
+                                <a v-bind="props" :href="manga.currentMangaURL" target="_blank">{{
                                     mangaInfos && mangaInfos.displayName ? mangaInfos.displayName : manga.name
                                 }}</a>
                             </template>
@@ -132,17 +132,16 @@
                             <v-toolbar class="pa-0 amr-chapters-toolbar">
                                 <div class="d-flex align-center py-1">
                                     <!-- Previous chapter button -->
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
+                                    <v-tooltip location="bottom">
+                                        <template v-slot:activator="{ props }">
                                             <v-btn
                                                 class="select-btn"
-                                                v-on="on"
-                                                text
-                                                small
-                                                tile
+                                                v-bind="props"
+                                                variant="text"
+                                                size="small"
                                                 v-show="shouldInvertKeys ? !lastChapter : !firstChapter"
                                                 @click.stop="shouldInvertKeys ? goNextChapter() : goPreviousChapter()">
-                                                <v-icon>{{ icons.mdiChevronLeft }}</v-icon>
+                                                <v-icon :icon="icons.mdiChevronLeft"></v-icon>
                                             </v-btn>
                                         </template>
                                         <span>
@@ -161,28 +160,27 @@
                                     <v-select
                                         v-model="selchap"
                                         :items="chapters"
-                                        item-text="title"
+                                        item-title="title"
                                         item-value="url"
-                                        solo
-                                        dense
+                                        variant="solo"
+                                        density="compact"
                                         single-line
                                         hide-details
                                         class="amr-chapter-select truncate"
                                         :loading="chapters.length === 0 ? 'primary' : false"
-                                        @change="goToChapter"></v-select>
+                                        @update:model-value="goToChapter"></v-select>
                                     <v-spacer></v-spacer>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on }">
+                                    <v-tooltip location="bottom">
+                                        <template v-slot:activator="{ props }">
                                             <!-- Next chapter button -->
                                             <v-btn
                                                 class="select-btn"
-                                                v-on="on"
-                                                text
-                                                small
-                                                tile
+                                                v-bind="props"
+                                                variant="text"
+                                                size="small"
                                                 v-show="shouldInvertKeys ? !firstChapter : !lastChapter"
                                                 @click.stop="shouldInvertKeys ? goPreviousChapter() : goNextChapter()">
-                                                <v-icon>{{ icons.mdiChevronRight }}</v-icon>
+                                                <v-icon :icon="icons.mdiChevronRight"></v-icon>
                                             </v-btn>
                                         </template>
                                         <span>
@@ -202,31 +200,31 @@
                         </v-col>
                         <!-- Next chapter preloading progression bar -->
                         <v-col cols="12" class="amr-chapter-progress-cont">
-                            <v-tooltip bottom>
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="bottom">
+                                <template v-slot:activator="{ props }">
                                     <v-progress-linear
                                         v-show="nextchapLoading"
-                                        v-on="on"
+                                        v-bind="props"
                                         class="amr-floting-progress"
                                         :height="3"
-                                        :value="nextchapProgress"
-                                        color="red darken-2"></v-progress-linear>
+                                        :model-value="nextchapProgress"
+                                        color="red-darken-2"></v-progress-linear>
                                 </template>
                                 <span>{{ i18n("reader_loading", Math.floor(nextchapProgress)) }}</span>
                             </v-tooltip>
                         </v-col>
                         <!-- Action buttons -->
                         <v-col class="text-center pa-2" cols="12">
-                            <v-menu offset-y>
+                            <v-menu>
                                 <!-- Bookmarks button -->
-                                <template v-slot:activator="{ on: menu }">
-                                    <v-tooltip bottom class="ml-1">
-                                        <template v-slot:activator="{ on: tooltip }">
+                                <template v-slot:activator="{ props: menuProps }">
+                                    <v-tooltip location="bottom" class="ml-1">
+                                        <template v-slot:activator="{ props: tooltipProps }">
                                             <v-btn
-                                                v-on="{ ...tooltip, ...menu }"
+                                                v-bind="{ ...tooltipProps, ...menuProps }"
                                                 icon
-                                                :color="bookstate.booked ? 'yellow' : 'yellow text--lighten-4'">
-                                                <v-icon>{{ icons.mdiStar }}</v-icon>
+                                                :color="bookstate.booked ? 'yellow' : 'yellow-lighten-4'">
+                                                <v-icon :icon="icons.mdiStar"></v-icon>
                                             </v-btn>
                                         </template>
                                         <span>{{ i18n("content_nav_click_bm") }}</span>
@@ -245,14 +243,14 @@
                                             :color="
                                                 !darkreader
                                                     ? bookstate.booked
-                                                        ? 'yellow grey--text text--darken-3'
-                                                        : 'yellow grey--text'
+                                                        ? 'yellow'
+                                                        : 'yellow'
                                                     : bookstate.booked
-                                                    ? 'yellow--text'
-                                                    : 'yellow--text text--lighten-4'
-                                            ">
-                                            <v-icon>{{ icons.mdiStar }}</v-icon
-                                            >&nbsp;
+                                                    ? 'yellow'
+                                                    : 'yellow-lighten-4'
+                                            "
+                                            :class="!darkreader ? 'text-grey-darken-3' : ''">
+                                            <v-icon :icon="icons.mdiStar"></v-icon>&nbsp;
                                             {{
                                                 bookstate.booked
                                                     ? i18n("reader_bookmark_update")
@@ -260,10 +258,10 @@
                                             }}
                                         </v-btn>
                                         <v-spacer></v-spacer>
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-btn v-on="on" icon @click="openBookmarksTab" color="blue">
-                                                    <v-icon>{{ icons.mdiOpenInNew }}</v-icon>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-btn v-bind="props" icon @click="openBookmarksTab" color="blue">
+                                                    <v-icon :icon="icons.mdiOpenInNew"></v-icon>
                                                 </v-btn>
                                             </template>
                                             <span>{{ i18n("reader_open_bookmarks_tab") }}</span>
@@ -283,10 +281,10 @@
                                                     :key="i"
                                                     @click.stop="$refs.reader.goScan(scan.page)"
                                                     class="amr-bookmarked-scan">
-                                                    <v-tooltip bottom v-if="scan.note">
-                                                        <template v-slot:activator="{ on }">
+                                                    <v-tooltip location="bottom" v-if="scan.note">
+                                                        <template v-slot:activator="{ props }">
                                                             <Scan
-                                                                v-on="on"
+                                                                v-bind="props"
                                                                 :full="false"
                                                                 :src="scan.url"
                                                                 resize="container"
@@ -296,7 +294,6 @@
                                                     </v-tooltip>
                                                     <Scan
                                                         v-else
-                                                        slot="activator"
                                                         :full="false"
                                                         :src="scan.url"
                                                         resize="container"
@@ -308,85 +305,90 @@
                                 </v-card>
                             </v-menu>
                             <!-- Mark as latest chapter read button -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         color="orange"
                                         v-show="showLatestRead"
                                         @click.stop="markAsLatest">
-                                        <v-icon>{{ icons.mdiPageLast }}</v-icon>
+                                        <v-icon :icon="icons.mdiPageLast"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_mark_read") }}</span>
                             </v-tooltip>
                             <!-- Add to reading list button -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         color="green"
                                         v-show="!mangaExists && options.addauto === 0"
                                         @click.stop="addManga">
-                                        <v-icon>{{ icons.mdiPlus }}</v-icon>
+                                        <v-icon :icon="icons.mdiPlus"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_add_list") }}</span>
                             </v-tooltip>
                             <!-- Remove from reading list button -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon color="red" v-show="mangaExists" @click.stop="deleteManga">
-                                        <v-icon>{{ icons.mdiDelete }}</v-icon>
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn
+                                        v-bind="props"
+                                        icon
+                                        color="red"
+                                        v-show="mangaExists"
+                                        @click.stop="deleteManga">
+                                        <v-icon :icon="icons.mdiDelete"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("reader_delete_manga") }}</span>
                             </v-tooltip>
                             <!-- Pause following updates on manga -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         color="blue"
                                         @click.stop="markMangaReadTop(1)"
                                         v-show="mangaExists && mangaInfos && mangaInfos.read === 0">
-                                        <v-icon>{{ icons.mdiPause }}</v-icon>
+                                        <v-icon :icon="icons.mdiPause"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_stopfollow") }}</span>
                             </v-tooltip>
                             <!-- Follow updates on manga -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         color="blue"
                                         @click.stop="markMangaReadTop(0)"
                                         v-show="mangaExists && mangaInfos && mangaInfos.read === 1">
-                                        <v-icon>{{ icons.mdiPlay }}</v-icon>
+                                        <v-icon :icon="icons.mdiPlay"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_follow") }}</span>
                             </v-tooltip>
                             <!-- Reload all scan errors -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon color="red" @click.stop="reloadErrors">
-                                        <v-icon>{{ icons.mdiReplay }}</v-icon>
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" icon color="red" @click.stop="reloadErrors">
+                                        <v-icon :icon="icons.mdiReplay"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_reload") }}</span>
                             </v-tooltip>
                             <!-- download chapter button -->
-                            <v-tooltip bottom class="ml-1">
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon color="red" @click.stop="DownloadChapter">
+                            <v-tooltip location="bottom" class="ml-1">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" icon color="red" @click.stop="DownloadChapter">
                                         <v-progress-circular indeterminate v-if="zip" />
-                                        <v-icon v-if="!zip">{{ icons.mdiDownloadOutline }}</v-icon>
+                                        <v-icon v-if="!zip" :icon="icons.mdiDownloadOutline"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("content_nav_downlaod") }}</span>
@@ -396,26 +398,26 @@
                 </v-card-actions>
             </v-card>
             <!-- Display options -->
-            <v-card tile :color="backcolor(1)" class="white--text">
+            <v-card rounded="0" :color="backcolor(1)" class="text-white">
                 <v-card-title>
                     <v-row dense>
                         <v-col cols="12">
                             <!-- Display book checkbox -->
                             <v-switch
-                                dense
+                                density="compact"
                                 v-model="book"
                                 :label="i18n('option_read_book')"
                                 hide-details
                                 class="pb-1"></v-switch>
                             <span>
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
+                                <v-tooltip location="top">
+                                    <template v-slot:activator="{ props }">
                                         <!-- Book offset button -->
                                         <v-switch
                                             :disabled="!book"
-                                            dense
+                                            density="compact"
                                             v-show="displayBookOffsetButton"
-                                            v-on="on"
+                                            v-bind="props"
                                             @click="offsetBook"
                                             :label="i18n('reader_book_offset')"
                                             hide-details
@@ -431,7 +433,7 @@
                         <v-col cols="12">
                             <!-- Display full chapter checkbox -->
                             <v-switch
-                                dense
+                                density="compact"
                                 v-model="fullchapter"
                                 :label="i18n('option_read_fullchapter')"
                                 hide-details
@@ -440,7 +442,7 @@
                         <v-col cols="12">
                             <!-- Webtoon Mode checkbox -->
                             <v-switch
-                                dense
+                                density="compact"
                                 v-model="webtoonMode"
                                 :label="i18n('option_read_webtoon')"
                                 hide-details
@@ -453,7 +455,7 @@
                         <v-col cols="12">
                             <!-- Scale Up Image checkbox -->
                             <v-switch
-                                dense
+                                density="compact"
                                 v-model="scaleUp"
                                 :label="i18n('option_read_scaleup')"
                                 hide-details
@@ -463,25 +465,21 @@
                     <v-row dense>
                         <!-- Reading direction -->
                         <v-col class="text-center mt-2" cols="12">
-                            <v-btn-toggle
-                                v-model="direction"
-                                mandatory
-                                color="primary"
-                                :background-color="backcolor(1)">
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn v-on="on" text value="ltr">
+                            <v-btn-toggle v-model="direction" mandatory color="primary">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn v-bind="props" variant="text" value="ltr">
                                             <!--<span>Left to right</span>-->
-                                            <v-icon>{{ icons.mdiArrowRight }}</v-icon>
+                                            <v-icon :icon="icons.mdiArrowRight"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_book_ltr") }}</span>
                                 </v-tooltip>
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn text v-on="on" value="rtl">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn variant="text" v-bind="props" value="rtl">
                                             <!--<span>Right to left</span>-->
-                                            <v-icon>{{ icons.mdiArrowLeft }}</v-icon>
+                                            <v-icon :icon="icons.mdiArrowLeft"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_book_rtl") }}</span>
@@ -490,39 +488,39 @@
                         </v-col>
                         <!-- Resize mode -->
                         <v-col class="text-center" cols="12">
-                            <v-btn-toggle v-model="resize" mandatory color="primary" :background-color="backcolor(1)">
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn v-on="on" text value="width">
+                            <v-btn-toggle v-model="resize" mandatory color="primary">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn v-bind="props" variant="text" value="width">
                                             <!--<span>Width</span>-->
-                                            <v-icon>{{ icons.mdiArrowExpandHorizontal }}</v-icon>
+                                            <v-icon :icon="icons.mdiArrowExpandHorizontal"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_resize_w") }}</span>
                                 </v-tooltip>
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn v-on="on" text value="height" v-show="!fullchapter">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn v-bind="props" variant="text" value="height" v-show="!fullchapter">
                                             <!--<span>Height</span>-->
-                                            <v-icon>{{ icons.mdiArrowExpandVertical }}</v-icon>
+                                            <v-icon :icon="icons.mdiArrowExpandVertical"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_resize_h") }}</span>
                                 </v-tooltip>
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn v-on="on" text value="container" v-show="!fullchapter">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn v-bind="props" variant="text" value="container" v-show="!fullchapter">
                                             <!--<span>Container</span>-->
-                                            <v-icon>{{ icons.mdiArrowExpandAll }}</v-icon>
+                                            <v-icon :icon="icons.mdiArrowExpandAll"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_resize_c") }}</span>
                                 </v-tooltip>
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-btn v-on="on" text value="none">
+                                <v-tooltip location="bottom">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn v-bind="props" variant="text" value="none">
                                             <!--<span>None</span>-->
-                                            <v-icon>{{ icons.mdiBorderNoneVariant }}</v-icon>
+                                            <v-icon :icon="icons.mdiBorderNoneVariant"></v-icon>
                                         </v-btn>
                                     </template>
                                     <span>{{ i18n("option_read_resize_n") }}</span>
@@ -533,7 +531,7 @@
                         <v-col class="text-center mt-2" cols="12" v-if="showMaxWidth">
                             <v-slider
                                 v-model="maxWidthValueStore"
-                                dense
+                                density="compact"
                                 min="10"
                                 max="100"
                                 track-fill-color="primary"
@@ -541,40 +539,35 @@
                                 thumb-label="always"
                                 hide-details>
                                 <template v-slot:prepend>
-                                    <v-icon :color="backcolor(3)" @click="zoomOut">
-                                        {{ icons.mdiMinus }}
-                                    </v-icon>
+                                    <v-icon :color="backcolor(3)" @click="zoomOut" :icon="icons.mdiMinus"></v-icon>
                                 </template>
                                 <template v-slot:append>
-                                    <v-icon :color="backcolor(3)" @click="zoomIn">
-                                        {{ icons.mdiPlus }}
-                                    </v-icon>
+                                    <v-icon :color="backcolor(3)" @click="zoomIn" :icon="icons.mdiPlus"></v-icon>
                                 </template>
                             </v-slider>
                         </v-col>
                         <v-col cols="12" class="mt-2" style="min-height: 40px !important" v-else />
                         <v-col class="text-center mt-2" cols="12">
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         @click="toggleDark"
                                         :color="darkreader ? 'white' : 'black'"
                                         class="ma-0">
-                                        <v-icon>{{ icons.mdiBrightness6 }}</v-icon>
+                                        <v-icon :icon="icons.mdiBrightness6"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{
                                     !darkreader ? i18n("reader_button_dark") : i18n("reader_button_light")
                                 }}</span>
                             </v-tooltip>
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon @click="toggleFullScreen" class="ma-0">
-                                        <v-icon>{{
-                                            fullscreen ? icons.mdiFullscreenExit : icons.mdiFullscreen
-                                        }}</v-icon>
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" icon @click="toggleFullScreen" class="ma-0">
+                                        <v-icon
+                                            :icon="fullscreen ? icons.mdiFullscreenExit : icons.mdiFullscreen"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{
@@ -583,62 +576,62 @@
                                         : i18n("reader_button_exit_fullscreen")
                                 }}</span>
                             </v-tooltip>
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         @click="showMaxWidth = !showMaxWidth"
                                         class="ma-0"
                                         :disabled="['height', 'none'].includes(resize)">
-                                        <v-icon>{{ icons.mdiMagnify }}</v-icon>
+                                        <v-icon :icon="icons.mdiMagnify"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("reader_zoom_show") }}</span>
                             </v-tooltip>
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon @click="openShortcuts" class="ma-0">
-                                        <v-icon>{{ icons.mdiKeyboard }}</v-icon>
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" icon @click="openShortcuts" class="ma-0">
+                                        <v-icon :icon="icons.mdiKeyboard"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("reader_shortcuts_tooltip") }}</span>
                             </v-tooltip>
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
-                                    <v-btn v-on="on" icon @click="displayTips" color="blue" class="ma-0">
-                                        <v-icon>{{ icons.mdiLightbulbOn }}</v-icon>
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn v-bind="props" icon @click="displayTips" color="blue" class="ma-0">
+                                        <v-icon :icon="icons.mdiLightbulbOn"></v-icon>
                                     </v-btn>
                                 </template>
                                 <span>{{ i18n("reader_button_tips") }}</span>
                             </v-tooltip>
                         </v-col>
                         <v-col class="text-center mt-2" cols="12">
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         @click="saveOptionsAsDefault(false)"
                                         color="primary"
                                         v-if="layoutDiffFromOptions"
                                         class="ma-0">
-                                        <v-icon>{{ icons.mdiContentSave }}</v-icon>
+                                        <v-icon :icon="icons.mdiContentSave"></v-icon>
                                     </v-btn>
                                     <v-btn v-else icon disabled class="select-btn" />
                                 </template>
                                 <span>{{ i18n("reader_button_saveoptions") }}</span>
                             </v-tooltip>
-                            <v-tooltip top>
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top">
+                                <template v-slot:activator="{ props }">
                                     <v-btn
-                                        v-on="on"
+                                        v-bind="props"
                                         icon
                                         @click="resetOptionsToDefault"
                                         color="primary"
                                         v-if="layoutDiffFromOptions"
                                         class="ma-0">
-                                        <v-icon>{{ icons.mdiReload }}</v-icon>
+                                        <v-icon :icon="icons.mdiReload"></v-icon>
                                     </v-btn>
                                     <v-btn v-else icon disabled class="select-btn" />
                                 </template>
@@ -1747,21 +1740,25 @@ export default {
 #amrapp {
     width: 100%;
 }
+
 /** Drawer content below menu button */
 .amr-drawer {
     padding-top: 36px;
     padding-bottom: 64px;
 }
+
 /** Center manga title */
 .amr-manga-title div {
     margin-left: auto;
     margin-right: auto;
     text-align: center;
 }
+
 /** Align mirror icon */
 .amr-manga-title img {
     vertical-align: middle;
 }
+
 /** Manga title link */
 .amr-manga-title a {
     color: #424242;
@@ -1770,32 +1767,40 @@ export default {
     word-break: break-word;
     font-weight: bold;
 }
+
 .theme--dark .amr-manga-title a {
     color: white;
 }
+
 /** Break work in chapter title */
 .amr-drawer .v-select {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
 /** To prevent select to be too small due to large padding */
 .v-toolbar.pa-0 .v-toolbar__content {
     padding: 0px 5px;
 }
+
 /** So the dropdown can hover the rest... */
 .amr-chapters-toolbar {
     z-index: 8;
     height: auto !important;
 }
+
 .amr-chapters-toolbar .v-toolbar__content {
     height: auto !important;
 }
+
 .opacity-full {
     opacity: 1;
 }
+
 .opacity-transparent {
     opacity: 0.7;
 }
+
 /** Floating buttons */
 .fab-container {
     position: fixed;
@@ -1803,24 +1808,30 @@ export default {
     right: 15px;
     z-index: 10;
 }
+
 /** Progress bars for next chapter loading */
 .amr-floting-progress .v-btn {
     width: 36px;
     height: 36px;
 }
+
 .amr-chapter-progress-cont .v-progress-linear {
     margin: 0px;
 }
+
 /** Scrollbars style (only works for chrome, firefox does not support that */
 ::-webkit-scrollbar {
     width: 10px;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #ddd;
 }
+
 ::-webkit-scrollbar-track {
     background: #666;
 }
+
 /** Loading cover */
 .amr-transition-cover {
     width: 100%;
@@ -1829,26 +1840,33 @@ export default {
     left: 0;
     position: fixed;
     opacity: 0.8;
-    z-index: 42; /* Because when you search for a high z-index, 42 is always the right answer */
+    z-index: 42;
+    /* Because when you search for a high z-index, 42 is always the right answer */
     text-align: center;
     display: block;
 }
+
 .amr-transition-cover .v-progress-circular {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 128px;
     height: 128px;
-    margin-top: -64px; /* Half the height */
-    margin-left: -64px; /* Half the width */
+    margin-top: -64px;
+    /* Half the height */
+    margin-left: -64px;
+    /* Half the width */
 }
+
 .v-select__selection--comma {
     white-space: normal;
 }
+
 label.v-label,
 span {
     word-break: break-word !important;
 }
+
 /* truncate chapter text in v-select */
 .truncate {
     width: 180px;
@@ -1856,9 +1874,11 @@ span {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
+
 .v-select__selection--comma {
     white-space: nowrap !important;
 }
+
 /* disable hover effect for select buttons */
 .select-btn::before {
     display: none !important;

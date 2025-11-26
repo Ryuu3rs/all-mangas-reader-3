@@ -29,11 +29,11 @@ globalThis["Madara"] = function (options) {
     this.mirrorName = "Madara"
     this.canListFullMangas = false
     this.getMangaList = async function (search) {
-        let searchApiUrl = this.options.search_url + "wp-admin/admin-ajax.php"
+        const searchApiUrl = this.options.search_url + "wp-admin/admin-ajax.php"
         var res = []
 
         if (this.options.search_json) {
-            let json = await amr.loadJson(searchApiUrl, {
+            const json = await amr.loadJson(searchApiUrl, {
                 nocache: true,
                 preventimages: true,
                 post: true,
@@ -46,15 +46,15 @@ globalThis["Madara"] = function (options) {
             })
 
             if (json.success) {
-                for (let i in json.data) {
-                    let item = json.data[i]
+                for (const i in json.data) {
+                    const item = json.data[i]
                     res.push([item.title, item.url])
                 }
             }
         } else {
             // Load search page
-            let urlManga = this.options.search_url + "?s=" + search + "&post_type=wp-manga"
-            let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+            const urlManga = this.options.search_url + "?s=" + search + "&post_type=wp-manga"
+            const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
             const self = this
             $(this.options.search_a_sel, doc).each(function (index) {
                 res[res.length] = [$(this).text(), self.options.urlProcessor($(this).attr("href"))]
@@ -69,8 +69,8 @@ globalThis["Madara"] = function (options) {
             urlManga,
             this.options.chapter_list_request_options(defaultHeaders, urlManga, urlManga)
         )
-        let self = this
-        let mangaName = $(this.options.search_a_sel, doc).text().trim()
+        const self = this
+        const mangaName = $(this.options.search_a_sel, doc).text().trim()
 
         if (this.options.chapter_list_ajax) {
             let searchApiUrl = this.options.search_url + "wp-admin/admin-ajax.php"
@@ -104,7 +104,7 @@ globalThis["Madara"] = function (options) {
         var res = []
         $(this.options.chapters_a_sel, doc).each(function (index) {
             let chapterName = $(this).text()
-            let stringsToStrip = [
+            const stringsToStrip = [
                 mangaName,
                 $(".chapter-release-date", this).text(),
                 $(".view", this).text(),
@@ -123,12 +123,12 @@ globalThis["Madara"] = function (options) {
 
         if (this.options.sort_chapters) {
             res.sort((a, b) => {
-                let aM = a[0]
+                const aM = a[0]
                     .replace(/chapter/gi, "")
                     .replace(/volume/gi, "")
                     .replace(/chap/gi, "")
                     .replace(/volume/gi, "")
-                let bM = b[0]
+                const bM = b[0]
                     .replace(/chapter/gi, "")
                     .replace(/volume/gi, "")
                     .replace(/chap/gi, "")
@@ -146,16 +146,16 @@ globalThis["Madara"] = function (options) {
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let url = new URL(this.options.urlProcessor(curUrl))
-        let path = url.pathname
-        let pathSplitted = path.split("/").filter(p => p != "")
-        let mangaPath = pathSplitted.slice(0, this.options.path_length)
+        const url = new URL(this.options.urlProcessor(curUrl))
+        const path = url.pathname
+        const pathSplitted = path.split("/").filter(p => p != "")
+        const mangaPath = pathSplitted.slice(0, this.options.path_length)
         // console.debug(
         //     this.options.chapterInformationsSeriesUrl(doc, curUrl) || url.origin + "/" + mangaPath.join("/") + "/",
         //     this.options.chapterInformationsSeriesUrl(doc, curUrl),
         //     url.origin + "/" + mangaPath.join("/") + "/"
         // )
-        let mangaurl =
+        const mangaurl =
             this.options.chapterInformationsSeriesUrl(doc, curUrl) || url.origin + "/" + mangaPath.join("/") + "/"
         let mgname = this.options.chapterInformationsSeriesName(doc, curUrl)
         if (mgname === undefined || mgname.trim() === "") {
@@ -175,7 +175,7 @@ globalThis["Madara"] = function (options) {
             }
         }
         if (mgname === undefined || mgname.trim() === "") {
-            let docmg = await amr.loadPage(mangaurl)
+            const docmg = await amr.loadPage(mangaurl)
             mgname = $("div.post-title > h3", docmg).text().trim()
             if (mgname === undefined || mgname.trim() === "") {
                 mgname = $(this.options.title_selector, docmg).text().trim()
@@ -190,14 +190,14 @@ globalThis["Madara"] = function (options) {
 
     this.getListImages = async function (doc, curUrl) {
         if (this.options.image_protection_plugin) {
-            let images = await this.protectedGetListImages(doc)
+            const images = await this.protectedGetListImages(doc)
             if (images) return images
         }
 
         res = []
-        let self = this
+        const self = this
 
-        let preloadImages = await amr.getVariable("chapter_preloaded_images", doc)
+        const preloadImages = await amr.getVariable("chapter_preloaded_images", doc)
         if (preloadImages !== this.undefined) {
             return preloadImages
         }
@@ -212,8 +212,8 @@ globalThis["Madara"] = function (options) {
     }
 
     this.protectedGetListImages = async function (doc) {
-        let chapter_data = amr.getVariable("chapter_data", doc)
-        let wpmangaprotectornonce = amr.getVariable("wpmangaprotectornonce", doc)
+        const chapter_data = amr.getVariable("chapter_data", doc)
+        const wpmangaprotectornonce = amr.getVariable("wpmangaprotectornonce", doc)
 
         if (!chapter_data || !wpmangaprotectornonce) return null
 
@@ -243,7 +243,7 @@ globalThis["Madara"] = function (options) {
             }
         }
 
-        let chapter_data_2 = JSON.parse(
+        const chapter_data_2 = JSON.parse(
             JSON.parse(
                 amr.crypto.AES.decrypt(chapter_data, wpmangaprotectornonce, { format: CryptoJSAesJson }).toString(
                     amr.crypto.enc.Utf8
@@ -265,7 +265,7 @@ globalThis["Madara"] = function (options) {
     }
 
     this.makeChapterUrl = function (url) {
-        let t = new URL(url)
+        const t = new URL(url)
         return this.stripLastSlash(t.origin + t.pathname) + (this.options.add_list_to_chapter_url ? "?style=list" : "")
     }
 

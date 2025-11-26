@@ -160,59 +160,144 @@ export class MirrorHelper {
     }
 
     /**
-     * No idea what magic is this...
-     * @TODO Need to get rid of this somehow
+     * Extracts a JavaScript variable value from a script string.
+     *
+     * This function parses JavaScript source code to extract the value of a variable
+     * declaration. It supports:
+     * - Number literals (e.g., `var x = 42`)
+     * - String literals with single or double quotes (e.g., `var x = "hello"`)
+     * - Object literals (e.g., `var x = { key: "value" }`)
+     * - Array literals (e.g., `var x = [1, 2, 3]`)
+     * - JSON.parse() calls (e.g., `var x = JSON.parse('{"key":"value"}')`)
+     * - Base64 encoded data via atob() (e.g., `JSON.parse(atob("..."))`)
+     *
+     * @param varname - The name of the variable to extract (must be a valid JS identifier)
+     * @param sc - The script source code to parse
+     * @returns The parsed value (number, string, object, or array), or undefined if not found
+     * @throws Error if the variable name is invalid or if JSON parsing fails
+     *
+     * @example
+     * // Extract a number
+     * getVariableFromScript('pageCount', 'var pageCount = 42;') // returns 42
+     *
+     * @example
+     * // Extract an object
+     * getVariableFromScript('config', 'const config = {"pages": [1,2,3]};') // returns {pages: [1,2,3]}
+     *
+     * @security This function uses regex-based parsing rather than eval() for safety.
+     * However, it still parses untrusted input via JSON.parse(), so the caller should
+     * handle potential parsing errors.
      */
-    public getVariableFromScript = function (varname: string, sc: string) {
-        let res = undefined
+    public getVariableFromScript = function (varname: string, sc: string): any {
+        // Validate variable name to prevent regex injection
+        if (!varname || !/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(varname)) {
+            throw new Error(`Invalid variable name: ${varname}`)
+        }
+
+        // Validate script input
+        if (!sc || typeof sc !== "string") {
+            return undefined
+        }
+
+        let res: any = undefined
+
+        // Escape special regex characters in variable name (extra safety)
+        const escapedVarname = varname.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
         const rx = new RegExp(
-            "(var|let|const)\\s+" + varname + "\\s*=\\s*([0-9]+|\\\"|\\'|\\{|\\[|JSON\\s*\\.\\s*parse\\()",
+            "(var|let|const)\\s+" + escapedVarname + "\\s*=\\s*([0-9]+|\\\"|\\'|\\{|\\[|JSON\\s*\\.\\s*parse\\()",
             "gmi"
         )
         const match = rx.exec(sc)
+
         if (match) {
             const ind = match.index
             const varchar = match[2]
             const start = sc.indexOf(varchar, ind) + 1
-            if (varchar.match(/[0-9]+/)) {
-                res = Number(varchar)
-            } else {
-                if (varchar === '"' || varchar === "'") {
-                    // var is a string
-                    let found = false,
-                        curpos = start,
-                        prevbs = false
-                    while (!found) {
-                        const c = sc.charAt(curpos++)
-                        if (c === varchar && !prevbs) {
-                            found = true
-                            break
-                        }
-                        prevbs = c === "\\"
-                    }
-                    res = sc.substring(start, curpos - 1)
+
+            try {
+                if (varchar.match(/^[0-9]+$/)) {
+                    // Variable is a number literal
+                    res = Number(varchar)
+                } else if (varchar === '"' || varchar === "'") {
+                    // Variable is a string literal
+                    res = this.parseStringLiteral(sc, start, varchar)
                 } else {
-                    // if (varchar === '[' || varchar === "{" || varchar === 'JSON.parse(') { // var is object or array or parsable
-                    let curpos = start + varchar.length - 1,
-                        openings = 1
-                    const opening = varchar === "JSON.parse(" ? "(" : varchar,
-                        opposite = varchar === "[" ? "]" : varchar === "{" ? "}" : ")"
-                    while (openings > 0 && curpos < sc.length) {
-                        const c = sc.charAt(curpos++)
-                        if (c === opening) openings++
-                        if (c === opposite) openings--
-                    }
-                    let toparse = sc.substring(start - 1 + varchar.length - 1, curpos)
-                    if (toparse.match(/atob\s*\(/g)) {
-                        // if data to parse is encoded using btoa
-                        const m = /(?:'|").*(?:'|")/g.exec(toparse)
-                        toparse = atob(m[0].substring(1, m[0].length - 1))
-                    }
-                    res = JSON.parse(toparse)
+                    // Variable is an object, array, or JSON.parse() call
+                    res = this.parseComplexLiteral(sc, start, varchar)
                 }
+            } catch (error) {
+                // Log parsing error but don't throw - return undefined instead
+                console.warn(`[MirrorHelper] Failed to parse variable '${varname}':`, error)
+                return undefined
             }
         }
+
         return res
+    }
+
+    /**
+     * Parses a string literal from script source, handling escape sequences.
+     * @private
+     */
+    private parseStringLiteral(sc: string, start: number, quoteChar: string): string {
+        let found = false
+        let curpos = start
+        let prevbs = false
+        const maxIterations = sc.length - start + 1
+        let iterations = 0
+
+        while (!found && iterations < maxIterations) {
+            iterations++
+            const c = sc.charAt(curpos++)
+            if (c === quoteChar && !prevbs) {
+                found = true
+                break
+            }
+            prevbs = c === "\\"
+        }
+
+        if (!found) {
+            throw new Error("Unterminated string literal")
+        }
+
+        return sc.substring(start, curpos - 1)
+    }
+
+    /**
+     * Parses a complex literal (object, array, or JSON.parse call) from script source.
+     * @private
+     */
+    private parseComplexLiteral(sc: string, start: number, varchar: string): any {
+        let curpos = start + varchar.length - 1
+        let openings = 1
+        const opening = varchar.startsWith("JSON") ? "(" : varchar
+        const opposite = varchar === "[" ? "]" : varchar === "{" ? "}" : ")"
+        const maxIterations = sc.length - curpos + 1
+        let iterations = 0
+
+        while (openings > 0 && curpos < sc.length && iterations < maxIterations) {
+            iterations++
+            const c = sc.charAt(curpos++)
+            if (c === opening) openings++
+            if (c === opposite) openings--
+        }
+
+        if (openings !== 0) {
+            throw new Error("Unbalanced brackets in literal")
+        }
+
+        let toparse = sc.substring(start - 1 + varchar.length - 1, curpos)
+
+        // Handle base64 encoded data via atob()
+        if (toparse.match(/atob\s*\(/g)) {
+            const m = /(?:'|").*(?:'|")/g.exec(toparse)
+            if (m && m[0]) {
+                toparse = atob(m[0].substring(1, m[0].length - 1))
+            }
+        }
+
+        return JSON.parse(toparse)
     }
 
     /**

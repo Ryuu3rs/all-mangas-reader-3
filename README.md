@@ -1,17 +1,221 @@
-# ![](src/icons/icon_32.png) All Mangas Reader V2
+# ![](src/icons/icon_32.png) All Mangas Reader V3
 
-## What is All Mangas Reader
+[![Build Status](https://github.com/Ryuu3rs/all-mangas-reader-3/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryuu3rs/all-mangas-reader-3/actions)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-All Mangas Reader is a browser extension which is designed to help you read and follow mangas on a lot of manga websites.
+A modernized browser extension for reading manga from various online sources. This is a complete modernization of All Mangas Reader V2, upgraded to modern web technologies.
 
--   Read whole chapters on manga websites
--   Follow mangas you like with your reading list
--   Be notified when new chapters are published
--   Order, classify mangas in your reading list
--   A lot of supported websites
--   Synchronization across multiple devices
+---
 
-### Browser compatibility
+## 🚀 What's New in V3
+
+### Major Upgrades
+
+| Component  | Before (V2) | After (V3)              |
+| ---------- | ----------- | ----------------------- |
+| Vue        | 2.7         | 3.5                     |
+| Vuetify    | 2.7         | 3.8                     |
+| TypeScript | Partial     | Key modules converted   |
+| Webpack    | 4.x         | 5.103                   |
+| Node.js    | 14+         | 18+ / 20+               |
+| Testing    | None        | Vitest + Vue Test Utils |
+| CI/CD      | None        | GitHub Actions          |
+
+### Code Quality Improvements
+
+-   ✅ Split large monolithic files into focused modules
+-   ✅ Added comprehensive test suite with Vitest
+-   ✅ Fixed memory leaks and improved error handling
+-   ✅ Enhanced security in mirror script parsing
+-   ✅ Updated all dependencies to latest stable versions
+-   ✅ Proper Vue 3 reactivity with `reactive()` state objects
+-   ✅ MDI SVG icons (no external font loading required)
+
+---
+
+## 📦 Installation
+
+### Firefox (Recommended)
+
+1. Download the latest release from [Releases](https://github.com/Ryuu3rs/all-mangas-reader-3/releases)
+2. Open Firefox and navigate to `about:addons`
+3. Click the gear icon → "Install Add-on From File..."
+4. Select the downloaded `.xpi` or `.zip` file
+
+**For Development:**
+
+1. Navigate to `about:debugging#/runtime/this-firefox`
+2. Click "Load Temporary Add-on"
+3. Select `manifest.json` from the `dist` folder
+
+### Chrome/Chromium
+
+1. Download the latest release from [Releases](https://github.com/Ryuu3rs/all-mangas-reader-3/releases)
+2. Extract the ZIP file
+3. Open Chrome and navigate to `chrome://extensions`
+4. Enable "Developer mode" (toggle in top right)
+5. Click "Load unpacked" and select the extracted `dist` folder
+
+---
+
+## 🛠️ Development
+
+### Prerequisites
+
+-   Node.js 18.x or 20.x
+-   npm 9.x or higher
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/Ryuu3rs/all-mangas-reader-3.git
+cd all-mangas-reader-3
+
+# Install dependencies
+npm install
+
+# Build for development
+npm run build
+
+# Run tests
+npm test
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
+```
+
+### Project Structure
+
+```
+src/
+├── amr/              # Core AMR functionality
+├── background/       # Background worker scripts
+├── mirrors/          # Manga source implementations (100+)
+├── pages/            # Extension pages (popup, options, etc.)
+├── reader/           # Manga reader components
+│   ├── components/   # Vue 3 components
+│   ├── helpers/      # Utility functions (TypeScript)
+│   └── state/        # Reactive state management
+├── store/            # Vuex store modules (split & organized)
+└── shared/           # Shared utilities
+```
+
+---
+
+## 📋 Features
+
+-   📚 **Read manga** from 100+ supported sources
+-   🔖 **Bookmarks** - Save your favorite pages and chapters
+-   📥 **Download** - Save chapters as ZIP files
+-   🔄 **Sync** - Synchronize reading progress across devices
+-   🌙 **Dark Mode** - Eye-friendly reading at night
+-   ⌨️ **Keyboard Shortcuts** - Navigate with ease
+-   📱 **Responsive** - Works on all screen sizes
+-   🔧 **Customizable** - Extensive options for reading experience
+-   📖 **Book Mode** - Two-page spread for traditional manga reading
+-   🖼️ **Webtoon Mode** - Continuous scroll for vertical comics
+
+---
+
+## 🔄 Migration from V2
+
+If you're upgrading from All Mangas Reader V2:
+
+1. Export your data from V2 (Options → Import/Export → Export)
+2. Install AMR3
+3. Import your data (Options → Import/Export → Import)
+
+Your reading lists, bookmarks, and settings will be preserved.
+
+---
+
+## 📊 Technical Changes (V2 → V3)
+
+<details>
+<summary>Click to expand detailed changelog</summary>
+
+### Vue 3 Migration
+
+-   Updated all components from Options API to Vue 3 compatible syntax
+-   Replaced `beforeDestroy` with `beforeUnmount`
+-   Updated slot syntax from `slot-scope` to `v-slot`
+-   Replaced `Vue.set`/`Vue.delete` with vue-compat utilities
+-   Updated EventBus from Vue instance to `mitt` library
+
+### Vuetify 3 Migration
+
+-   Updated all component props for Vuetify 3 API
+-   `v-on="on"` → `v-bind="props"` for activator slots
+-   `dense` → `density="compact"`
+-   `text/outlined` → `variant="text/outlined"`
+-   `small/large` → `size="small/large"`
+-   Color classes: `red--text` → `text-red`, `grey darken-4` → `grey-darken-4`
+-   MDI icons: `{{ icons.mdiXxx }}` → `:icon="icons.mdiXxx"` (SVG paths)
+
+### Code Splitting
+
+-   `mangas.js` (1338 lines) → 11 focused modules
+-   `sync-manager.js` (502 lines) → 3 modules
+-   `AmrReader.vue` → extracted keyboard shortcuts helper
+
+### TypeScript
+
+-   `mangas-constants.ts` - Type-safe constants
+-   `sync-operations.ts` - Sync logic with interfaces
+-   `keyboardShortcuts.ts` - Keyboard handling
+
+### Testing
+
+-   Vitest testing framework
+-   Vue Test Utils for component testing
+-   28+ unit tests for critical paths
+
+### Security
+
+-   Enhanced `getVariableFromScript` with input validation
+-   Protection against regex injection
+-   Proper error boundaries
+
+### Performance
+
+-   Fixed memory leaks (clearInterval, removeEventListener)
+-   Optimized bundle with Webpack 5
+-   Tree-shaking for smaller builds
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the GPL v3 License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+-   Original [All Mangas Reader V2](https://github.com/alysson-souza/all-mangas-reader-2)
+-   All contributors and manga source maintainers
+
+---
+
+## 🌐 Browser Compatibility
 
 <table>
     <thead>
@@ -250,11 +454,12 @@ be turned off / on at any time from the settings menu.
     -   **[Beta](https://amr-releases.com/firefox/release/all-mangas-reader-beta-latest.xpi)**
 
 <h2 id="#chromium-install"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Chromium_Material_Icon.svg/langfr-1024px-Chromium_Material_Icon.svg.png" width="30" title="Chromium"/> Chromium</h2>
- 
-⚠️ **Chromium based browsers** need the following additional steps in order to install All Mangas Reader.  
+
+⚠️ **Chromium based browsers** need the following additional steps in order to install All Mangas Reader.
 If you are not sure your browser is based on chromium you can check our [Browser compatibilty](#browser-compatibility) list (or google it).
- 
+
 ### Install AMR on a chromium browser
+
 All Mangas Reader do not comply with Google Chrome Extensions terms of services, thus cannot be downloaded directly from their store.
 
 1.  Click link below for the version you wish to use
@@ -268,7 +473,7 @@ All Mangas Reader do not comply with Google Chrome Extensions terms of services,
 
 ### Update AMR on a chromium browser
 
-1. Download the lasted version of All Mangas Reader directly from within the extension when prompted  
+1. Download the lasted version of All Mangas Reader directly from within the extension when prompted
    ![](/images/new_version.PNG)
 2. Extract the file .crx file you just downloaded into your (already existing) All Mangas Reader's installation folder
 3. Restart browser
@@ -277,7 +482,7 @@ All Mangas Reader do not comply with Google Chrome Extensions terms of services,
 
 ### Browser Sync
 
-_Browser sync_ uses your browser capabilities to synchronize your manga list:  
+_Browser sync_ uses your browser capabilities to synchronize your manga list:
 ⚠️**only works with Firefox**.
 
 -   ✔️ 🖥️💻📱 <small>(Firefox)</small> **⬌** 🖥️💻📱 <small>(Firefox)</small>
@@ -286,7 +491,7 @@ Enable _Browser sync_ in All Mangas Reader under `Settings (cog icon in the top-
 
 ### Synchronization with Gist (3rd-party)
 
-_Gist Sync_ is an alernative method to synchornize your manga list using a third party service.  
+_Gist Sync_ is an alernative method to synchornize your manga list using a third party service.
 :information_source: Although more [difficult to setup](#enable-gist-sync), this synchronization method is compatible with all (chromium/firefox) browsers.
 
 -   ✔️ 🖥️💻📱 <small>(any browser)</small> **⬌** 🖥️💻📱 <small>(any browser)</small>

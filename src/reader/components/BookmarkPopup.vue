@@ -1,6 +1,8 @@
 <template>
     <v-dialog v-model="dialog" max-width="500px">
-        <slot name="activator" slot="activator"></slot>
+        <template v-slot:activator="{ props }">
+            <slot name="activator" v-bind="props"></slot>
+        </template>
         <v-card>
             <v-card-title>
                 <span class="text-h5">{{ i18n("bookmark_popup_title") }}</span>
@@ -15,7 +17,7 @@
                     <v-row dense>
                         <v-col cols="12">
                             <v-textarea
-                                filled
+                                variant="filled"
                                 hide-details
                                 name="input-7-4"
                                 :label="i18n('bookmark_popup_note')"
@@ -26,11 +28,11 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="grey darken-1" text @click="cancel">{{ i18n("button_cancel") }}</v-btn>
-                <v-btn color="primary darken-1" text @click="deleteBookmark" v-show="alreadyBookmarked">{{
+                <v-btn color="grey-darken-1" variant="text" @click="cancel">{{ i18n("button_cancel") }}</v-btn>
+                <v-btn color="primary-darken-1" variant="text" @click="deleteBookmark" v-show="alreadyBookmarked">{{
                     i18n("button_delete")
                 }}</v-btn>
-                <v-btn color="primary darken-1" text @click="saveBookmark">{{ i18n("button_save") }}</v-btn>
+                <v-btn color="primary-darken-1" variant="text" @click="saveBookmark">{{ i18n("button_save") }}</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

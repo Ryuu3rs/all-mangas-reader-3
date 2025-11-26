@@ -4,9 +4,11 @@
             <template v-slot:label>
                 <div>
                     {{ i18n("options_mangadex_datasaver") }}
-                    <v-tooltip bottom>
-                        <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" color="blue darken-2" class="superscript" small> mdi-information </v-icon>
+                    <v-tooltip location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <v-icon v-bind="props" color="blue-darken-2" class="superscript" size="small">
+                                mdi-information
+                            </v-icon>
                         </template>
                         {{ i18n("options_mangadex_datasaver_info") }}
                     </v-tooltip>
@@ -18,9 +20,11 @@
             <template v-slot:label>
                 <div>
                     {{ i18n("options_mangadex_integration") }}
-                    <v-tooltip bottom>
-                        <template v-slot:activator="{ on }">
-                            <v-icon v-on="on" color="blue darken-2" class="superscript" small> mdi-information </v-icon>
+                    <v-tooltip location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <v-icon v-bind="props" color="blue-darken-2" class="superscript" size="small">
+                                mdi-information
+                            </v-icon>
                         </template>
                         {{ i18n("options_mangadex_integration_info") }}
                     </v-tooltip>
@@ -56,13 +60,18 @@
                 :disabled="exportLoading || exportFollowsLoading" />
             <v-alert
                 v-if="(exportFollowsLoading && exportFollowsProgress && exportFollowsTotal) || exportFollowsDone"
-                text
+                variant="text"
                 elevation="1"
                 :color="exportFollowsDone ? 'success' : 'info'"
                 icon="mdi-information">
                 {{ i18n(exportFollowsLoadingText, exportFollowsProgress, exportFollowsTotal) }}
             </v-alert>
-            <v-alert v-else-if="exportToFollowsNextTime" text elevation="1" color="info" icon="mdi-information">
+            <v-alert
+                v-else-if="exportToFollowsNextTime"
+                variant="text"
+                elevation="1"
+                color="info"
+                icon="mdi-information">
                 {{ i18n("options_mangadex_integration_wait_export") }}
             </v-alert>
             <!-- Export to MDList option-->
@@ -73,24 +82,19 @@
 
             <v-alert
                 v-if="(exportLoading && exportProgress && exportTotal) || exportDone"
-                text
+                variant="text"
                 elevation="1"
                 :color="exportDone ? 'success' : 'info'"
                 icon="mdi-information">
                 {{ i18n(exportLoadingText, exportProgress, exportTotal) }}
             </v-alert>
-            <v-alert v-else-if="exportToListNextTime" text elevation="1" color="info" icon="mdi-information">
+            <v-alert v-else-if="exportToListNextTime" variant="text" elevation="1" color="info" icon="mdi-information">
                 {{ i18n("options_mangadex_integration_wait_export") }}
             </v-alert>
             <!-- Import option-->
             <v-row class="mb-4">
                 <v-col cols="3">
-                    <v-btn
-                        v-bind="attrs"
-                        v-on="on"
-                        :loading="importLoading"
-                        :disabled="importLoading"
-                        @click="importManga">
+                    <v-btn :loading="importLoading" :disabled="importLoading" @click="importManga">
                         {{ i18n(importButtonText) }}
                     </v-btn>
                 </v-col>
@@ -106,13 +110,13 @@
                 </v-col>
             </v-row>
             <!-- dialog please wait -->
-            <v-dialog v-model="importMangaWait" max-width="500" hide-overlay>
+            <v-dialog v-model="importMangaWait" max-width="500" :scrim="false">
                 <v-card>
                     <v-card-text>
                         <div class="text-h6 pa-10 pb-5" v-html="i18n('options_mangadex_integration_wait')" />
                     </v-card-text>
                     <v-card-actions class="justify-end">
-                        <v-btn text @click="importMangaWait = false">{{ i18n("button_close") }}</v-btn>
+                        <v-btn variant="text" @click="importMangaWait = false">{{ i18n("button_close") }}</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -128,18 +132,18 @@
                                 :items-per-page="5"
                                 :calculate-widths="true"
                                 class="elevation-4"
-                                dense>
+                                density="compact">
                                 <template v-slot:item="{ item }">
                                     <tr>
                                         <td class="py-2">
                                             <v-btn
                                                 class="mx-2"
-                                                x-small
-                                                text
+                                                size="x-small"
+                                                variant="text"
                                                 :loading="addLangLoading == item.code"
                                                 :disabled="addLangLoading !== ''"
                                                 @click="addLang(item.code)">
-                                                <v-icon left> mdi-plus </v-icon>
+                                                <v-icon start> mdi-plus </v-icon>
                                             </v-btn>
                                             <Flag big :value="item.code" />
                                         </td>
@@ -174,9 +178,9 @@
                                                 class="my-2"
                                                 v-for="(subitem, index) of item.langs"
                                                 :key="index"
-                                                x-small
+                                                size="x-small"
                                                 rounded
-                                                text
+                                                variant="text"
                                                 @click="addManga(item, subitem)">
                                                 <Flag v-if="subitem.code" :value="subitem.code" />
                                             </v-btn>

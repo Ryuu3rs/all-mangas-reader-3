@@ -21,12 +21,12 @@ globalThis["GenkanAbs"] = function (options) {
     this.canListFullMangas = true
 
     this.getMangaList = async function (search) {
-        let doc = await amr.loadPage(this.options.base_url + this.options.search_path + search, {
+        const doc = await amr.loadPage(this.options.base_url + this.options.search_path + search, {
             nocache: true,
             preventimages: true
         })
 
-        let res = []
+        const res = []
 
         $(this.options.series_list_selector, doc).each(function () {
             res.push([$(this).text().trim(), $(this).attr("href")])
@@ -36,24 +36,24 @@ globalThis["GenkanAbs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, {
+        const doc = await amr.loadPage(urlManga, {
             nocache: true,
             preventimages: true
         })
 
-        let res = []
-        let self = this
+        const res = []
+        const self = this
         $(this.options.chapter_list_selector, doc).each(function () {
-            let chapter_no = $(self.options.chapter_list_chapterno_selector, $(this))[0].innerText.trim()
-            let chapter_name = $(self.options.chapter_list_chaptername_selector, $(this)).text().trim()
-            let url = $(self.options.chapter_list_chaptername_selector, $(this)).attr("href")
+            const chapter_no = $(self.options.chapter_list_chapterno_selector, $(this))[0].innerText.trim()
+            const chapter_name = $(self.options.chapter_list_chaptername_selector, $(this)).text().trim()
+            const url = $(self.options.chapter_list_chaptername_selector, $(this)).attr("href")
             res.push([chapter_no + ": " + chapter_name, url])
         })
         return res
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let parts = curUrl.split("/")
+        const parts = curUrl.split("/")
         return {
             name: $(this.options.chapter_information_selector, doc).text().trim(),
             currentMangaURL: parts.slice(0, this.options.chapter_information_title_url_parts).join("/"),
@@ -62,17 +62,17 @@ globalThis["GenkanAbs"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let res = []
-        let base_url = this.options.base_url
-        let self = this
+        const res = []
+        const base_url = this.options.base_url
+        const self = this
 
         let tmp_script = doc.innerText.split(this.options.images_start)[1]
         tmp_script = tmp_script.split(this.options.images_end)[0]
 
-        let matches = Array.from(tmp_script.matchAll(/["'](.*?)["']/g), m => m[1])
+        const matches = Array.from(tmp_script.matchAll(/["'](.*?)["']/g), m => m[1])
 
         matches.forEach(function (item) {
-            let cleaned = item.replace(/\\/g, "")
+            const cleaned = item.replace(/\\/g, "")
             if (self.options.images_include_base_url) {
                 res.push(base_url + cleaned)
             } else {

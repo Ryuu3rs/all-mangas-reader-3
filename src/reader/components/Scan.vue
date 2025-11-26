@@ -17,7 +17,7 @@
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" text @click="copyImageToClipboardWarning = false">
+                    <v-btn color="primary" variant="text" @click="copyImageToClipboardWarning = false">
                         {{ i18n("button_close") }}
                     </v-btn>
                 </v-card-actions>
@@ -26,10 +26,10 @@
         <!-- The Scan container ! -->
         <div ref="scanDiv" class="amr-scan" v-show="!loading && !error" @contextmenu="show"></div>
 
-        <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+        <v-menu v-model="showMenu" :target="[x, y]" location="bottom start">
             <v-list>
-                <v-list-item link>
-                    <v-list-item-title @click="bookmarkScan">
+                <v-list-item link @click="bookmarkScan">
+                    <v-list-item-title>
                         {{
                             scanbooked
                                 ? i18n("reader_context_menu_manage_bookmark")
@@ -37,16 +37,13 @@
                         }}
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item link>
-                    <v-list-item-title
-                        v-clipboard="src"
-                        v-clipboard:success="copySuccess"
-                        v-clipboard:error="copyError">
+                <v-list-item link v-clipboard="src" v-clipboard:success="copySuccess" v-clipboard:error="copyError">
+                    <v-list-item-title>
                         {{ i18n("reader_context_menu_copy_url") }}
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item link>
-                    <v-list-item-title @click="copyIMG">
+                <v-list-item link @click="copyIMG">
+                    <v-list-item-title>
                         {{ i18n("reader_context_menu_copy_img") }}
                     </v-list-item-title>
                 </v-list-item>
@@ -67,9 +64,9 @@
         <v-container class="fill-height text-center" v-if="error && !loading">
             <v-row>
                 <v-col cols="12">
-                    <v-tooltip bottom>
-                        <template v-slot:activator="{ on }">
-                            <v-btn v-on="on" icon large @click="reloadScan" color="primary">
+                    <v-tooltip location="bottom">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" icon size="large" @click="reloadScan" color="primary">
                                 <v-icon v-bind:data-src="src">{{ icons.mdiImageBroken }}</v-icon>
                             </v-btn>
                         </template>
@@ -179,7 +176,7 @@ export default {
         /* Event from side bar to reload all errored scans */
         EventBus.$on("reload-all-errors", this.reloadScan)
     },
-    beforeDestroy() {
+    beforeUnmount() {
         EventBus.$off("reload-all-errors", this.reloadScan)
     },
     methods: {
@@ -280,33 +277,42 @@ export default {
 td.scanContainer.xs6 {
     width: 50%;
 }
+
 td.scanContainer.xs12 {
     width: 100%;
 }
+
 .scanContainer.res-w img {
     max-width: 100%;
 }
+
 .scanContainer.res-h img {
     max-height: 100vh;
 }
+
 .scanContainer.scale-up img {
     object-fit: contain;
 }
+
 .scanContainer.res-w.scale-up img {
     width: 100%;
 }
+
 .scanContainer.res-h.scale-up img {
     height: 100vh;
 }
+
 /* Positioning bookmark button */
 .amr-scan {
     position: relative;
     text-align: center;
     transition: all 0.2s;
 }
+
 .amr-left-page.scale-up img {
     object-position: right;
 }
+
 .amr-right-page.scale-up img {
     object-position: left;
 }

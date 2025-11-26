@@ -1,9 +1,9 @@
 <template>
     <div class="amr-thumbs-scrollable">
-        <v-tooltip v-for="(scans, i) in thumbnails()" :key="i" top>
-            <template v-slot:activator="{ on }">
+        <v-tooltip v-for="(scans, i) in thumbnails()" :key="i" location="top">
+            <template v-slot:activator="{ props }">
                 <table
-                    v-on="on"
+                    v-bind="props"
                     :class="{ current: scans.index === currentPage }"
                     class="amr-pages-page-cont"
                     @click.stop="goScan(scans.index)">

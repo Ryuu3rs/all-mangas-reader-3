@@ -1,7 +1,7 @@
 <template>
-    <v-tooltip top>
-        <template v-slot:activator="{ on, attrs }">
-            <div class="mirror-search" slot="activator">
+    <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+            <div class="mirror-search">
                 <v-progress-circular
                     v-if="searching"
                     indeterminate
@@ -9,8 +9,7 @@
                     color="primary"
                     class="mirror-progress"></v-progress-circular>
                 <img
-                    v-bind="attrs"
-                    v-on="on"
+                    v-bind="props"
                     :src="mirror.mirrorIcon"
                     :class="'mirror-search-icon ' + (disabled ? 'disabled' : '')"
                     @click.stop="disabled = !disabled" />
@@ -76,11 +75,13 @@ export default {
     width: 32px;
     height: 32px;
 }
+
 .mirror-progress {
     position: absolute;
     left: 0;
     top: 0;
 }
+
 .mirror-search-icon {
     position: absolute;
     top: 8px;
@@ -89,6 +90,7 @@ export default {
     border: 1px solid #aaaaaa;
     border-radius: 4px;
 }
+
 .mirror-search-icon.disabled {
     opacity: 0.3;
 }

@@ -16,9 +16,9 @@ globalThis["ComiCake"] = function (options) {
     this.canListFullMangas = true
 
     this.getMangaList = async function (search) {
-        let self = this
-        let res = []
-        let doc = await amr.loadPage(this.options.reader_url + this.options.series_list_url)
+        const self = this
+        const res = []
+        const doc = await amr.loadPage(this.options.reader_url + this.options.series_list_url)
 
         $(this.options.series_list_selector, doc).each(function () {
             res.push([$(this).text().trim(), self.options.reader_url + $(this).attr("href")])
@@ -27,9 +27,9 @@ globalThis["ComiCake"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let res = []
-        let self = this
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const res = []
+        const self = this
         $(this.options.chapter_list_selector, doc).each(function (index) {
             res.push([$(this).text(), self.stripUrl(self.options.reader_url + $(this).attr("href"))])
         })
@@ -39,7 +39,7 @@ globalThis["ComiCake"] = function (options) {
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
         doc = await this.getStripMode(doc, curUrl)
-        let link = $(this.options.chapter_information_selector, doc)
+        const link = $(this.options.chapter_information_selector, doc)
         return {
             name: link.text(),
             currentMangaURL: this.options.reader_url + link.attr("href"),
@@ -48,7 +48,7 @@ globalThis["ComiCake"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let res = []
+        const res = []
         doc = await this.getStripMode(doc, curUrl)
         $(this.options.images_selector, doc).each(function () {
             res.push($(this).attr("src"))
@@ -82,8 +82,8 @@ globalThis["ComiCake"] = function (options) {
     }
 
     this.isStripMode = function (curUrl) {
-        let url = new URL(curUrl)
-        let path = url.pathname
+        const url = new URL(curUrl)
+        const path = url.pathname
         return path.split("/").includes("strip")
     }
 }

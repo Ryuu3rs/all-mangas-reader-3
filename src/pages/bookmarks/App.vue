@@ -1,80 +1,74 @@
 <template>
     <v-app>
-        <v-navigation-drawer :clipped="$vuetify.breakpoint.lgAndUp" v-model="drawer" fixed app>
-            <v-card flat>
-                <v-list two-line>
-                    <v-list-item @click="switchAllStates()" avatar ripple>
-                        <v-list-item-content>
-                            <v-list-item-title>
-                                {{ i18n("bookmarks_allmangas") }}
-                            </v-list-item-title>
-                            <v-list-item-subtitle class="text--primary">
-                                {{ i18n("bookmarks_number", nbBookmarks) }}
-                            </v-list-item-subtitle>
-                        </v-list-item-content>
-                        <v-list-item-action>
-                            <v-icon v-if="hasOneUnState()" color="red darken-2"> mdi-eye </v-icon>
-                            <v-icon v-else color="grey lighten-1"> mdi-eye-off </v-icon>
-                        </v-list-item-action>
+        <v-navigation-drawer v-model="drawer">
+            <v-card variant="flat">
+                <v-list lines="two">
+                    <v-list-item @click="switchAllStates()">
+                        <v-list-item-title>
+                            {{ i18n("bookmarks_allmangas") }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle class="text-primary">
+                            {{ i18n("bookmarks_number", nbBookmarks) }}
+                        </v-list-item-subtitle>
+                        <template v-slot:append>
+                            <v-icon v-if="hasOneUnState()" color="red-darken-2"> mdi-eye </v-icon>
+                            <v-icon v-else color="grey-lighten-1"> mdi-eye-off </v-icon>
+                        </template>
                     </v-list-item>
                     <v-divider></v-divider>
-                    <template v-for="(mg, index) in mangas">
-                        <v-list-item :key="mg.key" @click="switchMgState(mg)" avatar ripple>
-                            <v-list-item-content>
-                                <v-list-item-title>
-                                    {{ mg.name }}
-                                </v-list-item-title>
-                                <v-list-item-subtitle class="text--primary"
-                                    >{{ i18n("bookmarks_number", mg.nb) }}
-                                </v-list-item-subtitle>
-                            </v-list-item-content>
-                            <v-list-item-action>
-                                <v-icon v-if="!mangasUnSel[mg.key]" color="red darken-2"> mdi-eye </v-icon>
-                                <v-icon v-else color="grey lighten-1"> mdi-eye-off </v-icon>
-                            </v-list-item-action>
+                    <template v-for="(mg, index) in mangas" :key="mg.key">
+                        <v-list-item @click="switchMgState(mg)">
+                            <v-list-item-title>
+                                {{ mg.name }}
+                            </v-list-item-title>
+                            <v-list-item-subtitle class="text-primary"
+                                >{{ i18n("bookmarks_number", mg.nb) }}
+                            </v-list-item-subtitle>
+                            <template v-slot:append>
+                                <v-icon v-if="!mangasUnSel[mg.key]" color="red-darken-2"> mdi-eye </v-icon>
+                                <v-icon v-else color="grey-lighten-1"> mdi-eye-off </v-icon>
+                            </template>
                         </v-list-item>
-                        <v-divider v-if="index + 1 < mangas.length" :key="index"></v-divider>
+                        <v-divider v-if="index + 1 < mangas.length"></v-divider>
                     </template>
                 </v-list>
             </v-card>
         </v-navigation-drawer>
-        <v-app-bar :clipped-left="$vuetify.breakpoint.lgAndUp" color="red darken-2" dark app fixed>
-            <v-app-bar-title style="width: 300px" class="ml-0 pl-3">
-                <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-                <v-btn icon large color="white" class="hidden-sm-and-down">
-                    <v-avatar size="32px" tile>
-                        <img src="/icons/icon_32.png" alt="All Mangas Reader" />
-                    </v-avatar>
-                </v-btn>
-                <span>{{ i18n("bookmarks_title") }}</span>
-            </v-app-bar-title>
+        <v-app-bar color="red-darken-2">
+            <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+            <v-btn icon size="large" color="white" class="d-none d-md-flex">
+                <v-avatar size="32" rounded="0">
+                    <v-img src="/icons/icon_32.png" alt="All Mangas Reader" />
+                </v-avatar>
+            </v-btn>
+            <v-app-bar-title>{{ i18n("bookmarks_title") }}</v-app-bar-title>
             <v-text-field
-                flat
-                solo-inverted
+                variant="solo-inverted"
                 hide-details
                 prepend-inner-icon="mdi-magnify"
                 :label="i18n('bookmarks_search')"
-                class="hidden-sm-and-down"
-                v-model="search"></v-text-field>
+                class="d-none d-md-flex"
+                v-model="search"
+                density="compact"
+                flat></v-text-field>
             <v-spacer></v-spacer>
-            <v-overflow-btn
+            <v-select
                 :items="dropdown_size"
                 label="Select size"
                 hide-details
-                overflow
                 v-model="size"
-                class="hidden-md-and-down mr-2"
-                item-text="text"
+                class="d-none d-lg-flex mr-2"
+                item-title="text"
                 item-value="value"
-                single-line
+                variant="solo-inverted"
+                density="compact"
                 return-object
-                solo-inverted
-                flat></v-overflow-btn>
-            <v-btn-toggle v-model="toggle_type" multiple class="transparent">
-                <v-btn text>
+                flat></v-select>
+            <v-btn-toggle v-model="toggle_type" multiple>
+                <v-btn variant="text">
                     <v-icon>mdi-image</v-icon>
                 </v-btn>
-                <v-btn text>
+                <v-btn variant="text">
                     <v-icon>mdi-book-open-variant</v-icon>
                 </v-btn>
             </v-btn-toggle>
@@ -83,7 +77,7 @@
             <v-container fluid>
                 <v-row justify="center" align="center" v-if="!loaded">
                     <!-- Before mirrors and bookmarks are loaded into bookmarks -->
-                    <v-progress-circular indeterminate :width="4" :size="50" color="red darken-2"></v-progress-circular>
+                    <v-progress-circular indeterminate :width="4" :size="50" color="red-darken-2"></v-progress-circular>
                 </v-row>
                 <v-row v-else>
                     <!-- Once loaded -->
@@ -105,7 +99,7 @@
 import i18n from "../../amr/i18n"
 import Bookmarks from "../components/Bookmarks"
 import { formatMangaName } from "../../shared/utils"
-import Vue from "vue"
+import { reactiveSet } from "../../shared/vue-compat"
 
 const sizes = [
     { text: i18n("bookmarks_size_large"), value: 2 },
@@ -203,7 +197,7 @@ export default {
     methods: {
         i18n: (message, ...args) => i18n(message, ...args),
         switchMgState: function (mg) {
-            Vue.set(this.mangasUnSel, mg.key, !this.mangasUnSel[mg.key])
+            reactiveSet(this.mangasUnSel, mg.key, !this.mangasUnSel[mg.key])
         },
         hasOneUnState: function (mg) {
             for (const mg of this.mangas) {
@@ -214,7 +208,7 @@ export default {
         switchAllStates: function (mg) {
             const nst = !this.hasOneUnState()
             for (const mg of this.mangas) {
-                Vue.set(this.mangasUnSel, mg.key, nst)
+                reactiveSet(this.mangasUnSel, mg.key, nst)
             }
         }
     },

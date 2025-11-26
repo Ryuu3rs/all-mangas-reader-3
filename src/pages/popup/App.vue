@@ -6,9 +6,9 @@
                 <img src="/icons/icon_32.png" alt="All Mangas Reader" style="margin-right: 5px" />
                 <v-toolbar-title>{{ title }}</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-tooltip bottom>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn icon @click.stop="openChangelog()" v-on="on" v-bind="attrs">
+                <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                        <v-btn icon @click.stop="openChangelog()" v-bind="props">
                             <v-icon>mdi-information</v-icon>
                         </v-btn>
                     </template>
@@ -32,35 +32,34 @@
 
         <!-- Default panel containing manga list -->
         <v-main class="ma-3">
-            <v-alert class="mb-0" type="info" :value="true" icon="mdi-incognito" v-if="!trackingDone">
+            <v-alert class="mb-0" type="info" :model-value="true" icon="mdi-incognito" v-if="!trackingDone">
                 {{ i18n("options_gen_allowtracking_desc") }}
                 <div>
                     <v-btn @click="saveAllowTracking(true)">{{ i18n("button_yes") }}</v-btn>
-                    <v-btn text @click="saveAllowTracking(false)">{{ i18n("button_no") }}</v-btn>
+                    <v-btn variant="text" @click="saveAllowTracking(false)">{{ i18n("button_no") }}</v-btn>
                 </div>
             </v-alert>
-            <v-alert class="mb-0" type="info" :value="true" icon="mdi-cookie-alert" v-if="!cookiesDone">
+            <v-alert class="mb-0" type="info" :model-value="true" icon="mdi-cookie-alert" v-if="!cookiesDone">
                 {{ i18n("options_gen_allowcookies_desc") }}
                 <br /><br />
                 {{ i18n("options_gen_allowcookies_warning") }}
                 <div>
                     <v-btn @click="saveAllowCookies(true)">{{ i18n("button_yes") }}</v-btn>
-                    <v-btn text @click="saveAllowCookies(false)">{{ i18n("button_no") }}</v-btn>
+                    <v-btn variant="text" @click="saveAllowCookies(false)">{{ i18n("button_no") }}</v-btn>
                 </div>
             </v-alert>
             <MangaList @search-request="openSearch" @manga-loaded="handleLoaded()" />
-            <v-tooltip top v-if="alertmessage !== ''">
-                <template v-slot:activator="{ on }">
+            <v-tooltip location="top" v-if="alertmessage !== ''">
+                <template v-slot:activator="{ props }">
                     <v-alert
                         class="mb-0"
                         type="warning"
-                        dismissible
-                        v-on="on"
-                        :value="true"
-                        icon="mdi-alert-decagram"
-                        slot="activator">
+                        closable
+                        v-bind="props"
+                        :model-value="true"
+                        icon="mdi-alert-decagram">
                         {{ alertmessage }}
-                        <v-btn light class="ml-2" x-small @v-if="!isFirefox()" @click="DownloadAMR()">
+                        <v-btn class="ml-2" size="x-small" v-if="!isFirefox()" @click="DownloadAMR()">
                             <v-icon>mdi-cloud-download</v-icon>
                         </v-btn>
                     </v-alert>
@@ -75,12 +74,12 @@
             v-model="options"
             fullscreen
             transition="dialog-bottom-transition"
-            hide-overlay
+            :scrim="false"
             scrollable
             :content-class="istab()">
             <v-card>
-                <v-toolbar max-height="64">
-                    <v-btn icon @click.native="closeOptions()">
+                <v-toolbar height="64">
+                    <v-btn icon @click="closeOptions()">
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ i18n("options_title") }}</v-toolbar-title>
@@ -92,15 +91,10 @@
         </v-dialog>
 
         <!-- Changelog dialog-->
-        <v-dialog
-            v-model="changelog"
-            fullscreen
-            transition="dialog-bottom-transition"
-            hide-overlay
-            :content-class="istab()">
+        <v-dialog v-model="changelog" fullscreen transition="dialog-bottom-transition" :content-class="istab()">
             <v-card>
-                <v-toolbar max-height="64">
-                    <v-btn icon @click.native="closeChangelog()">
+                <v-toolbar height="64">
+                    <v-btn icon @click="closeChangelog()">
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ i18n("change_log_title") }}</v-toolbar-title>
@@ -111,29 +105,29 @@
             </v-card>
         </v-dialog>
         <!-- Mangadex integration dialog -->
-        <v-dialog v-model="mangadex" max-width="500" hide-overlay persistent>
+        <v-dialog v-model="mangadex" max-width="500" persistent>
             <v-card>
-                <v-toolbar max-height="64">
+                <v-toolbar height="64">
                     <v-toolbar-title>{{ i18n("options_mirror_specific_mangadex") }}</v-toolbar-title>
                 </v-toolbar>
                 <v-card-text>
                     <div class="text-h6 pa-10 pb-5">{{ i18n("options_mangadex_integration_expired_text") }}</div>
                 </v-card-text>
                 <v-card-actions class="justify-end">
-                    <v-btn text @click="mdDontRemindMe">{{
+                    <v-btn variant="text" @click="mdDontRemindMe">{{
                         i18n("options_mangadex_integration_expired_dontremindme")
                     }}</v-btn>
-                    <v-btn text color="primary" @click="mdLogin">{{
+                    <v-btn variant="text" color="primary" @click="mdLogin">{{
                         i18n("options_mangadex_integration_expired_login")
                     }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
         <!-- Search dialog -->
-        <v-dialog v-model="search" fullscreen transition="dialog-bottom-transition" hide-overlay scrollable>
-            <v-card tile>
-                <v-toolbar max-height="64">
-                    <v-btn icon @click.native="closeSearch()">
+        <v-dialog v-model="search" fullscreen transition="dialog-bottom-transition" scrollable>
+            <v-card rounded="0">
+                <v-toolbar height="64">
+                    <v-btn icon @click="closeSearch()">
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
                     <v-toolbar-title>{{ i18n("search_title") }}</v-toolbar-title>
@@ -144,24 +138,32 @@
             </v-card>
         </v-dialog>
         <!-- Right panel containing links, refresh buttons, import export panels -->
-        <v-navigation-drawer temporary v-model="rpanel" right absolute width="500">
+        <v-navigation-drawer temporary v-model="rpanel" location="right" absolute width="500">
             <!-- Links in right panel -->
             <v-container fluid class="pa-0 text-center" v-if="rpanel">
                 <v-row align="center">
                     <v-col cols="6">
                         <v-row>
                             <v-col cols="12">
-                                <v-btn text icon color="red darken-2" @click="opentab('https://amr-releases.com')">
+                                <v-btn
+                                    variant="text"
+                                    icon
+                                    color="red-darken-2"
+                                    @click="opentab('https://amr-releases.com')">
                                     <img src="/icons/icon_32.png" width="24" alt="All Mangas Reader" />
                                 </v-btn>
-                                <v-btn text icon color="yellow" @click="opentab('/pages/bookmarks/bookmarks.html')">
+                                <v-btn
+                                    variant="text"
+                                    icon
+                                    color="yellow"
+                                    @click="opentab('/pages/bookmarks/bookmarks.html')">
                                     <v-icon>mdi-star</v-icon>
                                 </v-btn>
-                                <v-btn text icon color="yellow" @click="opentab('/pages/lab/lab.html')">
+                                <v-btn variant="text" icon color="yellow" @click="opentab('/pages/lab/lab.html')">
                                     <v-icon>mdi-antenna</v-icon>
                                 </v-btn>
                                 <v-btn
-                                    text
+                                    variant="text"
                                     icon
                                     color="blue"
                                     @click="
@@ -170,9 +172,9 @@
                                     <v-icon>mdi-help</v-icon>
                                 </v-btn>
                                 <v-btn
-                                    text
+                                    variant="text"
                                     icon
-                                    color="blue lighten-2"
+                                    color="blue-lighten-2"
                                     @click="opentab('/pages/popup/popup.html?mode=tab')">
                                     <v-icon>mdi-open-in-new</v-icon>
                                 </v-btn>
@@ -180,28 +182,27 @@
                         </v-row>
                     </v-col>
                     <v-col cols="6">
-                        <v-tabs v-model="tabs" right>
-                            <v-tabs-slider></v-tabs-slider>
-                            <v-tab key="refresh">
+                        <v-tabs v-model="tabs" align-tabs="end">
+                            <v-tab value="refresh">
                                 <v-icon>mdi-refresh</v-icon>
                             </v-tab>
-                            <v-tab @click="openImportExport()" key="importexport">
+                            <v-tab @click="openImportExport()" value="importexport">
                                 <v-icon>mdi-content-save</v-icon>
                             </v-tab>
                         </v-tabs>
                     </v-col>
                 </v-row>
             </v-container>
-            <v-tabs-items v-model="tabs" v-if="rpanel">
-                <v-tab-item key="refresh">
+            <v-window v-model="tabs" v-if="rpanel">
+                <v-window-item value="refresh">
                     <!-- Refresh buttons -->
                     <Timers />
-                </v-tab-item>
-                <v-tab-item key="importexport">
+                </v-window-item>
+                <v-window-item value="importexport">
                     <!-- Import export panels -->
                     <ImportExport />
-                </v-tab-item>
-            </v-tabs-items>
+                </v-window-item>
+            </v-window>
         </v-navigation-drawer>
     </v-app>
 </template>
@@ -415,8 +416,9 @@ export default {
             await this.$store.dispatch("setOption", { key: "allowcookies", value: doAllow ? 1 : 0 })
         },
         toggleDarkMode() {
-            this.$vuetify.theme.dark = !this.$store.state.options.dark
-            this.$store.dispatch("setOption", { key: "dark", value: this.$store.state.options.dark ? 0 : 1 })
+            const isDark = !this.$store.state.options.dark
+            this.$vuetify.theme.global.name = isDark ? "dark" : "light"
+            this.$store.dispatch("setOption", { key: "dark", value: isDark ? 1 : 0 })
         }
     },
     mounted: function () {
@@ -431,23 +433,29 @@ export default {
 .hidescrollbar::-webkit-scrollbar {
     display: none;
 }
+
 /* Disable scrollbar Firefox */
 .hidescrollbar {
     scrollbar-width: none;
 }
+
 .v-dialog .v-card__title,
 .v-dialog .v-card__text {
     padding: 4px 16px;
 }
+
 .v-dialog .v-card__title {
     padding-top: 10px;
 }
+
 .navigation-drawer {
     padding: 0;
 }
+
 .v-dialog .v-card--tile {
     overflow: auto;
 }
+
 .v-alert {
     padding: 4px !important;
 }

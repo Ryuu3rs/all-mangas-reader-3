@@ -20,7 +20,7 @@ globalThis["NextJs"] = function (options) {
     }
 
     this.getListChaps = async function (mangaUrl) {
-        let doc = await amr.loadPage(mangaUrl, {
+        const doc = await amr.loadPage(mangaUrl, {
             nocache: true,
             preventimages: true
         })
@@ -29,9 +29,9 @@ globalThis["NextJs"] = function (options) {
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let json = JSON.parse(doc["outerHTML"].match(this.options.nextDataRegex)[1])
+        const json = JSON.parse(doc["outerHTML"].match(this.options.nextDataRegex)[1])
 
-        let mangaUrl = curUrl.split("/")
+        const mangaUrl = curUrl.split("/")
         mangaUrl.pop()
 
         return {

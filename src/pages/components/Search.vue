@@ -15,20 +15,20 @@
                 <v-text-field v-model="searchwrite" @keyup.enter="launchSearch()" />
             </v-col>
             <v-col cols="3">
-                <v-btn color="primary" @click="launchSearch()" small>{{ i18n("search_button") }}</v-btn>
+                <v-btn color="primary" @click="launchSearch()" size="small">{{ i18n("search_button") }}</v-btn>
             </v-col>
         </v-row>
         <!-- results area -->
         <v-row class="search-results">
             <v-container fluid>
                 <v-tabs v-model="langtabs" color="transparent" show-arrows>
-                    <v-tabs-slider></v-tabs-slider>
-                    <v-tab v-for="lang in langs" :key="lang" :href="'#langtab-' + lang" class="primary--text">
+                    <v-tab v-for="lang in langs" :key="lang" :value="'langtab-' + lang" class="text-primary">
                         <Flag v-if="lang != 'aa'" :value="lang" big />
                         <v-btn color="primary" v-else>{{ i18n("search_multilang") }}</v-btn>
                     </v-tab>
-
-                    <v-tab-item :id="'langtab-' + lang" v-for="(res, lang) in results" :key="lang" v-model="langtabs">
+                </v-tabs>
+                <v-window v-model="langtabs">
+                    <v-window-item :value="'langtab-' + lang" v-for="(res, lang) in results" :key="lang">
                         <v-container fluid>
                             <v-row v-for="fmtkey in res['__SORTEDKEYS__']" :key="fmtkey">
                                 <!-- name of the manga -->
@@ -40,12 +40,12 @@
                                 <!-- mirror icons buttons to add to list -->
                                 <v-col cols="8">
                                     <v-tooltip
-                                        top
+                                        location="top"
                                         content-class="icon-ttip"
                                         v-for="(mg, key) in res[fmtkey]"
                                         :key="key">
-                                        <template v-slot:activator="{ on }">
-                                            <div class="mirror-result-cont" v-on="on">
+                                        <template v-slot:activator="{ props }">
+                                            <div class="mirror-result-cont" v-bind="props">
                                                 <img
                                                     @click="handleIconClick(mg)"
                                                     :src="getIcon(mg.mirror)"
@@ -57,7 +57,7 @@
                                                     indeterminate
                                                     size="18"
                                                     v-if="mg.adding"
-                                                    color="grey darken-4"></v-progress-circular>
+                                                    color="grey-darken-4"></v-progress-circular>
                                             </div>
                                         </template>
                                         <span v-if="isInList(mg)">{{
@@ -68,8 +68,8 @@
                                 </v-col>
                             </v-row>
                         </v-container>
-                    </v-tab-item>
-                </v-tabs>
+                    </v-window-item>
+                </v-window>
             </v-container>
         </v-row>
     </v-container>
@@ -244,13 +244,16 @@ export default {
     /*background: #ffffff;*/
     overflow: auto;
 }
+
 .mirrors-cont {
     margin: auto;
 }
+
 .searchbar {
     width: 450px;
     margin: auto;
 }
+
 .mirror-result-cont {
     display: inline-block;
     position: relative;
@@ -259,17 +262,21 @@ export default {
     margin: 4px;
     cursor: pointer;
 }
+
 .mirror-result-cont > * {
     position: absolute;
     left: 0;
     top: 0;
 }
+
 .mirror-result-cont > i {
     font-size: 1.6rem;
 }
+
 .mirror-icon.added {
     opacity: 0.3;
 }
+
 .search-results {
     font-size: 1.2rem;
 }

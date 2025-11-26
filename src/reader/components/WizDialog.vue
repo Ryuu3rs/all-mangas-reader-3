@@ -12,23 +12,23 @@
         @keydown.esc="options.persistent ? () => {} : cancel()"
         v-bind:style="{ zIndex: options.zIndex }">
         <v-card>
-            <v-toolbar dark :color="options.color" dense flat v-show="!!title">
-                <v-toolbar-title class="white--text">{{ title }}</v-toolbar-title>
+            <v-toolbar :color="options.color" density="compact" variant="flat" v-show="!!title">
+                <v-toolbar-title class="text-white">{{ title }}</v-toolbar-title>
             </v-toolbar>
-            <v-card-text v-show="!!message" text-no-wrap :class="{ 'text-xs-center': options.center }">
+            <v-card-text v-show="!!message" text-no-wrap :class="{ 'text-center': options.center }">
                 <span v-html="messageHtml"></span>
             </v-card-text>
             <v-card-actions class="pt-0" v-show="options.buttons.length > 0 || options.cancel">
                 <v-spacer></v-spacer>
-                <v-btn v-if="options.cancel" color="grey" text @click.native="cancel">
+                <v-btn v-if="options.cancel" color="grey" variant="text" @click="cancel">
                     {{ i18n("button_cancel") }}
                 </v-btn>
                 <v-btn
                     v-for="(but, i) in options.buttons"
                     :key="i"
                     :color="but.color || 'grey'"
-                    text
-                    @click.native="clickButton(but)">
+                    variant="text"
+                    @click="clickButton(but)">
                     {{ but.title }}
                 </v-btn>
             </v-card-actions>
@@ -66,6 +66,11 @@ export default {
             message: null,
             title: null,
             options: default_options
+        }
+    },
+    watch: {
+        dialog(newVal, oldVal) {
+            console.log("[DEBUG] WizDialog.dialog changed:", oldVal, "->", newVal, new Error().stack)
         }
     },
     computed: {
@@ -152,7 +157,7 @@ export default {
                 },
                 {
                     title: this.i18n("button_yes"),
-                    color: "primary darken-1",
+                    color: "primary-darken-1",
                     click: ({ agree }) => {
                         agree()
                     }
@@ -166,7 +171,7 @@ export default {
             options.buttons = [
                 {
                     title: this.i18n("button_yes"),
-                    color: "primary darken-1",
+                    color: "primary-darken-1",
                     click: ({ agree }) => agree()
                 }
             ]
@@ -175,14 +180,27 @@ export default {
         },
         /** Open a dialog, no options buttons --> alert */
         open(title, message, options) {
+            console.log("[DEBUG] WizDialog.open() called", {
+                title,
+                currentDialogOpen: this.dialog,
+                currentImportant: this.options?.important
+            })
             if (this.dialog) {
-                if (this.options.important) return Promise.resolve() // do not close current if important
+                if (this.options.important) {
+                    console.log("[DEBUG] WizDialog.open(): current dialog is important, ignoring new open request")
+                    return Promise.resolve() // do not close current if important
+                }
+                console.log("[DEBUG] WizDialog.open(): closing existing non-important dialog")
                 this.cancel()
             }
             this.dialog = true
             this.title = title
             this.message = message
             this.options = Object.assign(Object.assign({}, default_options), options)
+            console.log("[DEBUG] WizDialog.open(): dialog opened with options", {
+                persistent: this.options.persistent,
+                important: this.options.important
+            })
             return new Promise((resolve, reject) => {
                 this.resolve = resolve
                 this.reject = reject
@@ -199,13 +217,17 @@ export default {
         },
         /** Finish the dialog and returns true */
         agree() {
+            console.log("[DEBUG] WizDialog.agree() called")
             this.resolve(true)
             this.dialog = false
+            console.log("[DEBUG] WizDialog.agree() completed, dialog =", this.dialog)
         },
         /** Finish the dialog and returns false */
         cancel() {
+            console.log("[DEBUG] WizDialog.cancel() called")
             this.resolve(false)
             this.dialog = false
+            console.log("[DEBUG] WizDialog.cancel() completed, dialog =", this.dialog)
         }
     }
 }
@@ -216,6 +238,7 @@ a:link,
 a:visited {
     color: #f44336;
 }
+
 .amr-filler-tag {
     text-decoration: none;
 }

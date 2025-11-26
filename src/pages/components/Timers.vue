@@ -17,15 +17,15 @@
         </v-row>
         <v-row>
             <v-col cols="12">
-                <v-tooltip top>
-                    <template v-slot:activator="{ on }">
+                <v-tooltip location="top">
+                    <template v-slot:activator="{ props }">
                         <v-btn
                             color="primary"
                             class="refresh-button"
                             @click="resetLists()"
                             :loading="loadingLists"
                             :disabled="loadingLists"
-                            v-on="on">
+                            v-bind="props">
                             <v-icon>mdi-format-list-bulleted</v-icon>
                             {{ i18n("refresh_lists") }}
                         </v-btn>
@@ -55,15 +55,22 @@ export default {
             loadingMirrors: false,
             loadingLists: false,
             ticker: Date.now(),
-            stats: { nb: 0, nbmangas: 0 }
+            stats: { nb: 0, nbmangas: 0 },
+            tickerInterval: null
         }
     },
     mounted: async function () {
         var self = this
-        setInterval(function () {
+        this.tickerInterval = setInterval(function () {
             self.$data.ticker = Date.now()
         }, 1000)
         this.stats = await storedb.getListsOfMangaStats()
+    },
+    beforeUnmount() {
+        if (this.tickerInterval) {
+            clearInterval(this.tickerInterval)
+            this.tickerInterval = null
+        }
     },
     computed: {
         /**
@@ -109,9 +116,11 @@ export default {
 .refresh-button {
     margin: 6px;
 }
+
 .refresh-button .v-btn__content {
     text-transform: none;
 }
+
 .refresh-button i {
     margin-right: 6px;
 }

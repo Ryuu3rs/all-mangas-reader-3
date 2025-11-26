@@ -1,44 +1,47 @@
 <template>
     <div>
-        <v-tabs v-model="tabs" fixed-tabs>
-            <v-tabs-slider></v-tabs-slider>
-            <v-tab href="#general" class="primary--text">
+        <v-tabs v-model="tabs" color="primary">
+            <v-tab value="general" class="text-primary">
                 {{ i18n("options_general") }}
             </v-tab>
-            <v-tab href="#onwebsites" class="primary--text">
+            <v-tab value="onwebsites" class="text-primary">
                 {{ i18n("options_on_websites") }}
             </v-tab>
-            <v-tab href="#supported" class="primary--text">
+            <v-tab value="supported" class="text-primary">
                 {{ i18n("options_supported") }}
             </v-tab>
-            <v-tab href="#mirror" class="primary--text">
+            <v-tab value="mirror" class="text-primary">
                 {{ i18n("options_mirror_specific") }}
             </v-tab>
         </v-tabs>
-        <v-tabs-items v-model="tabs" class="elevation-1">
-            <v-tab-item value="general" transition="false">
-                <v-expansion-panels accordion focusable v-model="panels">
+        <v-window v-model="tabs" class="elevation-1">
+            <v-window-item value="general">
+                <v-expansion-panels variant="accordion" v-model="panels">
                     <v-expansion-panel>
                         <!-- AMR aspect -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_gen_aspect") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6">
                             <!-- Open in new tab -->
                             <v-checkbox
                                 v-model="newTab"
-                                @change="setOption('newTab')"
+                                @update:model-value="setOption('newTab')"
                                 :label="i18n('options_gen_newTab_desc')"></v-checkbox>
                             <!-- Group mangas with same name -->
-                            <v-checkbox v-model="groupmgs" @change="setOption('groupmgs')">
+                            <v-checkbox v-model="groupmgs" @update:model-value="setOption('groupmgs')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_groupmgs_opt") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -48,13 +51,17 @@
                                 </template>
                             </v-checkbox>
                             <!-- Display percentage -->
-                            <v-checkbox v-model="disppercentage" @change="setOption('disppercentage')">
+                            <v-checkbox v-model="disppercentage" @update:model-value="setOption('disppercentage')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_disppercentage_opt") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -64,13 +71,17 @@
                                 </template>
                             </v-checkbox>
                             <!-- Display badge last update -->
-                            <v-checkbox v-model="displastup" @change="setOption('displastup')">
+                            <v-checkbox v-model="displastup" @update:model-value="setOption('displastup')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_displastup_opt") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -80,13 +91,17 @@
                                 </template>
                             </v-checkbox>
                             <!--Allow read/create cookies -->
-                            <v-checkbox v-model="allowcookies" @change="setOption('allowcookies')">
+                            <v-checkbox v-model="allowcookies" @update:model-value="setOption('allowcookies')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_allowcookies_opt") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -98,17 +113,21 @@
                             <!-- Dark popup -->
                             <v-checkbox
                                 v-model="dark"
-                                @change="setOption('dark')"
+                                @update:model-value="setOption('dark')"
                                 :label="i18n('options_gen_dark_desc')"></v-checkbox>
                             <!-- Enable inverted color scheme -->
                             <v-checkbox
                                 v-model="alternateColors"
-                                @change="setOption('alternateColors')"
+                                @update:model-value="setOption('alternateColors')"
                                 :label="i18n('options_invert_color_scheme')"></v-checkbox>
 
                             <!-- Mangas with new chapters color -->
                             <v-label>{{ i18n("options_gen_colors_new") }}</v-label>
-                            <v-radio-group v-model="colornew" @change="setOption('colornew')" row class="colored-radio">
+                            <v-radio-group
+                                v-model="colornew"
+                                @update:model-value="setOption('colornew')"
+                                inline
+                                class="colored-radio">
                                 <v-radio
                                     v-for="c in colors"
                                     :key="c"
@@ -120,8 +139,8 @@
                             <v-label>{{ i18n("options_gen_colors_read") }}</v-label>
                             <v-radio-group
                                 v-model="colorread"
-                                @change="setOption('colorread')"
-                                row
+                                @update:model-value="setOption('colorread')"
+                                inline
                                 class="colored-radio">
                                 <v-radio
                                     v-for="c in colors"
@@ -134,8 +153,8 @@
                             <v-label>{{ i18n("options_gen_colors_notfollow") }}</v-label>
                             <v-radio-group
                                 v-model="colornotfollow"
-                                @change="setOption('colornotfollow')"
-                                row
+                                @update:model-value="setOption('colornotfollow')"
+                                inline
                                 class="colored-radio">
                                 <v-radio
                                     v-for="c in colors"
@@ -144,16 +163,16 @@
                                     :color="getColor(c)"
                                     :class="getTextColor(c)"></v-radio>
                             </v-radio-group>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Updates -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_gen_updates") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- Update chapters list -->
                             <v-label>{{ i18n("options_gen_update_chap_label") }}</v-label>
                             <v-container fluid class="opt-container">
@@ -165,7 +184,7 @@
                                         <v-btn
                                             color="primary"
                                             class="btn-sel"
-                                            small
+                                            size="small"
                                             @click="updateChaps()"
                                             :loading="loadingChapters"
                                             :disabled="loadingChapters">
@@ -176,13 +195,19 @@
                             </v-container>
 
                             <!-- Stop updates for a week -->
-                            <v-checkbox v-model="stopupdateforaweek" @change="setOption('stopupdateforaweek')">
+                            <v-checkbox
+                                v-model="stopupdateforaweek"
+                                @update:model-value="setOption('stopupdateforaweek')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_stopupdateforaweek_desc") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -194,21 +219,25 @@
                             <!-- Update on startup -->
                             <v-checkbox
                                 v-model="checkmgstart"
-                                @change="setOption('checkmgstart')"
+                                @update:model-value="setOption('checkmgstart')"
                                 :label="i18n('options_gen_checkmgstart_desc')"></v-checkbox>
                             <!-- Spin icon while loading chapters -->
                             <v-checkbox
                                 v-model="refreshspin"
-                                @change="setOption('refreshspin')"
+                                @update:model-value="setOption('refreshspin')"
                                 :label="i18n('options_gen_refreshspin_desc')"></v-checkbox>
                             <!-- Save bandwidth while loading chapters -->
-                            <v-checkbox v-model="savebandwidth" @change="setOption('savebandwidth')">
+                            <v-checkbox v-model="savebandwidth" @update:model-value="setOption('savebandwidth')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_gen_savebandwidth_desc") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -222,9 +251,13 @@
                                 <template>
                                     <div>
                                         {{ i18n("options_gen_waitbetweenupdates_opt") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -243,27 +276,27 @@
                             <!-- Display grey 0 when no new -->
                             <v-checkbox
                                 v-model="displayzero"
-                                @change="setOption('displayzero')"
+                                @update:model-value="setOption('displayzero')"
                                 :label="i18n('options_gen_displayzero_desc')"></v-checkbox>
                             <!-- Grey sharingan if no new -->
                             <v-checkbox
                                 v-model="nocount"
-                                @change="setOption('nocount')"
+                                @update:model-value="setOption('nocount')"
                                 :label="i18n('options_gen_nocount_desc')"></v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Notifications -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_gen_notifs") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- Notify on new chapter -->
                             <v-checkbox
                                 v-model="shownotifications"
-                                @change="setOption('shownotifications')"
+                                @update:model-value="setOption('shownotifications')"
                                 :label="i18n('options_gen_shownotifications_desc')"></v-checkbox>
                             <!-- Time to close notification -->
                             <v-label>{{ i18n("options_gen_notificationtimer_label") }}</v-label>
@@ -280,42 +313,46 @@
                             <v-checkbox
                                 v-if="!isFirefox()"
                                 v-model="notifynewversion"
-                                @change="setOption('notifynewversion')"
+                                @update:model-value="setOption('notifynewversion')"
                                 :label="i18n('options_gen_notifynewversion_desc')"></v-checkbox>
                             <!--Allow tracking of reading -->
-                            <!-- <v-checkbox v-model="allowtracking" @change="setOption('allowtracking')"
+                            <!-- <v-checkbox v-model="allowtracking" @update:model-value="setOption('allowtracking')"
                       :label="i18n('options_gen_allowtracking_desc')"></v-checkbox>
                -->
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Synchronization -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_sync_title") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <v-alert
-                                dense
+                                density="compact"
                                 v-if="!syncEnabled || !gistSyncEnabled"
-                                :value="true"
+                                :model-value="true"
                                 color="error"
                                 icon="mdi-alert-octagon"
-                                text
+                                variant="text"
                                 elevation="1">
                                 {{ i18n("options_sync_title_warning") }}
                             </v-alert>
                             <v-checkbox
                                 v-if="isFirefox() || syncEnabled"
                                 v-model="syncEnabled"
-                                @change="setOption('syncEnabled')">
+                                @update:model-value="setOption('syncEnabled')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_sync_checkbox") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -324,13 +361,17 @@
                                     </div>
                                 </template>
                             </v-checkbox>
-                            <v-checkbox v-model="gistSyncEnabled" @change="setOption('gistSyncEnabled')">
+                            <v-checkbox v-model="gistSyncEnabled" @update:model-value="setOption('gistSyncEnabled')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_sync_gist") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -340,14 +381,14 @@
                                 </template>
                             </v-checkbox>
                             <v-alert
-                                dense
+                                density="compact"
                                 v-if="gistSyncEnabled"
                                 color="info"
                                 icon="mdi-information"
-                                text
+                                variant="text"
                                 elevation="1">
                                 <a
-                                    class="info--text"
+                                    class="text-info"
                                     href="https://gitlab.com/all-mangas-reader/all-mangas-reader-2#synchronization-with-gist-3rd-party"
                                     target="__blank"
                                     >{{ i18n("options_sync_gist_help") }}</a
@@ -356,19 +397,19 @@
                             <v-text-field
                                 v-if="gistSyncEnabled"
                                 v-model="gistSyncSecret"
-                                @change="setOption('gistSyncSecret')"
+                                @update:model-value="setOption('gistSyncSecret')"
                                 :label="i18n('option_sync_gist_secret')"></v-text-field>
                             <v-text-field
                                 v-if="gistSyncEnabled"
                                 v-model="gistSyncGitID"
-                                @change="setOption('gistSyncGitID')"
+                                @update:model-value="setOption('gistSyncGitID')"
                                 :label="i18n('option_sync_gist_gitID')"></v-text-field>
                             <v-alert
-                                dense
+                                density="compact"
                                 v-if="lastSync"
                                 :color="lastSync.status === 'error' ? 'red' : 'green'"
                                 icon="mdi-information"
-                                text
+                                variant="text"
                                 elevation="1">
                                 <div>
                                     <h2>Last Sync</h2>
@@ -383,9 +424,9 @@
                                                 <br />
                                                 <span>Reason: {{ lastSync.errorDetails.message }}</span>
                                                 <br />
-                                                <v-tooltip bottom>
-                                                    <template v-slot:activator="{ on }">
-                                                        <span v-on="on">{{ lastTimeISO(lastSync.date) }} ago</span>
+                                                <v-tooltip location="bottom">
+                                                    <template v-slot:activator="{ props }">
+                                                        <span v-bind="props">{{ lastTimeISO(lastSync.date) }} ago</span>
                                                     </template>
                                                     {{ lastSync.date }}
                                                 </v-tooltip>
@@ -401,60 +442,62 @@
                                     </div>
                                 </div>
                             </v-alert>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Search -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_search_title") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <v-checkbox
                                 v-model="searchOpenSeries"
-                                @change="setOption('searchOpenSeries')"
+                                @update:model-value="setOption('searchOpenSeries')"
                                 :label="i18n('options_search_open_series_desc')"></v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Support -->
                     <v-expansion-panel v-if="gistSyncEnabled && gistSyncSecret.length && gistSyncGitID.length">
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_support_title") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <v-checkbox
                                 v-model="gistDebugEnabled"
-                                @change="setOption('gistDebugEnabled')"
+                                @update:model-value="setOption('gistDebugEnabled')"
                                 :label="i18n('options_support_desc')"></v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
-            </v-tab-item>
-            <v-tab-item value="onwebsites" transition="false">
-                <v-expansion-panels accordion focusable v-model="panels">
+            </v-window-item>
+            <v-window-item value="onwebsites" transition="false">
+                <v-expansion-panels variant="accordion" v-model="panels">
                     <v-expansion-panel>
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_web_chapter_display_mode") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- Display options -->
-                            <v-alert dense color="info" icon="mdi-information" text elevation="1">
+                            <v-alert density="compact" color="info" icon="mdi-information" variant="text" elevation="1">
                                 {{ i18n("options_web_chapter_desc") }}
                             </v-alert>
 
                             <!-- Display as a book option -->
                             <v-checkbox
                                 v-model="displayBook"
-                                @change="setOption('displayBook')"
+                                @update:model-value="setOption('displayBook')"
                                 :label="i18n('option_read_book')"></v-checkbox>
 
                             <!-- Reading direction -->
-                            <v-radio-group v-model="readingDirection" @change="setOption('readingDirection')" column>
+                            <v-radio-group
+                                v-model="readingDirection"
+                                @update:model-value="setOption('readingDirection')">
                                 <v-radio :label="i18n('option_read_book_ltr')" :value="0"></v-radio>
                                 <v-radio :label="i18n('option_read_book_rtl')" :value="1"></v-radio>
                             </v-radio-group>
@@ -463,17 +506,23 @@
                             <v-checkbox
                                 v-if="readingDirection"
                                 v-model="invertKeys"
-                                @change="setOption('invertKeys')"
+                                @update:model-value="setOption('invertKeys')"
                                 :label="i18n('options_web_chapter_reading_direction_invert_keys_opt')"></v-checkbox>
 
                             <!-- Display full chapter option -->
-                            <v-checkbox v-model="displayFullChapter" @change="setOption('displayFullChapter')">
+                            <v-checkbox
+                                v-model="displayFullChapter"
+                                @update:model-value="setOption('displayFullChapter')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("option_read_fullchapter") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -483,7 +532,7 @@
                                 </template>
                             </v-checkbox>
                             <!-- Scaling mode -->
-                            <v-radio-group v-model="resizeMode" @change="setOption('resizeMode')" column>
+                            <v-radio-group v-model="resizeMode" @update:model-value="setOption('resizeMode')">
                                 <v-radio :label="i18n('option_read_resize_w')" :value="0"></v-radio>
                                 <v-radio
                                     :label="i18n('option_read_resize_h')"
@@ -498,7 +547,7 @@
                             <!-- Display dark reader option -->
                             <v-checkbox
                                 v-model="darkreader"
-                                @change="setOption('darkreader')"
+                                @update:model-value="setOption('darkreader')"
                                 :label="i18n('options_web_chapter_darkreader_desc')"></v-checkbox>
 
                             <!-- Thin Scan option -->
@@ -508,49 +557,53 @@
                                     <v-select
                                         v-model="thinscan"
                                         :items="thinscan_values"
-                                        @change="setOption('thinscan')"></v-select>
+                                        @update:model-value="setOption('thinscan')"></v-select>
                                 </v-col>
                             </v-row>
                             <!-- Default to webtoon mode -->
                             <v-checkbox
                                 v-model="webtoonDefault"
-                                @change="setOption('webtoonDefault')"
+                                @update:model-value="setOption('webtoonDefault')"
                                 :label="i18n('options_webtoon_mode_default')"></v-checkbox>
 
                             <!-- Magic Scroll enabled/disabled -->
                             <v-checkbox
                                 v-model="magicScrollEnabled"
-                                @change="setOption('magicScrollEnabled')"
+                                @update:model-value="setOption('magicScrollEnabled')"
                                 :label="i18n('options_magic_scroll_enabled')"></v-checkbox>
 
                             <!-- Magic Scroll enabled/disabled -->
                             <v-checkbox
                                 v-model="bottomNavigationEnabled"
-                                @change="setOption('bottomNavigationEnabled')"
+                                @update:model-value="setOption('bottomNavigationEnabled')"
                                 :label="i18n('options_bottom_navigation_enabled')"></v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Loading options -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_web_loading") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- Loading progression -->
                             <v-checkbox
                                 v-model="load"
-                                @change="setOption('load')"
+                                @update:model-value="setOption('load')"
                                 :label="i18n('options_web_load_desc')"></v-checkbox>
                             <!-- Loading images in the order -->
-                            <v-checkbox v-model="imgorder" @change="setOption('imgorder')">
+                            <v-checkbox v-model="imgorder" @update:model-value="setOption('imgorder')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_web_imgorder_desc") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -560,13 +613,17 @@
                                 </template>
                             </v-checkbox>
                             <!-- Prefetch next chapter -->
-                            <v-checkbox v-model="prefetch" @change="setOption('prefetch')">
+                            <v-checkbox v-model="prefetch" @update:model-value="setOption('prefetch')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_web_prefetch_desc") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -578,16 +635,20 @@
                             <!-- Mark chapter as read when loaded -->
                             <v-checkbox
                                 v-model="markwhendownload"
-                                @change="setOption('markwhendownload')"
+                                @update:model-value="setOption('markwhendownload')"
                                 :label="i18n('options_web_markwhendownload_desc')"></v-checkbox>
                             <!-- Automatically add manga to updates list -->
-                            <v-checkbox v-model="addauto" @change="setOption('addauto')">
+                            <v-checkbox v-model="addauto" @update:model-value="setOption('addauto')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_web_addauto_desc") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -597,13 +658,17 @@
                                 </template>
                             </v-checkbox>
                             <!-- Smooth navigation toggle (dynamially load next/previous chapters) -->
-                            <v-checkbox v-model="smoothNavigation" @change="setOption('smoothNavigation')">
+                            <v-checkbox v-model="smoothNavigation" @update:model-value="setOption('smoothNavigation')">
                                 <template v-slot:label>
                                     <div>
                                         {{ i18n("options_reader_smooth_navigation") }}
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="blue darken-2" class="superscript" small>
+                                        <v-tooltip location="bottom">
+                                            <template v-slot:activator="{ props }">
+                                                <v-icon
+                                                    v-bind="props"
+                                                    color="blue-darken-2"
+                                                    class="superscript"
+                                                    size="small">
                                                     mdi-information
                                                 </v-icon>
                                             </template>
@@ -614,20 +679,20 @@
                                     </div>
                                 </template>
                             </v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
-            </v-tab-item>
-            <v-tab-item value="supported" transition="false">
-                <v-expansion-panels accordion focusable v-model="panels">
+            </v-window-item>
+            <v-window-item value="supported" transition="false">
+                <v-expansion-panels variant="accordion" v-model="panels">
                     <v-expansion-panel>
                         <!-- Languages -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_sup_languages") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <div class="text-h6">{{ i18n("options_sup_languages_desc") }}</div>
                             <Flag
                                 v-for="lang in alllangs"
@@ -639,18 +704,18 @@
                             <!-- Deactivate unreadable websites-->
                             <v-checkbox
                                 v-model="deactivateunreadable"
-                                @change="setOption('deactivateunreadable')"
+                                @update:model-value="setOption('deactivateunreadable')"
                                 :label="i18n('options_sup_deactivate_unreadable_desc')"></v-checkbox>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Supported websites -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_supported") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <v-label>{{ i18n("options_sup_desc") }}</v-label>
                             <!-- Filters -->
                             <v-row class="mt-2 flex">
@@ -658,10 +723,10 @@
                                     <v-select v-model="selectedLang" :items="distinctLangs"></v-select>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-btn @click="deactivateAll()" color="primary" small>{{
+                                    <v-btn @click="deactivateAll()" color="primary" size="small">{{
                                         i18n("options_gen_deactivate_all")
                                     }}</v-btn>
-                                    <v-btn @click="activateAll()" color="primary" small>{{
+                                    <v-btn @click="activateAll()" color="primary" size="small">{{
                                         i18n("options_gen_activate_all")
                                     }}</v-btn>
                                 </v-col>
@@ -672,7 +737,7 @@
                                 item-key="mirrorName"
                                 class="elevation-1"
                                 disable-pagination
-                                dense
+                                density="compact"
                                 hide-default-header
                                 hide-default-footer>
                                 <template v-slot:header="{ props: { headers } }">
@@ -697,7 +762,7 @@
                                             <v-card
                                                 v-if="nbMangas(item.mirrorName) > 0"
                                                 color="primary"
-                                                dark
+                                                theme="dark"
                                                 class="mirror-manga-info">
                                                 {{ i18n("options_gen_mirrornbmangas", nbMangas(item.mirrorName)) }}
                                             </v-card>
@@ -711,91 +776,91 @@
                                             <v-checkbox
                                                 :disabled="nbMangas(item.mirrorName) > 0 && item.activated"
                                                 v-model="item.activated"
-                                                @change="changeActivation(item)" />
+                                                @update:model-value="changeActivation(item)" />
                                         </td>
                                     </tr>
                                 </template>
                             </v-data-table>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <v-expansion-panel>
                         <!-- Laboratory -->
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_sup_repos") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <v-label>{{ i18n("options_sup_repos_desc") }}</v-label>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-btn color="primary" dark class="mb-2" @click="goLab()" small>{{
+                                    <v-btn color="primary" class="mb-2" @click="goLab()" size="small">{{
                                         i18n("options_gen_laboratory")
                                     }}</v-btn>
                                 </v-col>
                             </v-row>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
-            </v-tab-item>
-            <v-tab-item value="mirror" transition="false">
-                <v-expansion-panels accordion focusable v-model="panels">
+            </v-window-item>
+            <v-window-item value="mirror" transition="false">
+                <v-expansion-panels variant="accordion" v-model="panels">
                     <!-- Mangadex Options -->
                     <v-expansion-panel>
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_mirror_specific_mangadex") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <Mangadex />
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- Komga Options -->
                     <v-expansion-panel>
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_mirror_specific_komga") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- Komga Domain -->
                             <v-text-field
                                 v-model="komgaUrl"
-                                @change="setOption('komgaUrl')"
+                                @update:model-value="setOption('komgaUrl')"
                                 :label="i18n('options_komga_server_label')" />
                             <!-- Komga Username -->
                             <v-text-field
                                 v-model="komgaUser"
-                                @change="setOption('komgaUser')"
+                                @update:model-value="setOption('komgaUser')"
                                 :label="i18n('options_komga_username_label')" />
                             <!-- Komga Password -->
                             <div class="text-h6">{{ i18n("options_komga_password") }}</div>
                             <v-text-field
                                 v-model="komgaPassword"
                                 type="password"
-                                @change="setOption('komgaPassword')"
+                                @update:model-value="setOption('komgaPassword')"
                                 :label="i18n('options_komga_password_label')" />
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                     <!-- tachidesk Options -->
                     <v-expansion-panel>
-                        <v-expansion-panel-header
-                            ><div class="text-h5 blue--text lighten-4">
+                        <v-expansion-panel-title>
+                            <div class="text-h5 text-blue-lighten-4">
                                 {{ i18n("options_mirror_specific_tachidesk") }}
-                            </div></v-expansion-panel-header
-                        >
-                        <v-expansion-panel-content class="pt-6" color="slight-overlay">
+                            </div>
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="pt-6" color="slight-overlay">
                             <!-- tachidesk Domain -->
                             <v-text-field
                                 v-model="tachideskUrl"
-                                @change="setOption('tachideskUrl')"
+                                @update:model-value="setOption('tachideskUrl')"
                                 :label="i18n('options_tachidesk_server_label')" />
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                     </v-expansion-panel>
                 </v-expansion-panels>
-            </v-tab-item>
-        </v-tabs-items>
+            </v-window-item>
+        </v-window>
     </div>
 </template>
 <script>
@@ -1070,7 +1135,7 @@ export default {
             let val = this[optstr]
             // Set dark mode before conversion
             if (optstr === "dark") {
-                this.$vuetify.theme.dark = val
+                this.$vuetify.theme.global.name = val ? "dark" : "light"
             }
             //convert it for base if necessary
             Object.keys(converters).forEach(key => {
@@ -1273,57 +1338,72 @@ export default {
     line-height: 24px !important;
     letter-spacing: normal !important;
 }
+
 .headline {
     font-size: 1.5rem !important;
     line-height: 30px !important;
     font-weight: bold;
 }
+
 .v-input {
     padding: 0;
     margin: 0;
 }
+
 .normal-input-group {
     padding: 18px 0 0;
 }
+
 /** hint to color radio buttons even if not selected */
 .colored-radio .v-input--selection-controls__input .v-icon {
     color: inherit !important;
 }
+
 .sel-title {
     line-height: 40px;
 }
+
 .v-btn-sel {
     padding: 0px 8px;
 }
+
 .opt-container {
     padding: 0;
 }
+
 .mirror-icon {
     vertical-align: middle;
     margin-right: 4px;
 }
+
 .mirror-manga-info {
     display: inline-block;
     width: auto;
     padding: 2px 5px;
     margin-left: 5px;
 }
+
 .td-langs {
     max-width: 200px;
 }
+
 .flag-list {
     margin: 2px 4px;
     cursor: pointer;
 }
+
 .flag-disabled {
     opacity: 0.4;
 }
+
 .v-alert {
     font-size: 0.8rem !important;
 }
+
 .slight-overlay {
     background-color: rgba(168, 83, 57, 0.06);
 }
+
 .v-icon.v-icon.superscript {
     vertical-align: super;
     line-height: 0;

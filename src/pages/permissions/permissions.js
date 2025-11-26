@@ -1,8 +1,10 @@
-import Vue from "vue"
-import Vuetify from "vuetify/lib"
+import { createApp } from "vue"
+import { createVuetify } from "vuetify"
+import * as components from "vuetify/components"
+import * as directives from "vuetify/directives"
 import App from "./App.vue"
 import store from "../../store"
-import vuetifyOptions from "../vuetifyOptions"
+import "vuetify/styles"
 
 const init = async function () {
     // Load options in store before everything
@@ -11,16 +13,20 @@ const init = async function () {
         mutation: "extendOptions"
     })
 
-    // Load vue
-    Vue.config.productionTip = false
-    Vue.use(Vuetify)
-    vuetifyOptions.theme.dark = store.state.options.dark === 1
-    new Vue({
-        el: "#app",
-        store,
-        vuetify: new Vuetify(vuetifyOptions),
-
-        render: h => h(App)
+    // Create Vuetify instance
+    const vuetify = createVuetify({
+        components,
+        directives,
+        theme: {
+            defaultTheme: store.state.options.dark === 1 ? "dark" : "light"
+        }
     })
+
+    // Create Vue app
+    const app = createApp(App)
+    app.config.globalProperties.$store = store
+    app.use(store)
+    app.use(vuetify)
+    app.mount("#app")
 }
 init()

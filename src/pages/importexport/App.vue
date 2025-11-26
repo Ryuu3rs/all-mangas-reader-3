@@ -2,21 +2,14 @@
     <v-app>
         <!-- Before mirrors and mangas are loaded into options -->
         <v-main v-if="!loaded" class="amr-loader">
-            <v-progress-circular indeterminate :width="4" :size="50" color="red darken-2"></v-progress-circular>
+            <v-progress-circular indeterminate :width="4" :size="50" color="red-darken-2"></v-progress-circular>
         </v-main>
 
         <!-- Once loaded -->
-        <v-toolbar
-            v-if="loaded"
-            :clipped-left="$vuetify.breakpoint.lgAndUp"
-            color="red darken-2"
-            dark
-            app
-            fixed
-            max-height="64">
+        <v-toolbar v-if="loaded" color="red-darken-2" height="64">
             <v-toolbar-title style="width: 300px" class="ml-0 pl-3">
-                <v-btn icon large color="white" class="hidden-sm-and-down">
-                    <v-avatar size="32px" tile>
+                <v-btn icon size="large" color="white" class="hidden-sm-and-down">
+                    <v-avatar size="32px" rounded="0">
                         <img src="/icons/icon_32.png" alt="All Mangas Reader" />
                     </v-avatar>
                 </v-btn>
@@ -41,7 +34,7 @@ export default {
     },
     async created() {
         document.title = i18n("page_ie_title")
-        let init = []
+        const init = []
         // initialize mirrors state for store in ie from background
         init.push(
             this.$store.dispatch("getStateFromReference", {

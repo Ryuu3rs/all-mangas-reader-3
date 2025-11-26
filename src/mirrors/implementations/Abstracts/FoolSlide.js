@@ -22,7 +22,7 @@ globalThis["FoolSlide"] = function (options) {
 
     this.getMangaList = async function (search) {
         let res = []
-        let self = this
+        const self = this
 
         if (this.options.search_all) {
             // search all pages,
@@ -35,12 +35,12 @@ globalThis["FoolSlide"] = function (options) {
 
     this.searchPage = async function (url, options) {
         let res = []
-        let self = this
-        let doc = await amr.loadPage(url, Object.assign({ nocache: true, preventimages: true }, options))
+        const self = this
+        const doc = await amr.loadPage(url, Object.assign({ nocache: true, preventimages: true }, options))
         $(this.options.mglist_selector, doc).each(function (index) {
             res[res.length] = [self.options.mglist_look_title_from_a(this).trim(), $(this).attr("href")]
         })
-        let nextpage_but = $(this.options.mglist_nextpage, doc)
+        const nextpage_but = $(this.options.mglist_nextpage, doc)
         if (nextpage_but.length > 0) {
             res = [...res, ...(await this.searchPage(nextpage_but.attr("href"), options))]
         }
@@ -51,7 +51,7 @@ globalThis["FoolSlide"] = function (options) {
         let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
         doc = await this.passAdult(doc, urlManga)
         let res = []
-        let self = this
+        const self = this
         $("a[href*='/read/']", doc).each(function (index) {
             res[res.length] = [self.options.listchaps_look_title_from_a(this).trim(), $(this).attr("href")]
         })
@@ -64,8 +64,8 @@ globalThis["FoolSlide"] = function (options) {
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
         doc = await this.passAdult(doc, curUrl)
 
-        let mga = $(this.options.info_manga_a, doc)
-        let base_url = amr.getVariable(this.options.info_chapter_var, doc)
+        const mga = $(this.options.info_manga_a, doc)
+        const base_url = amr.getVariable(this.options.info_chapter_var, doc)
         return {
             name: this.options.info_look_title_from_a(mga).trim(),
             currentMangaURL: mga.attr("href"),
@@ -75,7 +75,7 @@ globalThis["FoolSlide"] = function (options) {
     ;(this.getListImages = async function (doc, curUrl) {
         doc = await this.passAdult(doc, curUrl)
 
-        let pages = amr.getVariable("pages", doc)
+        const pages = amr.getVariable("pages", doc)
         return pages.map(page => page.url)
     }),
         /**

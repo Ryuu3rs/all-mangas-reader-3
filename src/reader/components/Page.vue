@@ -75,13 +75,19 @@ export default {
     components: { Scan },
     created() {
         /* Listen for scroll event to check if page is in viewport */
-        window.addEventListener("scroll", () => {
+        this.scrollHandler = () => {
             this.checkInViewPort()
-        })
+        }
+        window.addEventListener("scroll", this.scrollHandler)
     },
     mounted() {
         // first set in viewport values
         this.$nextTick(() => this.checkInViewPort())
+    },
+    beforeUnmount() {
+        if (this.scrollHandler) {
+            window.removeEventListener("scroll", this.scrollHandler)
+        }
     },
     methods: {
         /* Check which part of the page is in viewport (in height) */
@@ -123,13 +129,16 @@ export default {
     text-align: left;
     padding-left: 4px;
 }
+
 td.amr-right-page .amr-scan {
     text-align: left;
 }
+
 .amr-scan-container td.amr-left-page {
     text-align: right;
     padding-right: 4px;
 }
+
 td.amr-left-page .amr-scan {
     text-align: right;
 }

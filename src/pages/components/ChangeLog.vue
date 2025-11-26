@@ -7,16 +7,21 @@
                     <v-select
                         v-model="selectedVersion"
                         :items="versionLabels"
-                        item-text="title"
+                        item-title="title"
                         item-value="index"
-                        solo>
+                        variant="solo">
                     </v-select>
                 </v-col>
                 <v-col cols="10" v-show="versionEntries">
-                    <v-card v-for="(value, key) in versionEntries" :key="key" class="my-4" outlined elevation="3">
-                        <v-card-title class="primary--text">{{ key }}</v-card-title>
+                    <v-card
+                        v-for="(value, key) in versionEntries"
+                        :key="key"
+                        class="my-4"
+                        variant="outlined"
+                        elevation="3">
+                        <v-card-title class="text-primary">{{ key }}</v-card-title>
                         <v-card-text>
-                            <v-list dense>
+                            <v-list density="compact">
                                 <v-list-item v-for="(item, i) in value" :key="i"> * {{ item }} </v-list-item>
                             </v-list>
                         </v-card-text>
@@ -43,7 +48,7 @@ export default {
     },
     computed: {
         versionEntries: function () {
-            let t = log.versions[this.selectedVersion].parsed
+            const t = log.versions[this.selectedVersion].parsed
             delete t._
             return t
         },

@@ -12,7 +12,7 @@
         :class="color(3, true) + ' amr-manga-row' + (manga.update === 0 ? ' amr-noupdates' : '')">
         <v-row :class="isDarkText ? 'dark-text' : 'light-text'">
             <v-lazy class="col-auto pr-0 mr-0" v-if="selectable && lazyLoad">
-                <v-checkbox v-model="selected" hide-details dense class="shrink mr-2 mt-0"></v-checkbox>
+                <v-checkbox v-model="selected" hide-details density="compact" class="shrink mr-2 mt-0"></v-checkbox>
             </v-lazy>
             <!-- Name, Last Updated -->
             <v-col cols="4" lg="5">
@@ -23,8 +23,8 @@
                     <v-row no-gutters align="center" class="min-h-26">
                         <!-- + / - icon if group of mangas  -->
                         <v-lazy v-if="isInGroup && isFirst && lazyLoad" class="d-flex align-self-center" width="16px">
-                            <v-icon small v-if="!groupExpanded" @click="emitExpand()">mdi-plus</v-icon>
-                            <v-icon small v-else @click="emitExpand()">mdi-minus</v-icon>
+                            <v-icon size="small" v-if="!groupExpanded" @click="emitExpand()">mdi-plus</v-icon>
+                            <v-icon size="small" v-else @click="emitExpand()">mdi-minus</v-icon>
                         </v-lazy>
 
                         <!-- Mirror icons -->
@@ -33,16 +33,16 @@
                             width="20"
                             height="16"
                             :class="!isInGroup || (isInGroup && !isFirst) ? 'ml-1' : ''">
-                            <v-tooltip top content-class="icon-ttip">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top" content-class="icon-ttip">
+                                <template v-slot:activator="{ props }">
                                     <img
                                         v-if="isMirrorEnabled && !manga.updateError"
                                         class="m-icon"
                                         width="16"
                                         height="16"
                                         :src="mirror.mirrorIcon"
-                                        v-on="on" />
-                                    <v-icon v-else small v-on="on">mdi-cancel</v-icon>
+                                        v-bind="props" />
+                                    <v-icon v-else size="small" v-bind="props">mdi-cancel</v-icon>
                                 </template>
                                 <span>
                                     <span v-if="isMirrorEnabled && !manga.updateError">{{ mirror.mirrorName }}</span>
@@ -60,10 +60,10 @@
                         </v-lazy>
                         <!-- Manga name -->
                         <v-col :sm="title_sm_col" :lg="title_lg_col">
-                            <v-tooltip top :disabled="!(manga.displayName && manga.displayName !== '')">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top" :disabled="!(manga.displayName && manga.displayName !== '')">
+                                <template v-slot:activator="{ props }">
                                     <div class="ml-1 d-flex">
-                                        <span class="amr-manga-title text-truncate" v-on="on" @click="openManga">
+                                        <span class="amr-manga-title text-truncate" v-bind="props" @click="openManga">
                                             {{
                                                 manga.displayName && manga.displayName !== ""
                                                     ? manga.displayName
@@ -78,10 +78,10 @@
                         <div class="d-flex align-center ml-auto">
                             <v-divider class="mx-1" vertical></v-divider>
                             <!-- Display a timer off if the manga is not updating anymore -->
-                            <v-tooltip top content-class="icon-ttip">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top" content-class="icon-ttip">
+                                <template v-slot:activator="{ props }">
                                     <v-lazy>
-                                        <v-icon small v-if="manga.update === 0" class="mx-1" v-on="on"
+                                        <v-icon size="small" v-if="manga.update === 0" class="mx-1" v-bind="props"
                                             >mdi-timer-off</v-icon
                                         >
                                     </v-lazy>
@@ -89,20 +89,19 @@
                                 <span>{{ i18n("list_stopped_updating") }}</span>
                             </v-tooltip>
                             <!-- Display last update time -->
-                            <v-tooltip top content-class="icon-ttip">
-                                <template v-slot:activator="{ on }">
+                            <v-tooltip location="top" content-class="icon-ttip">
+                                <template v-slot:activator="{ props }">
                                     <v-lazy>
                                         <v-card
                                             flat
                                             v-if="options.displastup === 1 && manga.upts != 0 && timeUpdated < 50"
-                                            dark
                                             :class="color(0)"
-                                            v-on="on">
+                                            v-bind="props">
                                             <span class="group mr-1">
                                                 <span v-if="timeUpdated > 0" class="text-caption">{{
                                                     timeUpdated
                                                 }}</span>
-                                                <v-icon small>mdi-calendar-clock</v-icon>
+                                                <v-icon size="small">mdi-calendar-clock</v-icon>
                                             </span>
                                         </v-card>
                                     </v-lazy>
@@ -125,26 +124,26 @@
                             v-if="displayChapterSelectMenu"
                             v-model="selValue"
                             :items="chapsForSelect"
-                            @change="playChap($event)"
-                            dense
-                            solo
+                            @update:model-value="playChap($event)"
+                            density="compact"
+                            variant="solo"
                             class="align-self-center"
                             hide-details
-                            :background-color="color(0)"
+                            :bg-color="color(0)"
                             :color="isDarkText ? 'dark-text' : 'light-text'"
                             :menu-props="{ auto: true }"
                             :loading="chapsForSelect.length ? '' : color(-2)"
                             :disabled="!chapsForSelect.length">
                             <template v-slot:prepend-inner v-if="chapsForSelect.length && showProgress">
-                                <v-tooltip top content-class="icon-ttip">
-                                    <template v-slot:activator="{ on }">
+                                <v-tooltip location="top" content-class="icon-ttip">
+                                    <template v-slot:activator="{ props }">
                                         <v-lazy width="12">
                                             <div class="d-flex align-center">
                                                 <v-progress-circular
                                                     :indeterminate="!chapsForSelect.length"
-                                                    v-on="on"
+                                                    v-bind="props"
                                                     :color="isDarkText ? 'dark-text' : 'light-text'"
-                                                    :value="progress > 90 && progress < 100 ? '90' : progress"
+                                                    :model-value="progress > 90 && progress < 100 ? '90' : progress"
                                                     :size="12"
                                                     :width="2"
                                                     :rotate="90"
@@ -156,13 +155,13 @@
                                 </v-tooltip>
                                 <v-divider class="ml-2 mr-1" vertical></v-divider>
                             </template>
-                            <template v-slot:selection="{ on, item }">
-                                <div v-on="on" class="d-flex align-center text-truncate align-content-space-between">
+                            <template v-slot:selection="{ item }">
+                                <div class="d-flex align-center text-truncate align-content-space-between">
                                     <v-lazy v-if="manga.language" width="16" height="20">
                                         <Flag :value="manga.language" />
                                     </v-lazy>
                                     <span class="chap-title text-truncate" :class="manga.language ? 'ml-1' : ''">{{
-                                        item.text
+                                        item.title
                                     }}</span>
                                 </div>
                             </template>
@@ -188,10 +187,10 @@
                 <v-card :color="color(0)" class="back-card px-3 min-h-26">
                     <div v-if="displayActionMenu" class="d-flex min-h-26 justify-space-between">
                         <!-- Mark as read -->
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy v-if="manga.hasNew" height="22" class="align-self-center">
-                                    <v-icon v-on="on" @click="markAsRead()">mdi-eye</v-icon>
+                                    <v-icon v-bind="props" @click="markAsRead()">mdi-eye</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_read") }}</span>
@@ -202,13 +201,13 @@
                         </v-lazy>
 
                         <!-- Previous chapter -->
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy
                                     v-if="posInChapList < listChaps.length - 1"
                                     height="22"
                                     class="align-self-center">
-                                    <v-icon v-on="on" @click="play(-1)">mdi-chevron-left</v-icon>
+                                    <v-icon v-bind="props" @click="play(-1)">mdi-chevron-left</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_prev") }}</span>
@@ -222,19 +221,19 @@
                             <v-icon class="empty-icon"></v-icon>
                         </v-lazy>
 
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy v-if="isMirrorEnabled" height="22" class="align-self-center">
-                                    <v-icon v-on="on" @click="play(0)">mdi-play</v-icon>
+                                    <v-icon v-bind="props" @click="play(0)">mdi-play</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_cur") }}</span>
                         </v-tooltip>
                         <!-- Next chapter play -->
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy v-if="posInChapList > 0" height="22" class="align-self-center">
-                                    <v-icon v-on="on" @click="play(1)">mdi-chevron-right</v-icon>
+                                    <v-icon v-bind="props" @click="play(1)">mdi-chevron-right</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_next") }}</span>
@@ -248,19 +247,19 @@
                             <v-icon class="empty-icon"></v-icon>
                         </v-lazy>
 
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy v-if="isMirrorEnabled" height="22" class="align-self-center">
-                                    <v-icon v-on="on" @click="play(Infinity)">mdi-page-last</v-icon>
+                                    <v-icon v-bind="props" @click="play(Infinity)">mdi-page-last</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_latest") }}</span>
                         </v-tooltip>
                         <!-- Delete manga -->
-                        <v-tooltip top content-class="icon-ttip">
-                            <template v-slot:activator="{ on }">
+                        <v-tooltip location="top" content-class="icon-ttip">
+                            <template v-slot:activator="{ props }">
                                 <v-lazy height="22" class="align-self-center">
-                                    <v-icon v-on="on" @click="deleteManga = true">mdi-delete</v-icon>
+                                    <v-icon v-bind="props" @click="deleteManga = true">mdi-delete</v-icon>
                                 </v-lazy>
                             </template>
                             <span>{{ i18n("list_mg_act_delete") }}</span>
@@ -277,10 +276,10 @@
                                 </v-card-title>
                                 <v-card-actions>
                                     <v-spacer></v-spacer>
-                                    <v-btn color="blue darken-1" elevation="1" @click.native="deleteManga = false">{{
+                                    <v-btn color="blue-darken-1" elevation="1" @click="deleteManga = false">{{
                                         i18n("button_no")
                                     }}</v-btn>
-                                    <v-btn color="blue darken-1" elevation="1" @click.native="trash()">{{
+                                    <v-btn color="blue-darken-1" elevation="1" @click="trash()">{{
                                         i18n("button_yes")
                                     }}</v-btn>
                                 </v-card-actions>
@@ -293,16 +292,15 @@
         <v-row v-if="expanded" dense>
             <!-- Categories Menu -->
             <v-col :cols="submenu_col" class="d-flex justify-center" v-if="categories.length">
-                <v-menu offset-x :close-on-content-click="false" max-height="196">
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn :color="color(-1)" v-bind="attrs" v-on="on" x-small :dark="!isDarkText">
+                <v-menu location="end" :close-on-content-click="false" max-height="196">
+                    <template v-slot:activator="{ props }">
+                        <v-btn :color="color(-1)" v-bind="props" size="x-small">
                             {{ i18n("list_details_cats") }}
-                            <v-icon right x-small> mdi-menu-down </v-icon>
+                            <v-icon end size="x-small"> mdi-menu-down </v-icon>
                         </v-btn>
                     </template>
-                    <v-list :color="color(1)" dense :subheader="true" class="py-0">
+                    <v-list :bg-color="color(1)" density="compact" class="py-0">
                         <v-list-item
-                            link
                             v-for="(item, index) of categories"
                             :key="index"
                             :style="index < categories.length - 1 ? 'border-bottom: 1px solid rgb(0 0 0 / 10%);' : ''"
@@ -311,57 +309,56 @@
                             <v-list-item-title>
                                 {{ item.name }}
                             </v-list-item-title>
-                            <v-list-item-action>
+                            <template v-slot:append>
                                 <v-checkbox
-                                    dense
-                                    :dark="!isDarkText"
-                                    :input-value="hasCategory(item.name)"></v-checkbox>
-                            </v-list-item-action>
+                                    density="compact"
+                                    :model-value="hasCategory(item.name)"
+                                    hide-details></v-checkbox>
+                            </template>
                         </v-list-item>
                     </v-list>
                 </v-menu>
             </v-col>
             <!-- Updates Menu -->
             <v-col :cols="submenu_col" class="d-flex justify-center">
-                <v-menu offset-x :close-on-content-click="false" max-height="196">
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn :color="color(-1)" v-bind="attrs" v-on="on" x-small :dark="!isDarkText">
+                <v-menu location="end" :close-on-content-click="false" max-height="196">
+                    <template v-slot:activator="{ props }">
+                        <v-btn :color="color(-1)" v-bind="props" size="x-small">
                             {{ i18n("options_gen_updates") }}
-                            <v-icon right x-small> mdi-menu-down </v-icon>
+                            <v-icon end size="x-small"> mdi-menu-down </v-icon>
                         </v-btn>
                     </template>
                     <v-list
-                        :color="color(1)"
-                        dense
-                        :subheader="true"
+                        :bg-color="color(1)"
+                        density="compact"
                         class="py-0"
                         :class="isDarkText ? 'dark-text' : 'light-text'">
                         <!-- un/follow updates -->
                         <v-list-item link @click="toggleFollow()">
                             <v-list-item-title v-if="manga.read === 0">
-                                <v-icon small left> mdi-bell-off-outline </v-icon>
+                                <v-icon size="small" start> mdi-bell-off-outline </v-icon>
                                 {{ i18n("list_details_act_stop_follow") }}
                             </v-list-item-title>
                             <v-list-item-title v-else>
-                                <v-icon small left> mdi-bell-alert-outline </v-icon>
+                                <v-icon size="small" start> mdi-bell-alert-outline </v-icon>
                                 {{ i18n("list_details_act_follow") }}
                             </v-list-item-title>
                         </v-list-item>
                         <!-- start/stop updates -->
                         <v-list-item link @click="toggleUpdate()">
                             <v-list-item-title v-if="manga.update === 1">
-                                <v-icon small left> mdi-timer-off-outline </v-icon>
+                                <v-icon size="small" start> mdi-timer-off-outline </v-icon>
                                 {{ i18n("list_details_act_stop_updating") }}
                             </v-list-item-title>
                             <v-list-item-title v-else>
-                                <v-icon small left> mdi-timer-outline </v-icon>
+                                <v-icon size="small" start> mdi-timer-outline </v-icon>
                                 {{ i18n("list_details_act_restart_updating") }}
                             </v-list-item-title>
                         </v-list-item>
                         <!-- refresh manga chapter list -->
                         <v-list-item link @click="refreshMangaNow()">
                             <v-list-item-title>
-                                <v-icon small left :class="loader"> mdi-refresh </v-icon>
+                                <v-icon size="small" start :class="loader"> mdi-refresh </v-icon>
                                 {{ i18n("refresh_chapters") }}
                             </v-list-item-title>
                         </v-list-item>
@@ -370,44 +367,43 @@
             </v-col>
             <!-- More actions Menu -->
             <v-col :cols="submenu_col" class="d-flex justify-center">
-                <v-menu offset-x :close-on-content-click="false" max-height="196">
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn :color="color(-1)" v-bind="attrs" v-on="on" x-small :dark="!isDarkText">
+                <v-menu location="end" :close-on-content-click="false" max-height="196">
+                    <template v-slot:activator="{ props }">
+                        <v-btn :color="color(-1)" v-bind="props" size="x-small">
                             {{ i18n("list_details_more_actions") }}
-                            <v-icon right x-small> mdi-menu-down </v-icon>
+                            <v-icon end size="x-small"> mdi-menu-down </v-icon>
                         </v-btn>
                     </template>
                     <v-list
-                        :color="color(1)"
-                        dense
-                        :subheader="true"
+                        :bg-color="color(1)"
+                        density="compact"
                         class="py-0"
                         :class="isDarkText ? 'dark-text' : 'light-text'">
                         <!-- search this manga elsewhere -->
                         <v-list-item link @click="searchElsewhere()">
                             <v-list-item-title>
-                                <v-icon small left> mdi-text-search </v-icon>
+                                <v-icon size="small" start> mdi-text-search </v-icon>
                                 {{ i18n("list_details_act_search") }}
                             </v-list-item-title>
                         </v-list-item>
                         <!-- Reset manga read status -->
                         <v-list-item link @click="resetManga()">
                             <v-list-item-title>
-                                <v-icon small left> mdi-restart </v-icon>
+                                <v-icon size="small" start> mdi-restart </v-icon>
                                 {{ i18n("list_details_act_reset") }}
                             </v-list-item-title>
                         </v-list-item>
                         <!-- Rename manga -->
                         <v-list-item link @click="renameManga()">
                             <v-list-item-title>
-                                <v-icon x-small left :class="loader"> mdi-pencil-outline </v-icon>
+                                <v-icon size="x-small" start :class="loader"> mdi-pencil-outline </v-icon>
                                 {{ i18n("list_details_rename_manga") }}
                             </v-list-item-title>
                         </v-list-item>
                         <!-- Reset manga name -->
                         <v-list-item link @click="resetName()" v-if="manga.displayName && manga.displayName !== ''">
                             <v-list-item-title>
-                                <v-icon x-small left :class="loader"> mdi-pencil-off-outline </v-icon>
+                                <v-icon size="x-small" start :class="loader"> mdi-pencil-off-outline </v-icon>
                                 {{ i18n("list_details_reset_name") }}
                             </v-list-item-title>
                         </v-list-item>
@@ -415,7 +411,7 @@
                         <!-- Copy manga JSON -->
                         <v-list-item link @click="copyMangaDebug()">
                             <v-list-item-title>
-                                <v-icon x-small left :class="loader">mdi-clipboard-outline </v-icon>
+                                <v-icon size="x-small" start :class="loader">mdi-clipboard-outline </v-icon>
                                 Debug
                             </v-list-item-title>
                         </v-list-item>
@@ -425,17 +421,16 @@
 
             <!-- Manage manga bookmarks -->
             <v-col :cols="submenu_col" class="d-flex justify-center" v-if="bookmarks.length">
-                <v-menu offset-x :close-on-content-click="false" max-height="196">
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn :color="color(-1)" v-bind="attrs" v-on="on" x-small :dark="!isDarkText">
+                <v-menu location="end" :close-on-content-click="false" max-height="196">
+                    <template v-slot:activator="{ props }">
+                        <v-btn :color="color(-1)" v-bind="props" size="x-small">
                             {{ i18n("list_details_books") }}
-                            <v-icon right x-small> mdi-bookmark-multiple-outline </v-icon>
+                            <v-icon end size="x-small"> mdi-bookmark-multiple-outline </v-icon>
                         </v-btn>
                     </template>
                     <v-list
-                        :color="color(1)"
-                        dense
-                        :subheader="true"
+                        :bg-color="color(1)"
+                        density="compact"
                         class="py-0"
                         :class="isDarkText ? 'dark-text' : 'light-text'">
                         <!-- search this manga elsewhere -->
@@ -871,27 +866,34 @@ export default {
     flex: 1;
     justify-content: space-evenly;
 }
+
 .dark-text * {
     color: #424242 !important;
 }
+
 .light-text * {
     color: #fafafa !important;
 }
+
 .amr-manga-title {
     font-weight: bold;
     cursor: pointer;
     max-width: 700px !important;
 }
+
 .amr-manga-title-cont .select-checkbox {
     display: inline-flex;
     height: 20px;
 }
+
 .empty-icon {
     width: 22px;
 }
+
 .padding-group {
     width: 16px;
 }
+
 .back-card {
     height: 100% !important;
 }
@@ -899,6 +901,7 @@ export default {
 .amr-prog-cont {
     margin-left: 0px;
 }
+
 .amr-manga-waiting {
     margin-top: 7px;
 }
@@ -913,6 +916,7 @@ export default {
     display: inline-block;
     position: relative;
 }
+
 .det-sel-wrapper:after {
     content: "▼";
     position: absolute;
@@ -925,6 +929,7 @@ export default {
     pointer-events: none;
     z-index: 1;
 }
+
 .det-sel-wrapper select {
     -moz-appearance: none;
     -webkit-appearance: none;
@@ -940,64 +945,80 @@ export default {
     color: white;
     font-size: 1rem;
 }
+
 .amr-list-actions .v-icon.v-icon {
     font-size: 22px;
 }
+
 .chap-title {
     font-size: 13px;
     max-width: 600px !important;
 }
+
 .amr-noupdates {
     opacity: 0.75;
 }
+
 .min-h-26 {
     min-height: 26px;
 }
+
 .add {
     color: rgba(0, 0, 255, 0.3) !important;
 }
+
 @media screen and (max-width: 1263px) {
     .m-icon {
         margin-left: 2px !important;
         margin-right: 2px !important;
     }
 }
+
 @media screen and (min-width: 1264px) {
     .m-icon {
         margin-left: 4px !important;
     }
 }
+
 .custom-loader {
     animation: loader 1s infinite;
 }
+
 @-moz-keyframes loader {
     from {
         transform: rotate(0);
     }
+
     to {
         transform: rotate(360deg);
     }
 }
+
 @-webkit-keyframes loader {
     from {
         transform: rotate(0);
     }
+
     to {
         transform: rotate(360deg);
     }
 }
+
 @-o-keyframes loader {
     from {
         transform: rotate(0);
     }
+
     to {
         transform: rotate(360deg);
     }
 }
+
 @keyframes loader {
     from {
         transform: rotate(0);
     }
+
     to {
         transform: rotate(360deg);
     }

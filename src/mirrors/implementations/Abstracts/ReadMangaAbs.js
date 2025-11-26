@@ -7,15 +7,15 @@ globalThis["ReadMangaAbs"] = function (options) {
     this.canListFullMangas = false
 
     this.getMangaList = async function (search) {
-        let json = await amr.loadJson(this.options.base_url + "search/suggestion", {
+        const json = await amr.loadJson(this.options.base_url + "search/suggestion", {
             nocache: true,
             preventimages: true,
             type: "GET",
             dataType: "text",
             data: { query: search }
         })
-        let res = []
-        for (let sug of json.suggestions) {
+        const res = []
+        for (const sug of json.suggestions) {
             if (!sug.link.includes("/", 1)) {
                 res[res.length] = [sug.value, this.options.base_url + sug.link]
             }
@@ -24,18 +24,18 @@ globalThis["ReadMangaAbs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga + "?mtr=1", { nocache: true, preventimages: true })
-        let mangaIdFromUrl = urlManga.split("/").pop()
-        let res = []
-        let self = this
+        const doc = await amr.loadPage(urlManga + "?mtr=1", { nocache: true, preventimages: true })
+        const mangaIdFromUrl = urlManga.split("/").pop()
+        const res = []
+        const self = this
 
         $("div.chapters a.chapter-link", doc).each(function (index) {
             var str = $(this).attr("href")
             str = str.split("/")[1]
             if (str === mangaIdFromUrl) {
-                let nameParts = this.innerText.match(/^\s*\S.*$/gm).map(name => name.trim())
+                const nameParts = this.innerText.match(/^\s*\S.*$/gm).map(name => name.trim())
                 if (nameParts[nameParts.length - 1] === "новое") nameParts.pop()
-                let chapterName = nameParts[nameParts.length - 1]
+                const chapterName = nameParts[nameParts.length - 1]
                 res[res.length] = [chapterName, self.options.base_url + $(this).attr("href")]
             }
         })

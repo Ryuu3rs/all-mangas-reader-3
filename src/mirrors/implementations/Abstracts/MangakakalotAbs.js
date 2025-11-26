@@ -17,14 +17,14 @@ globalThis["MangakakalotAbs"] = function (options) {
 
     this.getMangaList = async function (search) {
         search = search.replace(/ /g, "_")
-        let res = []
-        let url = this.options.base_url + this.options.search_url + search
+        const res = []
+        const url = this.options.base_url + this.options.search_url + search
         let doc = await amr.loadPage(url, { nocache: true, preventimages: true })
         res.push(...this.searchPage(doc))
 
-        let lastPage = $(this.options.series_list_page_last_selector, doc)
+        const lastPage = $(this.options.series_list_page_last_selector, doc)
         if (lastPage.length > 0) {
-            let pageCount = parseInt(new URLSearchParams(new URL(lastPage.attr("href")).search).get("page")) || 2
+            const pageCount = parseInt(new URLSearchParams(new URL(lastPage.attr("href")).search).get("page")) || 2
             for (i = 2; i <= pageCount; i++) {
                 doc = await amr.loadPage(url + "?page=" + i, { nocache: true, preventimages: true })
                 res.push(...this.searchPage(doc))
@@ -35,8 +35,8 @@ globalThis["MangakakalotAbs"] = function (options) {
     }
 
     this.searchPage = function (doc) {
-        let self = this
-        let res = []
+        const self = this
+        const res = []
         $(this.options.series_list_selector, doc).each(function () {
             if (!$(this).attr("href").includes(self.options.base_url)) {
                 // This is because multiple sites can be linked to each other
@@ -48,8 +48,8 @@ globalThis["MangakakalotAbs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let res = []
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const res = []
         $(this.options.chapter_list_selector, doc).each(function (index) {
             res.push([$(this).text(), $(this).attr("href")])
         })
@@ -58,7 +58,7 @@ globalThis["MangakakalotAbs"] = function (options) {
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let link = $(this.options.chapter_information_selector, doc)
+        const link = $(this.options.chapter_information_selector, doc)
         return {
             name: link.text(),
             currentMangaURL: link.attr("href"),
@@ -67,7 +67,7 @@ globalThis["MangakakalotAbs"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let res = []
+        const res = []
         $(this.options.images_selector, doc).each(function () {
             res.push($(this).attr("src"))
         })

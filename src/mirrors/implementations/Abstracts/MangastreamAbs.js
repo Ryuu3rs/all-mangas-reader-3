@@ -25,12 +25,13 @@ globalThis["MangastreamAbs"] = function (options) {
     this.mirrorName = "MangastreamAbs"
     this.canListFullMangas = false
     this.getMangaList = async function (search) {
-        let self = this
+        const self = this
         var res = []
-        let urlManga = this.options.search_url + `?${this.options.search_field}=` + search + this.options.search_option
-        let searchApiUrl = this.options.search_url + "wp-admin/admin-ajax.php"
+        const urlManga =
+            this.options.search_url + `?${this.options.search_field}=` + search + this.options.search_option
+        const searchApiUrl = this.options.search_url + "wp-admin/admin-ajax.php"
         if (this.options.search_json) {
-            let json = await amr.loadJson(searchApiUrl, {
+            const json = await amr.loadJson(searchApiUrl, {
                 nocache: true,
                 preventimages: true,
                 post: true,
@@ -43,14 +44,14 @@ globalThis["MangastreamAbs"] = function (options) {
                 }
             })
             if (json != []) {
-                let mangas = json.manga[0].all
-                for (let i in mangas) {
-                    let item = mangas[i]
+                const mangas = json.manga[0].all
+                for (const i in mangas) {
+                    const item = mangas[i]
                     res.push([item["post_title"], self.options.fixSeriesUrl(item["post_link"])])
                 }
             }
         } else {
-            let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+            const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
 
             $(this.options.search_a_sel, doc).each(function (index) {
                 res[res.length] = [
@@ -63,8 +64,8 @@ globalThis["MangastreamAbs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let self = this
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const self = this
         var res = []
         $(this.options.chapters_a_sel, doc).each(function (index) {
             let chapter_text = $(this).text().trim()
@@ -72,7 +73,7 @@ globalThis["MangastreamAbs"] = function (options) {
                 chapter_text = $(self.options.chapters_text_sel, this).text().trim()
             }
 
-            let chapter_url = self.options.fixChapterUrl($(this).attr("href") + self.options.chapter_url_suffix)
+            const chapter_url = self.options.fixChapterUrl($(this).attr("href") + self.options.chapter_url_suffix)
 
             // if (self.options.flame_scans_fuckery) {
             //     chapter_url = self.flame_scans_chapter_url(chapter_url)
@@ -84,8 +85,8 @@ globalThis["MangastreamAbs"] = function (options) {
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let manga_url = $(this.options.manga_url_sel, doc).attr("href")
-        let manga_name = $(this.options.manga_url_sel, doc).text()
+        const manga_url = $(this.options.manga_url_sel, doc).attr("href")
+        const manga_name = $(this.options.manga_url_sel, doc).text()
 
         // if (this.options.flame_scans_fuckery) {
         //     curUrl = this.flame_scans_chapter_url(curUrl)
@@ -98,7 +99,7 @@ globalThis["MangastreamAbs"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let self = this
+        const self = this
         res = []
         $(this.options.img_sel, doc).each(function (index) {
             res[res.length] = $(this).attr(self.options.img_src)
@@ -116,9 +117,9 @@ globalThis["MangastreamAbs"] = function (options) {
 
     /* This function removes the random integer from flame scans chapter links. */
     this.flame_scans_chapter_url = function (origUrl) {
-        let parts = origUrl.split("/")
+        const parts = origUrl.split("/")
 
-        let parts2 = parts[3].split("-")
+        const parts2 = parts[3].split("-")
 
         if (!isNaN(parts2[0]) && !isNaN(parseFloat(parts2[0]))) parts2.shift()
 

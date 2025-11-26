@@ -18,7 +18,7 @@ globalThis["FunMangaAbs"] = function (options) {
     this.canListFullMangas = false
 
     this.getMangaList = async function (search) {
-        let opts = {
+        const opts = {
             nocache: true,
             preventimages: true,
             post: true,
@@ -27,7 +27,7 @@ globalThis["FunMangaAbs"] = function (options) {
         opts.data[this.options.search_data_field] = search
         if (this.options.sendDataAsText) {
             let str = ""
-            for (let dt in opts.data) {
+            for (const dt in opts.data) {
                 str += "&" + dt + "=" + opts.data[dt]
             }
             opts.data = str.substr(1)
@@ -35,8 +35,8 @@ globalThis["FunMangaAbs"] = function (options) {
             opts.headers["X-Requested-With"] = "XMLHttpRequest"
         }
 
-        let doc = await amr.loadPage(this.options.search_url, opts)
-        let res = []
+        const doc = await amr.loadPage(this.options.search_url, opts)
+        const res = []
         $(this.options.search_a_sel, doc).each(function (index) {
             res[index] = [$(this).attr("title").trim(), $(this).attr("href")]
         })
@@ -44,8 +44,8 @@ globalThis["FunMangaAbs"] = function (options) {
     }
 
     this.getListChaps = async function (urlManga) {
-        let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-        let res = []
+        const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+        const res = []
         $(this.options.chapters_a_sel, doc).each(function () {
             res[res.length] = [$(".val", $(this)).text().trim(), $(this).attr("href")]
         })
@@ -53,13 +53,13 @@ globalThis["FunMangaAbs"] = function (options) {
     }
 
     this.getInformationsFromCurrentPage = async function (doc, curUrl) {
-        let mangaurl = amr.getVariable("manga_url", doc)
+        const mangaurl = amr.getVariable("manga_url", doc)
         let mgname
         if ($("a[href='" + mangaurl + "']", doc).length > 0) {
             mgname = $("a[href='" + mangaurl + "']", doc).text()
         }
         if (mgname === undefined || mgname.trim() === "") {
-            let docmg = await amr.loadPage(mangaurl)
+            const docmg = await amr.loadPage(mangaurl)
             mgname = $(".panel-heading h1", docmg).text()
         }
         return {
@@ -70,7 +70,7 @@ globalThis["FunMangaAbs"] = function (options) {
     }
 
     this.getListImages = async function (doc, curUrl) {
-        let images = amr.getVariable("images", doc)
+        const images = amr.getVariable("images", doc)
         return images.map(obj => obj.url)
     }
 

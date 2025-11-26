@@ -9,9 +9,12 @@ if (typeof registerMangaObject === "function") {
         chapter_url: /^\/manga\/.+\/chapter\/.+/g,
 
         getMangaList: async function (search) {
-            let res = []
-            let self = this
-            let doc = await amr.loadPage(this.home + "series?search=" + search, { nocache: true, preventimages: true })
+            const res = []
+            const self = this
+            const doc = await amr.loadPage(this.home + "series?search=" + search, {
+                nocache: true,
+                preventimages: true
+            })
             $(`a[href*="/manga/"]`, doc).each(function () {
                 res.push([$(this).text().trim(), self.home + $(this).attr("href")])
             })
@@ -19,9 +22,9 @@ if (typeof registerMangaObject === "function") {
         },
 
         getListChaps: async function (urlManga) {
-            let doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
-            let res = []
-            let self = this
+            const doc = await amr.loadPage(urlManga, { nocache: true, preventimages: true })
+            const res = []
+            const self = this
 
             $("ul.chapter-list a", doc).each(function (index) {
                 res.push([$(this).find("strong").text().trim(), self.home + $(this).attr("href")])
@@ -40,8 +43,8 @@ if (typeof registerMangaObject === "function") {
         },
 
         getListImages: async function (doc, curUrl) {
-            let res = []
-            let self = this
+            const res = []
+            const self = this
             $("article center div img", doc).each(function (index) {
                 const src = $(this).attr("src")
                 if (!res.includes(src)) {
