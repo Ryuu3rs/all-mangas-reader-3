@@ -17,7 +17,7 @@ A modernized browser extension for reading manga from various online sources. Th
 | Vuetify    | 2.7         | 3.8                     |
 | TypeScript | Partial     | Key modules converted   |
 | Webpack    | 4.x         | 5.103                   |
-| Node.js    | 14+         | 18+ / 20+               |
+| Node.js    | 14+         | 20.x LTS                |
 | Testing    | None        | Vitest + Vue Test Utils |
 | CI/CD      | None        | GitHub Actions          |
 
@@ -62,8 +62,8 @@ A modernized browser extension for reading manga from various online sources. Th
 
 ### Prerequisites
 
--   Node.js 18.x or 20.x
--   npm 9.x or higher
+-   Node.js 20.x LTS (recommended)
+-   npm 10.x or higher
 
 ### Quick Start
 
