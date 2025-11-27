@@ -87,6 +87,10 @@ export interface AppManga {
     currentScanUrl: string
 
     zoom?: number
+
+    // Update error tracking
+    updateError?: 0 | 1
+    updateErrorCode?: number
 }
 
 /** Plain javascript object with static properties defined **/
@@ -136,7 +140,7 @@ export interface ScriptJsonInject {
 export interface MirrorImplementation extends MirrorObject {
     getMangaList(search?: string): Promise<InfoResult[]>
 
-    getListChaps(urlManga: string): Promise<InfoResult[] | Record<string, InfoResult[]>>
+    getListChaps(urlManga: string, htmlContent?: string): Promise<InfoResult[] | Record<string, InfoResult[]>>
 
     getCurrentPageInfo(doc: string, curUrl: string): Promise<CurrentPageInfo>
 

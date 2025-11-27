@@ -45,13 +45,16 @@ export class HandleManga {
             case "saveCurrentState":
                 return this.store.dispatch("saveCurrentState", message)
             case "readManga": {
+                console.log("[DEBUG] handle-manga received readManga:", (message as any).name, (message as any).mirror)
                 //count number of chapters read
                 const nb = (await this.optionStorage.getKey("nb_read")) ?? 1
                 const value = (typeof nb === "string" ? parseInt(nb) : nb) + 1
                 await this.optionStorage.setKey("nb_read", value)
                 this.logger.debug("Read manga " + message.url)
                 // call store method to update reading list appropriately
-                return this.store.dispatch("readManga", message)
+                const result = await this.store.dispatch("readManga", message)
+                console.log("[DEBUG] handle-manga readManga dispatch completed")
+                return result
             }
             case "initMangasFromDB":
                 return this.store.dispatch("initMangasFromDB", true)
@@ -98,15 +101,36 @@ export class HandleManga {
                 return this.searchList(message as SearchListAction)
             case "getListChaps": {
                 const key = this.getMangaKey(message)
+                console.log("[DEBUG] getListChaps - looking for key:", key)
                 const mgch = this.store.state.mangas.all.find(mg => mg.key === key)
                 if (mgch !== undefined) {
-                    return Promise.resolve(mgch.listChaps)
+                    const listChaps = mgch.listChaps
+                    console.log(
+                        "[DEBUG] getListChaps - found manga:",
+                        mgch.name,
+                        "listChaps length:",
+                        listChaps?.length || 0
+                    )
+                    if (listChaps && listChaps.length > 0) {
+                        console.log("[DEBUG] getListChaps - first chapter:", JSON.stringify(listChaps[0]))
+                        // Serialize to plain array to avoid any Proxy issues
+                        const plainListChaps = JSON.parse(JSON.stringify(listChaps))
+                        console.log(
+                            "[DEBUG] getListChaps - returning serialized listChaps, length:",
+                            plainListChaps.length
+                        )
+                        return Promise.resolve(plainListChaps)
+                    }
+                    return Promise.resolve(listChaps)
                 } else {
+                    console.log("[DEBUG] getListChaps - manga not found in store")
                     return Promise.resolve(false)
                 }
             }
             case "loadListChaps":
                 return this.loadListChaps(message)
+            case "storeListChaps":
+                return this.storeListChaps(message)
             case "importMangas":
                 return this.importMangas(message)
             default:
@@ -132,7 +156,75 @@ export class HandleManga {
      */
     async loadListChaps(message) {
         const impl = await this.mirrorLoader.getImpl(message.mirror)
-        return impl.getListChaps(message.url)
+        // Pass htmlContent if provided (for Cloudflare-protected sites)
+        return impl.getListChaps(message.url, message.htmlContent)
+    }
+
+    /**
+     * Store chapters list to database (for Cloudflare-protected sites)
+     * Called from reader when chapters are fetched via content script
+     * @param {*} message
+     */
+    /**
+     * Store chapter list fetched from content script context (used for Cloudflare-protected sites).
+     *
+     * This is called when the reader successfully fetches chapters via the content script,
+     * which has access to the user's authenticated session and can bypass Cloudflare protection.
+     *
+     * TODO: KNOWN ISSUE - Icon not displaying for Cloudflare-protected Madara sites (e.g., ToonClash/MangaClash)
+     * The manga.updateError flag is set to 1 when background script XHR fails with 403 from Cloudflare.
+     * Even though chapters are successfully fetched via content script and we attempt to clear
+     * updateError here, the icon still shows as "cancel" in popup.html manga list view.
+     *
+     * What we've tried:
+     * 1. Calling markNoUpdateError action to clear the flag
+     * 2. Awaiting the markNoUpdateError dispatch before returning
+     * 3. markNoUpdateError internally calls findAndUpdateManga to persist to IndexedDB
+     * 4. Debug logs confirm this code path is reached
+     *
+     * Possible causes not yet investigated:
+     * - Vue reactivity not triggering re-render in popup after store mutation
+     * - IndexedDB persistence timing issues
+     * - Popup loading stale data before update is persisted
+     * - BroadcastChannel not syncing state between background and popup
+     */
+    async storeListChaps(message) {
+        console.log("[DEBUG] storeListChaps called for:", message.url, "chapters:", message.listChaps?.length)
+        const key = this.getMangaKey(message)
+        if (!key) {
+            console.log("[DEBUG] storeListChaps - could not generate manga key")
+            return false
+        }
+        const manga = this.store.state.mangas.all.find(mg => mg.key === key)
+        if (manga) {
+            console.log(
+                "[DEBUG] storeListChaps - found manga:",
+                manga.name,
+                "updateError:",
+                manga.updateError,
+                "updating listChaps"
+            )
+            this.store.commit("updateMangaListChaps", { key: key, listChaps: message.listChaps })
+
+            // Clear the update error flag since chapters were successfully loaded
+            // Always clear it when we successfully get chapters from content script
+            // NOTE: This should fix the icon issue but currently doesn't work - see TODO above
+            console.log("[DEBUG] storeListChaps - clearing updateError flag (was:", manga.updateError, ")")
+            // markNoUpdateError action already calls findAndUpdateManga internally, so we just need to await it
+            try {
+                await this.store.dispatch("markNoUpdateError", manga)
+                console.log(
+                    "[DEBUG] storeListChaps - cleared updateError and persisted to database, new updateError:",
+                    manga.updateError
+                )
+            } catch (e) {
+                console.error("[DEBUG] storeListChaps - failed to clear updateError:", e)
+            }
+            return true
+        } else {
+            console.log("[DEBUG] storeListChaps - manga not found in store for key:", key)
+            return false
+        }
     }
 
     /**
@@ -240,6 +332,9 @@ export class HandleManga {
 
         // check if we need to load preload (it could be annoying to have preload on each pages of the website)
         // websites which provide a chapter_url regexp will have their chapters with a preload
+        // Reset lastIndex to avoid issues with the 'g' flag on regex - calling .test() on a
+        // global regex maintains state and can return false on subsequent calls
+        chapterUrl.lastIndex = 0
         if (!chapterUrl.test("/" + afterHostURL(url))) {
             this.logger.info({
                 result: "Chapter url is not matching, skipping...",
@@ -376,64 +471,91 @@ export class HandleManga {
      * Return the list of images urls from a chapter
      */
     async getChapterData(message, sender) {
-        return fetch(message.url)
-            .then(async resp => {
-                // We no longer have #__amr_text_dom__, as that was added to wrapper div in dom purifier
-                const htmlDocument = await resp.text()
-                // loads the implementation code
-                const impl = await this.mirrorLoader.getImpl(message.mirrorName)
-                // Check if this is a chapter page
-                const isChapter = impl.isCurrentPageAChapterPage(htmlDocument, message.url)
-                let infos,
-                    imagesUrl: string[] = []
-                if (isChapter) {
-                    // Retrieve information relative to current chapter / manga read
-                    infos = await impl.getCurrentPageInfo(htmlDocument, message.url).catch(e => {
-                        console.error("Error while loading getCurrentPageInfo from url " + message.url)
-                        console.error(e)
-                    })
+        // Use HTML content passed from content script if available (avoids Cloudflare issues)
+        // Otherwise, fetch the page (for loading subsequent chapters)
+        const getHtmlDocument = async (): Promise<string> => {
+            if (message.htmlContent) {
+                return message.htmlContent
+            }
+            const resp = await fetch(message.url)
+            return resp.text()
+        }
 
-                    // retrieve images to load
-                    imagesUrl = await impl.getListImages(htmlDocument, message.url, sender).catch(e => {
-                        console.error("Error while loading getListImages from url " + message.url)
-                        console.error(e)
-                        return []
-                    })
-                }
-                const body = cheerio.load(htmlDocument)
-                let title = body("title" as string).text()
-                try {
-                    if (typeof impl.getChapterTitle === "function") {
-                        title = await impl.getChapterTitle(htmlDocument, message.url)
-                    }
-                } catch (e) {
+        try {
+            const htmlDocument = await getHtmlDocument()
+            // loads the implementation code
+            const impl = await this.mirrorLoader.getImpl(message.mirrorName)
+            // Check if this is a chapter page
+            const isChapter = impl.isCurrentPageAChapterPage(htmlDocument, message.url)
+            let infos,
+                imagesUrl: string[] = []
+            if (isChapter) {
+                // Retrieve information relative to current chapter / manga read
+                infos = await impl.getCurrentPageInfo(htmlDocument, message.url).catch(e => {
+                    console.error("Error while loading getCurrentPageInfo from url " + message.url)
                     console.error(e)
-                }
-                if (!title) {
-                    title = (infos?.name ? infos.name + " - " : "") + "Undefined Chapter"
-                }
+                })
 
-                return <ChapterData>{
-                    isChapter: !!isChapter,
-                    infos: infos,
-                    images: imagesUrl,
-                    title: title
+                // retrieve images to load
+                imagesUrl = await impl.getListImages(htmlDocument, message.url, sender).catch(e => {
+                    console.error("Error while loading getListImages from url " + message.url)
+                    console.error(e)
+                    return []
+                })
+            }
+            const body = cheerio.load(htmlDocument)
+            let title = body("title" as string).text()
+            try {
+                if (typeof impl.getChapterTitle === "function") {
+                    title = await impl.getChapterTitle(htmlDocument, message.url)
                 }
-            })
-            .catch(e => {
-                console.error("error while loading images from chapter " + message.url)
+            } catch (e) {
                 console.error(e)
-                return Promise.resolve({ images: null })
-            })
+            }
+            if (!title) {
+                title = (infos?.name ? infos.name + " - " : "") + "Undefined Chapter"
+            }
+
+            return <ChapterData>{
+                isChapter: !!isChapter,
+                infos: infos,
+                images: imagesUrl,
+                title: title
+            }
+        } catch (e) {
+            console.error("error while loading images from chapter " + message.url)
+            console.error(e)
+            return { images: null }
+        }
     }
 
     private async getImageUrlFromPageUrl(message: { mirror?: string; url: string }) {
+        console.log("[DEBUG] getImageUrlFromPageUrl handler called for:", message.url, message.mirror)
         if (!message.mirror) {
-            throw new Error(`message.mirror is required to resolve image from page`)
+            console.error("[DEBUG] getImageUrlFromPageUrl: mirror is required")
+            return null
         }
 
-        const impl = await this.mirrorLoader.getImpl(message.mirror)
-        return impl.getImageUrlFromPage(message.url)
+        try {
+            const impl = await this.mirrorLoader.getImpl(message.mirror)
+            if (!impl) {
+                console.error("[DEBUG] getImageUrlFromPageUrl: mirror impl not found:", message.mirror)
+                return null
+            }
+            console.log("[DEBUG] Got mirror impl, calling getImageUrlFromPage")
+            const result = await impl.getImageUrlFromPage(message.url)
+            console.log("[DEBUG] getImageUrlFromPage result:", result)
+
+            // If mirror returns "error" string, treat it as null
+            if (result === "error" || !result) {
+                console.error("[DEBUG] getImageUrlFromPageUrl: mirror returned error or null")
+                return null
+            }
+            return result
+        } catch (e) {
+            console.error("[DEBUG] getImageUrlFromPageUrl ERROR:", e)
+            return null
+        }
     }
 
     /**

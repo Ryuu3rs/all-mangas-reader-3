@@ -31,9 +31,17 @@ export default class ChapterLoader {
             url = window.location.href
         }
 
+        // If we're on the current page, pass the DOM content directly to avoid
+        // re-fetching which can fail due to Cloudflare or other protections
+        let htmlContent = null
+        if (url === window.location.href && document.documentElement) {
+            htmlContent = document.documentElement.outerHTML
+        }
+
         const data = await browser.runtime.sendMessage({
             action: "getChapterData",
             url: url,
+            htmlContent: htmlContent, // pass DOM content if available
             mirrorName: this.mirror.mirrorName, // assuming we read on the same mirror (no other possibilities for now...)
             language: pageData.state.language // and in the same language...
         })

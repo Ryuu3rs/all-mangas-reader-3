@@ -17,22 +17,25 @@ export const readingActions = {
      * Read a manga: update latest read chapter if the current chapter is more recent than the previous one
      */
     async readManga({ dispatch, commit, getters, rootState, state }, message) {
+        console.log("[DEBUG] readManga action called:", message.name, message.mirror)
         const key = mangaKey({
             url: message.url,
             mirror: message.mirror,
             language: message.language,
             rootState: { state: rootState }
         })
+        console.log("[DEBUG] readManga key:", key)
         if (key.indexOf("unknown") === 0) {
-            console.error("Impossible to import manga because mirror can't be found. Perhaps has it been deleted...")
+            console.error("[DEBUG] readManga FAILED - unknown mirror:", message.mirror)
             console.error(message)
             return
         }
         const iconHelper = getIconHelper({ state: rootState, getters })
         const mg = state.all.find(manga => manga.key === key)
         if (mg === undefined) {
-            console.warn("readManga of an unlisted manga --> create it")
+            console.log("[DEBUG] readManga - manga not in list, creating unlisted manga")
             await dispatch("createUnlistedManga", message)
+            console.log("[DEBUG] readManga - createUnlistedManga completed")
             iconHelper.refreshBadgeAndIcon()
             return
         }

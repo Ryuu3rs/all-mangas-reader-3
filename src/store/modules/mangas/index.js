@@ -31,6 +31,10 @@ const initActions = {
     async initMangasFromDB({ commit, dispatch, rootState }) {
         await dispatch("mdFixLang")
         await storedb.getMangaList().then(async mangasdb => {
+            console.log("[DEBUG] initMangasFromDB - loaded from database:", mangasdb.length, "mangas")
+            if (mangasdb.length > 0) {
+                console.log("[DEBUG] First manga from DB:", mangasdb[0].name, mangasdb[0].key)
+            }
             await dispatch("updateLanguageCategories")
             commit(
                 "setMangas",

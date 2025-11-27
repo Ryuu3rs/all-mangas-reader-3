@@ -215,7 +215,7 @@
                         </v-col>
                         <!-- Action buttons -->
                         <v-col class="text-center pa-2" cols="12">
-                            <v-menu>
+                            <v-menu :close-on-content-click="false" v-model="bookmarkMenuOpen">
                                 <!-- Bookmarks button -->
                                 <template v-slot:activator="{ props: menuProps }">
                                     <v-tooltip location="bottom" class="ml-1">
@@ -239,16 +239,9 @@
                                     <v-card-actions>
                                         <!-- Action to update / delete bookmark for chapter > open popup -->
                                         <v-btn
-                                            @click="bookmarkChapter"
-                                            :color="
-                                                !darkreader
-                                                    ? bookstate.booked
-                                                        ? 'yellow'
-                                                        : 'yellow'
-                                                    : bookstate.booked
-                                                    ? 'yellow'
-                                                    : 'yellow-lighten-4'
-                                            "
+                                            @click="handleBookmarkButtonClick"
+                                            @mousedown.stop
+                                            color="yellow"
                                             :class="!darkreader ? 'text-grey-darken-3' : ''">
                                             <v-icon :icon="icons.mdiStar"></v-icon>&nbsp;
                                             {{
@@ -767,6 +760,8 @@ export default {
         maxWidthValue: 100,
         maxWidthTimeout: null,
 
+        bookmarkMenuOpen: false /* State of bookmark menu */,
+
         icons: {
             mdiMenu,
             mdiChevronRight,
@@ -1111,25 +1106,89 @@ export default {
         },
         /** Load chapters list for current manga */
         async loadChapters() {
+            console.log(
+                "[DEBUG] loadChapters called for:",
+                this.pageData.currentMangaURL,
+                "mirror:",
+                this.mirror?.mirrorName
+            )
+
+            let alreadyLoadedListChaps = null
             // try to get list chap from background (already loaded in local db)
-            const alreadyLoadedListChaps = await browser.runtime.sendMessage({
-                action: "getListChaps",
-                url: this.pageData.currentMangaURL,
-                language: this.pageData.language
-            })
+            try {
+                alreadyLoadedListChaps = await browser.runtime.sendMessage({
+                    action: "getListChaps",
+                    url: this.pageData.currentMangaURL,
+                    mirror: this.mirror?.mirrorName,
+                    language: this.pageData.language
+                })
+                console.log(
+                    "[DEBUG] loadChapters - alreadyLoadedListChaps:",
+                    alreadyLoadedListChaps
+                        ? Array.isArray(alreadyLoadedListChaps)
+                            ? alreadyLoadedListChaps.length + " chapters"
+                            : typeof alreadyLoadedListChaps
+                        : "null/undefined"
+                )
+            } catch (e) {
+                console.log("[DEBUG] loadChapters - getListChaps error:", e)
+            }
+
             if (alreadyLoadedListChaps && alreadyLoadedListChaps.length > 0) {
+                console.log(
+                    "[DEBUG] loadChapters - using cached chapters, count:",
+                    alreadyLoadedListChaps.length,
+                    "first raw:",
+                    JSON.stringify(alreadyLoadedListChaps[0])
+                )
                 this.chapters = alreadyLoadedListChaps.map(arr => {
                     return { url: arr[1], title: arr[0] }
                 })
+                console.log(
+                    "[DEBUG] loadChapters - chapters mapped, count:",
+                    this.chapters.length,
+                    "first mapped:",
+                    JSON.stringify(this.chapters[0])
+                )
             } else {
                 let list = []
                 // we need to load chapters using background page
-                list = await browser.runtime.sendMessage({
-                    action: "loadListChaps",
-                    mirror: this.mirror.mirrorName,
-                    url: this.pageData.currentMangaURL,
-                    language: this.pageData.language
-                })
+                // Try to fetch manga page HTML in content script context (bypasses Cloudflare)
+                let htmlContent = undefined
+                console.log(
+                    "[DEBUG] loadChapters - no cached chapters, fetching manga page HTML from:",
+                    this.pageData.currentMangaURL
+                )
+                try {
+                    const response = await fetch(this.pageData.currentMangaURL)
+                    console.log("[DEBUG] loadChapters - fetch response status:", response.status, response.ok)
+                    if (response.ok) {
+                        htmlContent = await response.text()
+                        console.log("[DEBUG] loadChapters - fetched HTML length:", htmlContent?.length)
+                    }
+                } catch (e) {
+                    console.log("[DEBUG] loadChapters - failed to fetch manga page HTML:", e)
+                }
+                console.log(
+                    "[DEBUG] loadChapters - sending loadListChaps with htmlContent:",
+                    htmlContent ? htmlContent.length + " chars" : "undefined"
+                )
+                try {
+                    list = await browser.runtime.sendMessage({
+                        action: "loadListChaps",
+                        mirror: this.mirror.mirrorName,
+                        url: this.pageData.currentMangaURL,
+                        language: this.pageData.language,
+                        htmlContent: htmlContent
+                    })
+                    console.log(
+                        "[DEBUG] loadChapters - loadListChaps response:",
+                        list ? (Array.isArray(list) ? list.length + " items" : typeof list) : "null/undefined"
+                    )
+                } catch (e) {
+                    console.log("[DEBUG] loadChapters - loadListChaps error:", e)
+                    list = []
+                }
                 if (list !== undefined && !Array.isArray(list)) {
                     // case of returned list is an object keys are languages and values are list of mangas
                     if (list[this.manga.language] && list[this.manga.language].length > 0) {
@@ -1145,6 +1204,23 @@ export default {
                     this.chapters = list.map(arr => {
                         return { url: arr[1], title: arr[0] }
                     })
+                    // Store chapters to database so popup can access them
+                    console.log(
+                        "[DEBUG] loadChapters - storing",
+                        list.length,
+                        "chapters to database for manga:",
+                        this.pageData.currentMangaURL
+                    )
+                    try {
+                        await browser.runtime.sendMessage({
+                            action: "storeListChaps",
+                            url: this.pageData.currentMangaURL,
+                            mirror: this.mirror.mirrorName,
+                            listChaps: list
+                        })
+                    } catch (e) {
+                        console.log("[DEBUG] loadChapters - failed to store chapters:", e)
+                    }
                 } else {
                     // no chapters
                     this.chapters = []
@@ -1539,9 +1615,27 @@ export default {
         openShortcuts() {
             this.$refs.shortcuts.open()
         },
+        /** Handle bookmark button click - separate method for event handling */
+        handleBookmarkButtonClick(event) {
+            console.log("[DEBUG] handleBookmarkButtonClick() called", event)
+            event.stopPropagation()
+            event.preventDefault()
+            this.bookmarkChapter()
+        },
         /** Open popup to bookmark chapter with note */
         bookmarkChapter() {
-            this.$refs.book.open()
+            console.log("[DEBUG] bookmarkChapter() called")
+            // Close the menu first
+            this.bookmarkMenuOpen = false
+            // Use nextTick to ensure menu is closed before opening dialog
+            this.$nextTick(() => {
+                console.log("[DEBUG] this.$refs.book:", this.$refs.book)
+                if (this.$refs.book) {
+                    this.$refs.book.open()
+                } else {
+                    console.error("[DEBUG] BookmarkPopup ref not found!")
+                }
+            })
         },
         /** Open AMR bookmarks in a new tab */
         openBookmarksTab() {

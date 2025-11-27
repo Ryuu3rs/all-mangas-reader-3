@@ -15,9 +15,24 @@ import { reactiveSet, reactiveDelete } from "../../../shared/vue-compat"
 export const mutations = {
     /**
      * Set the list of mangas in the store
+     * Protected against clearing mangas when new list is empty but current list has data
+     * This prevents race conditions from VuexMutationSharer clearing the list
      */
     setMangas(state, mangas) {
-        state.all = mangas
+        console.log("[DEBUG] setMangas called with", mangas?.length || 0, "mangas, current:", state.all?.length || 0)
+
+        // Protect against clearing existing mangas with empty array
+        // This happens when another page initializes and shares an empty setMangas mutation
+        if ((!mangas || mangas.length === 0) && state.all?.length > 0) {
+            console.warn(
+                "[DEBUG] Blocked setMangas from clearing",
+                state.all.length,
+                "existing mangas with empty array"
+            )
+            return // Don't clear existing mangas
+        }
+
+        state.all = mangas || []
     },
 
     /**
