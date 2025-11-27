@@ -1,8 +1,5 @@
 <template>
     <v-dialog v-model="dialog" max-width="500px">
-        <template v-slot:activator="{ props }">
-            <slot name="activator" v-bind="props"></slot>
-        </template>
         <v-card>
             <v-card-title>
                 <span class="text-h5">{{ i18n("bookmark_popup_title") }}</span>
@@ -79,6 +76,7 @@ export default {
     methods: {
         /** Open the bookmark dialog with options (default chapter, with scanUrl : corresponding scan) */
         open({ scanUrl } = {}) {
+            console.log("[DEBUG] BookmarkPopup.open() called", { scanUrl })
             this.dialog = true
             this.scanUrl = scanUrl
             if (scanUrl) {
@@ -91,6 +89,7 @@ export default {
                 this.alreadyBookmarked = bookmarks.state.booked
                 this.scanName = undefined
             }
+            console.log("[DEBUG] BookmarkPopup dialog state:", this.dialog)
             return new Promise((resolve, reject) => {
                 this.resolve = resolve
                 this.reject = reject

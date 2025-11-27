@@ -48,6 +48,10 @@ export default {
 
     /** Save a bookmark */
     async saveBookmark({ note, scanUrl, scanName } = {}) {
+        console.log("[DEBUG] saveBookmark called", { note, scanUrl, scanName })
+        console.log("[DEBUG] mirror:", this.mirror)
+        console.log("[DEBUG] pageData.state:", pageData.state)
+
         const obj = {
             action: "addUpdateBookmark",
             mirror: this.mirror.mirrorName,
@@ -64,7 +68,14 @@ export default {
             obj.scanUrl = scanUrl
             obj.scanName = scanName
         }
-        await browser.runtime.sendMessage(obj)
+        console.log("[DEBUG] Sending bookmark message:", obj)
+        try {
+            const result = await browser.runtime.sendMessage(obj)
+            console.log("[DEBUG] Bookmark save result:", result)
+        } catch (error) {
+            console.error("[DEBUG] Bookmark save error:", error)
+            throw error
+        }
 
         if (!scanUrl) {
             this.state.note = note
@@ -76,6 +87,7 @@ export default {
                 sc.booked = true
             }
         }
+        console.log("[DEBUG] Bookmark state updated:", this.state)
     },
     /** Delete a bookmark */
     async deleteBookmark({ scanUrl } = {}) {

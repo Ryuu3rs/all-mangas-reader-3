@@ -208,7 +208,13 @@ export default {
             if (this.isInList(mg)) return
             mg.adding = true
             // call background because readManga uses jQuery (through refreshListChaps in website implementation) and its not present in popup
-            await browser.runtime.sendMessage(Object.assign({ action: "readManga" }, mg))
+            console.log("[DEBUG] Sending readManga to background:", mg.name, mg.mirror)
+            try {
+                const result = await browser.runtime.sendMessage(Object.assign({ action: "readManga" }, mg))
+                console.log("[DEBUG] readManga response from background:", result)
+            } catch (e) {
+                console.error("[DEBUG] readManga FAILED:", e)
+            }
             mg.adding = false
         },
         /**

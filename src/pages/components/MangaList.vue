@@ -475,13 +475,33 @@ export default {
          * Return all visible mangas
          */
         visMangas: function () {
+            console.log("[DEBUG] visMangas computed - allMangas count:", this.allMangas.length)
+
             if (this.showErrorsOnly) {
-                return this.allMangas.filter(mg => mg.updateError == 1)
+                const result = this.allMangas.filter(mg => mg.updateError == 1)
+                console.log("[DEBUG] visMangas (errors only):", result.length)
+                return result
             }
             if (this.mirrorSelection !== i18n("list_page_all")) {
-                return this.allMangas.filter(mg => mg.mirror == this.mirrorSelection)
+                const result = this.allMangas.filter(mg => mg.mirror == this.mirrorSelection)
+                console.log("[DEBUG] visMangas (mirror filter):", result.length, "for mirror:", this.mirrorSelection)
+                return result
             }
-            return this.allMangas.filter(mg => displayFilterCats(mg, this.options.categoriesStates, this.mirrors))
+
+            // Debug: check what displayFilterCats returns for each manga
+            const filtered = this.allMangas.filter(mg => {
+                const visible = displayFilterCats(mg, this.options.categoriesStates, this.mirrors)
+                if (!visible) {
+                    console.log("[DEBUG] Manga filtered out by displayFilterCats:", mg.name, {
+                        key: mg.key,
+                        cats: mg.cats,
+                        listChapsLength: mg.listChaps?.length || 0
+                    })
+                }
+                return visible
+            })
+            console.log("[DEBUG] visMangas (category filter):", filtered.length, "of", this.allMangas.length)
+            return filtered
         },
         /**
          * Returns a list of all mirrors that have series
@@ -690,19 +710,35 @@ export default {
         clearInterval(this.searchTextTimeout)
     },
     async created() {
+        console.log("[DEBUG] MangaList created - starting initialization")
+
         // initialize state for store in popup from background
         await this.$store.dispatch("getStateFromReference", {
             module: "mangas",
             key: "all",
             mutation: "setMangas"
         })
+        console.log("[DEBUG] Mangas loaded from background:", this.$store.state.mangas.all.length)
+
+        // Log each manga's basic info
+        this.$store.state.mangas.all.forEach(mg => {
+            console.log("[DEBUG] Manga in store:", mg.name, {
+                key: mg.key,
+                mirror: mg.mirror,
+                listChapsLength: mg.listChaps?.length || 0
+            })
+        })
+
         // initialize state for store in popup from background
         await this.$store.dispatch("getStateFromReference", {
             module: "bookmarks",
             key: "all",
             mutation: "setBookmarks"
         })
+        console.log("[DEBUG] Bookmarks loaded:", this.$store.state.bookmarks.all.length)
+
         this.loaded = true
+        console.log("[DEBUG] MangaList initialization complete")
         setTimeout(() => this.$emit("manga-loaded"), 1000)
 
         this.$eventBus.$on("multi-manga:select-manga", key => {
@@ -717,19 +753,17 @@ export default {
 </script>
 <style data-amr="true">
 .amr-filter {
-    color: grey;
+    color: #9e9e9e !important;
+    cursor: pointer;
+    transition: color 0.2s ease;
 }
 
-.theme--dark .amr-filter {
-    color: grey;
+.amr-filter:hover {
+    color: #4caf50 !important;
 }
 
 .amr-filter.activated {
-    color: black;
-}
-
-.theme--dark .amr-filter.activated {
-    color: white;
+    color: #4caf50 !important;
 }
 
 .hover-card {
