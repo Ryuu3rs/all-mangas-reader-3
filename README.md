@@ -448,6 +448,7 @@ be turned off / on at any time from the settings menu.
 
 <h2 id="#firefox-install"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Firefox_logo.png/255px-Firefox_logo.png" width="30" title="Firefox"/> Firefox</h2>
 
+Older versions not this current one ..
 -   Download the latest stable version from the Mozilla add-ons explorer
     -   **[Stable](https://addons.mozilla.org/firefox/addon/all-mangas-reader/)**
 -   Beta versions for firefox are available here :
@@ -456,12 +457,12 @@ be turned off / on at any time from the settings menu.
 <h2 id="#chromium-install"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Chromium_Material_Icon.svg/langfr-1024px-Chromium_Material_Icon.svg.png" width="30" title="Chromium"/> Chromium</h2>
 
 ⚠️ **Chromium based browsers** need the following additional steps in order to install All Mangas Reader.
-If you are not sure your browser is based on chromium you can check our [Browser compatibilty](#browser-compatibility) list (or google it).
+If you are not sure your browser is based on chromium you can check our [Browser compatibilty](#browser-compatibility)  
 
 ### Install AMR on a chromium browser
 
 All Mangas Reader do not comply with Google Chrome Extensions terms of services, thus cannot be downloaded directly from their store.
-
+Old links will update at some point
 1.  Click link below for the version you wish to use
     -   **[Stable](https://amr-releases.com/chrome/release/all-mangas-reader-latest.zip)**
     -   **[Beta](https://amr-releases.com/chrome/beta/all-mangas-reader-beta-latest.zip)**
