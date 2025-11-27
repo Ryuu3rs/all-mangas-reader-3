@@ -246,13 +246,17 @@ Your reading lists, bookmarks, and settings will be preserved.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) before submitting PRs.
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+Submit issues through [GitHub Issues](https://github.com/Ryuu3rs/all-mangas-reader-3/issues).
+
+⚠️ Developers working on mirror implementations **MUST** read [SITES_REQUIREMENTS.md](SITES_REQUIREMENTS.md)
 
 ---
 
@@ -264,7 +268,7 @@ This project is licensed under the GPL v3 License - see the [LICENSE](LICENSE) f
 
 ## 🙏 Acknowledgments
 
--   Original [All Mangas Reader V2](https://github.com/alysson-souza/all-mangas-reader-2)
+-   Based on [All Mangas Reader V2](https://github.com/alysson-souza/all-mangas-reader-2) - modernized for Vue 3 & Vuetify 3
 -   All contributors and manga source maintainers
 
 ---
@@ -492,15 +496,7 @@ This project is licensed under the GPL v3 License - see the [LICENSE](LICENSE) f
     </table>
 </details>
 
-Your favorite website not listed yet? [Submit a request on discord](https://discord.gg/bdzk9hR)
-
-### 🔐 Privacy
-
-All Mangas Reader creates cookies to force English on the Webtoons website, and pass an "I am adult" cookie to websites that have verifications
-for more explicit content. Not allowing AMR to read / create cookies will hinder or break compatibility with these websites. This option can
-be turned off / on at any time from the settings menu.
-
-<!-- Installation links moved to the Installation section at the top of this README -->
+Your favorite website not listed yet? [Submit a request on GitHub Issues](https://github.com/Ryuu3rs/all-mangas-reader-3/issues)
 
 ## 📡 Synchronization
 
@@ -543,109 +539,4 @@ _Gist Sync_ is an alernative method to synchornize your manga list using a third
     - You can use `Revision` to see/restore past version of your synced data
 6. Enable Gist Sync in All Mangas Reader for all other devices, make sure they each have their own token and use the same Gist ID.
 
-:information*source: \*\*\_Browser Sync* doesn't need to be enabled for _Gist Sync_ to work.\*\*
-
-## Contribute
-
-**❗ Before contributing to the project, please read our [Contribution guide](CONTRIBUTING.md).**
-
-To contribute, fork the project and work on opened issues. Once fixed, submit a pull request which owners will merge as soon as possible
-
-You can submit issues through GitLab issues tool, please submit a test case to reproduce your issue.
-
-⚠️ Developers working on sites implementation **MUST** read [this](SITES_REQUIREMENTS.md)
-
-**If you are not a developer, you can still contribute as a translator** too, to do so, clone the repository locally and work on the `messages.json` file in your language as explained in [this doc](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/i18n/Locale-Specific_Message_reference).
-
-You can also work on the wiki to help us explain to everyone how All Mangas Reader works.
-
-### Developer installation
-
-1. First clone this repository locally and install it using `yarn` (if you don't have yarn, [install it](https://yarnpkg.com)).
-2. Install dependencies: `yarn install`
-3. Build the extension (note that you will need to run this command when updating extension code) `yarn run build:dev`
-4. This will create the deployable extension in the `dist` folder.
-5. Once done, you can install the extension as a temporary extension in the main browsers (please note that browsers may delete the associated database when the extension is temporal)
-    - **Chromium**: Go to Menu > Extensions and switch to developer mode (in the top right hand corner). Click on **LOAD UNPACKED** and select the `dist` folder of your local repository.
-    - **Quantum**: Go to [about:debugging#addons](about:debugging#addons) and click on **Load temporal module**. Select the `manifest.json` file from the `dist`
-        - ⚠️ If you want to debug the extension while testing you will need web-ext.
-          `yarn global add web-ext`
-        - To load your browser with All Mangas Reader in debug mode, execute the following command in the `dist` folder of your local repository :
-          `web-ext run`
-
-⚠️ Syncing data using `browser.storage.sync` across different devices require same extension id on both devices.
-
-extension id can be set in manifest.json
-
--   for chrome - "key" field
--   for firefox - "applications.gecko.id"
-
-The easiest way to build and set know id by simply running two yarn commands
-
--   `yarn build:dev && yarn manifest:specify -chrome`
--   `yarn build:dev && yarn manifest:specify -firefox`
-
-#### Caveats:
-
-The above approach does not work very well during development as normally `yarn watch:dev` command is run to track changes and compile code, however it can cause the manifest to be reset and the `yarn build:dev && yarn manifest:specify` would need to be executed again.
-
-As a temporary solution, the `manifest.json` file in src directly can be modified (BUT NOT COMMITTED) with either specific vendor changes.
-
-Right fields can be copied from `dist/manifest.json` to `src/manifest.json` after running `yarn manifest:specify` command`
-
-### Firefox for Android
-
-To test the extension while developing on Firefox for Android, install Firefox on your computer and adb, follow the steps in the [Set up your computer and Android emulator or device](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Developing_WebExtensions_for_Firefox_for_Android) to configure your debugging environment
-
-1. Build the extension as [explained here](#developer-installation) (step 1 to 4)
-2. Add the firefox app id by running `yarn manifest:specify -firefox`
-3. Zip the `dist` folder and change the created file extension from `.zip` to `.xpi`
-4. Push it to your phone or emulator (using `adb push ./dist-zip/all-mangas-reader-vXXX.xpi /mnt/sdcard/`)
-5. Open Firefox on your phone and open (as an url) `file:///mnt/sdcard/`
-6. Tap the extension file, it will install it !
-7. You can now debug it using Firefox WebIDE and connect to your phone.
-
-### Dependencies
-
--   Vue : One of the most popular reactive framework, Vue allows to create great UI
--   Vuex : Reactive store for vue, vuex organizes the data model properly
--   Vuetify : a set of UI components for view based on Material design
--   vuex-shared-mutations : a great plugin for Vuex which allows to synchronize vuex data model through different instances of Vue using localStorage events
--   webextension-polyfill : web extension API has been normalize and is implemented in Chrome, Firefox, Edge, ... but with still a few differences, thanks to this polyfill, the code works everywhere
-
-### Dev dependencies
-
-All Mangas Reader V3 is based on Webpack 5 to compile the code.
-
-### Integration with Vue devtools
-
-Make sure "Allow access to file URLs" is enabled
-Install [Vue Remote tools](https://github.com/vuejs/vue-devtools/blob/master/shells/electron/README.md)
-
-if you installed vue-devtools globally, run it with `vue-devtools`
-Open AMR popup, vue-devtools should now be connected
-
-**Note**: Browser extension does not work due to security restrictions
-
-```
-Unchecked runtime.lastError while running scripting.executeScript: Cannot access a chrome-extension:// URL of different extension
-```
-
-## For repository admins only
-
-**Release version**
-
-Beta channel is automatically updated on each commit.
-
-Process to release a stable version :
-
--   Commit version change with message `Update version to x.y.z before tag NO-CI`
-    -   CI will run on gitlab but webhook (which generates xpi and crx server side) will not consider artefacts as a version because of the `NO-CI` in commit message
-    -   **⚠️ Do not forget NO-CI**, if not, beta Vx.y.z.157 will be generated and will prevent next commits to create valid versions because after the version is tagged, beta version will start at 1 after the first commit after tag
--   Merge develop into master
--   Tag version on master (will generate release Vx.y.z when the tag CI runs on master)
-
-## License
-
-All Mangas Reader is licensed under GPL V3
-[View LICENSE FILE](LICENSE)
+ℹ️ **Browser Sync doesn't need to be enabled for Gist Sync to work.**
