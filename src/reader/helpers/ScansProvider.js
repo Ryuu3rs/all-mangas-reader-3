@@ -6,6 +6,12 @@ import pageData from "../state/pagedata"
 /**
  * This file handles Scans Loading, (unique scan and all scans from a chapter)
  * and keeps the state of the current chapter scans
+ *
+ * IMPORTANT: Vue 3 reactivity change from Vue 2:
+ * In Vue 2, objects added to a reactive array automatically became reactive.
+ * In Vue 3, this is NOT the case - objects must be explicitly made reactive.
+ * Each ScanLoader instance is wrapped in reactive() to ensure Vue detects
+ * property changes like loading=false.
  */
 
 /** Current chapter's scans state - wrapped in reactive() for Vue 3 */
@@ -70,8 +76,9 @@ export const ScansLoader = class {
         this.onloadchapter = () => {} // function to call when chapter is fully loaded
         this.onloadscan = () => {} // function to call when scan is loaded
 
-        // initialize scans
-        this.scans.push(...scansUrl.map(url => new ScanLoader(url, mirror)))
+        // initialize scans - wrap each ScanLoader in reactive() for Vue 3 reactivity
+        // This is critical: Vue 3 doesn't auto-reactify objects added to reactive arrays
+        this.scans.push(...scansUrl.map(url => reactive(new ScanLoader(url, mirror))))
     }
 
     /** Load all scans */
@@ -148,9 +155,18 @@ class ScanLoader {
         }*/
 
         return new Promise(async (resolve, reject) => {
+            console.log("[ScanLoader] Starting load for:", this.url)
             this.scan.addEventListener("load", () => {
                 const img = this.scan
                 if (!img) return
+                console.log(
+                    "[ScanLoader] Image loaded successfully:",
+                    this.url,
+                    "dimensions:",
+                    img.width,
+                    "x",
+                    img.height
+                )
                 /** Check if scan is double page */
                 if (img.width > img.height) {
                     this.doublepage = true
@@ -161,10 +177,11 @@ class ScanLoader {
                 }
                 this.loading = false
                 this.error = false
+                console.log("[ScanLoader] Set loading=false for:", this.url)
                 resolve()
             })
             const manageError = e => {
-                console.error("An error occurred while loading an image")
+                console.error("[ScanLoader] Error loading image:", this.url)
                 console.error(e)
                 this.loading = false
                 this.error = true
@@ -178,17 +195,33 @@ class ScanLoader {
                 manageError(e)
             })
             try {
-                // @TODO this used to replace url of prefix "https://.." to just "//.."
-                // Does not really work with fetch?
-                // const url = this.url.replace(/(^\w+:|^)/, "")
-
                 // Load the scan using implementation method
-                this.scan.src = await browser.runtime.sendMessage({
+                console.log("[ScanLoader] Sending getImageUrlFromPageUrl message for:", this.url)
+                let imageUrl = await browser.runtime.sendMessage({
                     action: "getImageUrlFromPageUrl",
                     url: this.url,
                     mirror: this.mirror.mirrorName,
                     language: pageData.state.language
                 })
+                console.log("[ScanLoader] Got imageUrl:", imageUrl)
+
+                // Check if we got a valid image URL
+                if (!imageUrl || imageUrl === "error" || imageUrl === "null") {
+                    console.error("[ScanLoader] Invalid imageUrl received:", imageUrl)
+                    manageError(new Error("Failed to get image URL from mirror"))
+                    return
+                }
+
+                // Normalize protocol-relative URLs (starting with //) to use https://
+                // In extension context, protocol-relative URLs resolve incorrectly
+                // (e.g., moz-extension://zjcdn.mangahere.org/... instead of https://...)
+                if (imageUrl.startsWith("//")) {
+                    imageUrl = "https:" + imageUrl
+                    console.log("[ScanLoader] Normalized to:", imageUrl)
+                }
+
+                console.log("[ScanLoader] Setting scan.src to:", imageUrl)
+                this.scan.src = imageUrl
             } catch (e) {
                 manageError(e)
             }
