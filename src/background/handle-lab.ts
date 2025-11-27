@@ -45,8 +45,15 @@ export class HandleLab {
         }
     }
     async loadChapterAndDo(message, impl: MirrorImplementation, sender: Sender) {
-        const resp = await fetch(message.url)
-        const htmlDocument = await resp.text()
+        // Use HTML content passed from content script if available (avoids Cloudflare issues)
+        // Otherwise, fetch the page (may fail on protected sites)
+        let htmlDocument: string
+        if (message.htmlContent) {
+            htmlDocument = message.htmlContent
+        } else {
+            const resp = await fetch(message.url)
+            htmlDocument = await resp.text()
+        }
 
         switch (message.task) {
             case "containScans":

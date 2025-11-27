@@ -1,6 +1,63 @@
 {
     "versions": [
         {
+            "version": "3.1.0",
+            "title": "[3.1.0] - 2024-11-26",
+            "date": "2024-11-26",
+            "body": "### 🚀 MAJOR VERSION: Complete Modernization\r\n\r\nThis release represents a complete modernization of All Mangas Reader, bringing the codebase up to current web standards.\r\n\r\n### New Features\r\n\r\n-   **Vue 3**: Complete migration from Vue 2.7 to Vue 3.5 with Composition API support\r\n-   **Vuetify 3**: Full migration from Vuetify 2 to Vuetify 3.8 with Material Design 3\r\n-   **TypeScript**: Key modules converted to TypeScript for better type safety\r\n-   **Testing**: Added Vitest testing framework with 28+ unit tests\r\n-   **CI/CD**: Added GitHub Actions for automated testing and releases\r\n-   **MDI SVG Icons**: Icons now use SVG paths (no external font loading required)\r\n\r\n### Changed Features\r\n\r\n-   **Webpack 5**: Updated build system with better tree-shaking and performance\r\n-   **Code Splitting**: Large monolithic files split into focused modules\r\n    -   `mangas.js` (1338 lines) → 11 focused modules\r\n    -   `sync-manager.js` (502 lines) → 3 modules\r\n    -   Extracted keyboard shortcuts helper from AmrReader.vue\r\n-   **Vue 3 Syntax**: Updated all components for Vue 3 compatibility\r\n    -   `beforeDestroy` → `beforeUnmount`\r\n    -   `slot-scope` → `v-slot`\r\n    -   EventBus using `mitt` library\r\n-   **Vuetify 3 Syntax**: Updated all Vuetify components\r\n    -   `v-on=\"on\"` → `v-bind=\"props\"` for activator slots\r\n    -   `dense` → `density=\"compact\"`\r\n    -   Updated color class syntax\r\n\r\n### Bug Fixes\r\n\r\n-   Fixed `newManga` variable used before declaration in mangas.js\r\n-   Fixed undefined `reject` in storedb.js\r\n-   Fixed memory leaks (missing clearInterval, removeEventListener)\r\n-   Fixed Vue 3 reactivity issues in reader state objects\r\n-   Fixed thin scan dialog being removed by DOM cleanup\r\n\r\n### Notes\r\n\r\n-   Node.js 18+ or 20+ required (dropped support for Node 14/16)\r\n-   If upgrading from V2: Export data first, install V3, then import\r\n-   Original V2 repository: https://github.com/alysson-souza/all-mangas-reader-2\r\n\r\n---",
+            "parsed": {
+                "_": [
+                    "Vue 3**: Complete migration from Vue 2.7 to Vue 3.5 with Composition API support",
+                    "Vuetify 3**: Full migration from Vuetify 2 to Vuetify 3.8 with Material Design 3",
+                    "TypeScript**: Key modules converted to TypeScript for better type safety",
+                    "Testing**: Added Vitest testing framework with 28+ unit tests",
+                    "CI/CD**: Added GitHub Actions for automated testing and releases",
+                    "MDI SVG Icons**: Icons now use SVG paths (no external font loading required)",
+                    "Webpack 5**: Updated build system with better tree-shaking and performance",
+                    "Code Splitting**: Large monolithic files split into focused modules",
+                    "Vue 3 Syntax**: Updated all components for Vue 3 compatibility",
+                    "Vuetify 3 Syntax**: Updated all Vuetify components",
+                    "Fixed newManga variable used before declaration in mangas.js",
+                    "Fixed undefined reject in storedb.js",
+                    "Fixed memory leaks (missing clearInterval, removeEventListener)",
+                    "Fixed Vue 3 reactivity issues in reader state objects",
+                    "Fixed thin scan dialog being removed by DOM cleanup",
+                    "Node.js 18+ or 20+ required (dropped support for Node 14/16)",
+                    "If upgrading from V2: Export data first, install V3, then import",
+                    "Original V2 repository: https://github.com/alysson-souza/all-mangas-reader-2",
+                    ""
+                ],
+                "🚀 MAJOR VERSION: Complete Modernization": [],
+                "New Features": [
+                    "Vue 3**: Complete migration from Vue 2.7 to Vue 3.5 with Composition API support",
+                    "Vuetify 3**: Full migration from Vuetify 2 to Vuetify 3.8 with Material Design 3",
+                    "TypeScript**: Key modules converted to TypeScript for better type safety",
+                    "Testing**: Added Vitest testing framework with 28+ unit tests",
+                    "CI/CD**: Added GitHub Actions for automated testing and releases",
+                    "MDI SVG Icons**: Icons now use SVG paths (no external font loading required)"
+                ],
+                "Changed Features": [
+                    "Webpack 5**: Updated build system with better tree-shaking and performance",
+                    "Code Splitting**: Large monolithic files split into focused modules",
+                    "Vue 3 Syntax**: Updated all components for Vue 3 compatibility",
+                    "Vuetify 3 Syntax**: Updated all Vuetify components"
+                ],
+                "Bug Fixes": [
+                    "Fixed newManga variable used before declaration in mangas.js",
+                    "Fixed undefined reject in storedb.js",
+                    "Fixed memory leaks (missing clearInterval, removeEventListener)",
+                    "Fixed Vue 3 reactivity issues in reader state objects",
+                    "Fixed thin scan dialog being removed by DOM cleanup"
+                ],
+                "Notes": [
+                    "Node.js 18+ or 20+ required (dropped support for Node 14/16)",
+                    "If upgrading from V2: Export data first, install V3, then import",
+                    "Original V2 repository: https://github.com/alysson-souza/all-mangas-reader-2",
+                    ""
+                ]
+            }
+        },
+        {
             "version": "3.0.3",
             "title": "[3.0.3] - 2024-08-25",
             "date": "2024-08-25",
