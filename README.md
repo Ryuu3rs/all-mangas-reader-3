@@ -3,7 +3,61 @@
 [![Build Status](https://github.com/Ryuu3rs/all-mangas-reader-3/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryuu3rs/all-mangas-reader-3/actions)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-A modernized browser extension for reading manga from various online sources. This is a complete modernization of All Mangas Reader V2, upgraded to modern web technologies.
+A modernized browser extension for reading manga from various online sources. This is a complete modernization of All Mangas Reader, upgraded to modern web technologies (Vue 3, Vuetify 3, TypeScript).
+
+---
+
+## 🗺️ Roadmap - Dashboard Redesign
+
+The following features are planned to transform the manga list into a comprehensive dashboard experience.
+
+### Phase 1: Performance Foundation (Critical Priority) 🔴
+
+| Status | Feature                      | Description                                          |
+| ------ | ---------------------------- | ---------------------------------------------------- |
+| [ ]    | Virtual Scrolling            | Implement vue-virtual-scroller for 1000+ manga lists |
+| [ ]    | Lazy Load Chapters           | Load chapter lists on-demand, not at startup         |
+| [ ]    | Optimize Computed Properties | Memoize expensive filtering/sorting operations       |
+| [ ]    | Skeleton Loading States      | Add loading placeholders for better UX               |
+| [ ]    | Reduce RAM Usage             | Store only manga metadata initially                  |
+
+### Phase 2: Navigation & Layout (High Priority) 🟡
+
+| Status | Feature                  | Description                                                        |
+| ------ | ------------------------ | ------------------------------------------------------------------ |
+| [ ]    | Dashboard Navigation Bar | Tab-based navigation (Library, Statistics, Achievements, Settings) |
+| [ ]    | Collapsible Sidebar      | Quick stats, categories, and mirror filters                        |
+| [ ]    | Responsive Grid Layout   | Two-column layout for wider screens                                |
+| [ ]    | Compact Mode Toggle      | High-density view for power users                                  |
+
+### Phase 3: Statistics Dashboard (High Priority) 🟡
+
+| Status | Feature                  | Description                                            |
+| ------ | ------------------------ | ------------------------------------------------------ |
+| [ ]    | Reading Time Tracking    | Track time spent reading (requires reader integration) |
+| [ ]    | Statistics Visualization | Charts for reading patterns, chapters by mirror        |
+| [ ]    | Reading History          | Detailed log of chapters read with timestamps          |
+| [ ]    | Export Statistics        | JSON/CSV export of reading data                        |
+
+### Phase 4: Achievements System (Medium Priority) 🟢
+
+| Status | Feature                   | Description                                             |
+| ------ | ------------------------- | ------------------------------------------------------- |
+| [ ]    | Achievement Store Module  | Vuex module for achievement tracking                    |
+| [ ]    | Achievement Definitions   | Milestones, streaks, exploration, dedication categories |
+| [ ]    | Achievement Progress UI   | Cards showing progress toward locked achievements       |
+| [ ]    | Achievement Notifications | Toast notifications when achievements unlock            |
+| [ ]    | Achievement Export        | Export earned achievements to JSON                      |
+
+### Phase 5: Polish & Additional Features (Low Priority) 🔵
+
+| Status | Feature             | Description                                           |
+| ------ | ------------------- | ----------------------------------------------------- |
+| [ ]    | Keyboard Shortcuts  | j/k navigation, Enter to read, m to mark read         |
+| [ ]    | Bulk Operations     | Multi-select for mark read, delete, categorize        |
+| [ ]    | Reading Goals       | Weekly/monthly chapter targets with progress tracking |
+| [ ]    | Smart Filters       | "Not read in 30 days", "New chapters", "Completed"    |
+| [ ]    | Quick Actions Panel | Floating action button with common actions            |
 
 ---
 
@@ -446,37 +500,7 @@ All Mangas Reader creates cookies to force English on the Webtoons website, and 
 for more explicit content. Not allowing AMR to read / create cookies will hinder or break compatibility with these websites. This option can
 be turned off / on at any time from the settings menu.
 
-<h2 id="#firefox-install"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Firefox_logo.png/255px-Firefox_logo.png" width="30" title="Firefox"/> Firefox</h2>
-
--   Download the latest stable version from the Mozilla add-ons explorer
-    -   **[Stable](https://addons.mozilla.org/firefox/addon/all-mangas-reader/)**
--   Beta versions for firefox are available here :
-    -   **[Beta](https://amr-releases.com/firefox/release/all-mangas-reader-beta-latest.xpi)**
-
-<h2 id="#chromium-install"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Chromium_Material_Icon.svg/langfr-1024px-Chromium_Material_Icon.svg.png" width="30" title="Chromium"/> Chromium</h2>
-
-⚠️ **Chromium based browsers** need the following additional steps in order to install All Mangas Reader.
-If you are not sure your browser is based on chromium you can check our [Browser compatibilty](#browser-compatibility) list (or google it).
-
-### Install AMR on a chromium browser
-
-All Mangas Reader do not comply with Google Chrome Extensions terms of services, thus cannot be downloaded directly from their store.
-
-1.  Click link below for the version you wish to use
-    -   **[Stable](https://amr-releases.com/chrome/release/all-mangas-reader-latest.zip)**
-    -   **[Beta](https://amr-releases.com/chrome/beta/all-mangas-reader-beta-latest.zip)**
-2.  Extract the file .zip file you just downloaded to a location you wish to use for this extension, you will need to remember where this folder is in order to update the extension.
-    -   **Windows**: Use the built in windows unzip via right click or [7zip](https://www.7-zip.org/download.html) to extract the file. ([how to extract file with 7z](https://www.webhostinghub.com/help/learn/website/managing-files/extract-file))
-    -   **MacOS X** / **Linux**: open a terminal and use [unzip](https://superuser.com/a/1026504)
-3.  Open the extensions page in your browser, enable developer mode and click `Load unpacked extension`.
-4.  Select the folder you extracted to install AMR.
-
-### Update AMR on a chromium browser
-
-1. Download the lasted version of All Mangas Reader directly from within the extension when prompted
-   ![](/images/new_version.PNG)
-2. Extract the file .crx file you just downloaded into your (already existing) All Mangas Reader's installation folder
-3. Restart browser
+<!-- Installation links moved to the Installation section at the top of this README -->
 
 ## 📡 Synchronization
 
@@ -533,7 +557,7 @@ You can submit issues through GitLab issues tool, please submit a test case to r
 
 **If you are not a developer, you can still contribute as a translator** too, to do so, clone the repository locally and work on the `messages.json` file in your language as explained in [this doc](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/i18n/Locale-Specific_Message_reference).
 
-You can also work on the [wiki](https://gitlab.com/all-mangas-reader/all-mangas-reader-2/wikis/) to help us explain to everyone how All Mangas Reader works.
+You can also work on the wiki to help us explain to everyone how All Mangas Reader works.
 
 ### Developer installation
 
@@ -591,7 +615,7 @@ To test the extension while developing on Firefox for Android, install Firefox o
 
 ### Dev dependencies
 
-All Mangas Reader V2 is based on Webpack to compile the code.
+All Mangas Reader V3 is based on Webpack 5 to compile the code.
 
 ### Integration with Vue devtools
 
