@@ -21,6 +21,8 @@ export default class BroadcastChannelStrategy implements ShareStrategy {
     }
 
     share(message) {
-        return this.channel.postMessage(message)
+        // Convert reactive Proxy objects to plain objects for structured cloning
+        const plainMessage = JSON.parse(JSON.stringify(message))
+        return this.channel.postMessage(plainMessage)
     }
 }

@@ -128,7 +128,7 @@ class StoreDB {
     getWebsites() {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mirrors"])
                 const objectStore = transaction.objectStore("mirrors")
                 const mirrors = []
@@ -154,7 +154,7 @@ class StoreDB {
     storeListOfMangaForMirror(mirror, list) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangalists"], "readwrite")
 
                 transaction.onerror = function (event) {
@@ -179,7 +179,7 @@ class StoreDB {
     getListOfMangaForMirror(mirror) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangalists"])
                 const objectStore = transaction.objectStore("mangalists")
 
@@ -201,7 +201,7 @@ class StoreDB {
     getListsOfMangaStats() {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangalists"])
                 const objectStore = transaction.objectStore("mangalists")
                 const stat = { nb: 0, nbmangas: 0 }
@@ -224,7 +224,7 @@ class StoreDB {
     deleteAllListOfManga() {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangalists"], "readwrite")
 
                 transaction.onerror = function (event) {
@@ -242,27 +242,39 @@ class StoreDB {
     // add an entry
     storeManga(manga) {
         const store = this
-        return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
-                const transaction = store.db.transaction(["mangas"], "readwrite")
+        console.log("[DEBUG] storedb.storeManga called for:", manga?.key, manga?.name)
+        return this.checkInit()
+            .then(() => {
+                return new Promise((resolve, reject) => {
+                    const transaction = store.db.transaction(["mangas"], "readwrite")
 
-                transaction.onerror = function (event) {
-                    reject("Impossible to store manga " + manga.key + ". Error code : " + event.target.errorCode)
-                }
+                    transaction.onerror = function (event) {
+                        console.error("[DEBUG] storedb.storeManga transaction error:", event.target.errorCode)
+                        reject("Impossible to store manga " + manga.key + ". Error code : " + event.target.errorCode)
+                    }
 
-                const objectStore = transaction.objectStore("mangas")
-                const request = objectStore.put(manga)
-                request.onsuccess = function (event) {
-                    resolve(event.target.result)
-                }
+                    const objectStore = transaction.objectStore("mangas")
+                    const request = objectStore.put(manga)
+                    request.onsuccess = function (event) {
+                        console.log("[DEBUG] storedb.storeManga SUCCESS for:", manga?.key)
+                        resolve(event.target.result)
+                    }
+                    request.onerror = function (event) {
+                        console.error("[DEBUG] storedb.storeManga request error:", event.target.error)
+                        reject("Failed to store manga " + manga.key + ": " + event.target.error)
+                    }
+                })
             })
-        })
+            .catch(err => {
+                console.error("[DEBUG] storedb.storeManga FAILED:", err)
+                throw err
+            })
     }
     // deletes an entry
     deleteManga(key) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangas"], "readwrite")
 
                 transaction.onerror = function (event) {
@@ -312,7 +324,7 @@ class StoreDB {
     getMangaList() {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["mangas"])
                 const objectStore = transaction.objectStore("mangas")
                 const mangas = []
@@ -335,7 +347,7 @@ class StoreDB {
     storeBookmark(bm) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["bookmarks"], "readwrite")
 
                 transaction.onerror = function (event) {
@@ -357,7 +369,7 @@ class StoreDB {
     getBookmarks() {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["bookmarks"])
                 const objectStore = transaction.objectStore("bookmarks")
                 const bms = []
@@ -380,7 +392,7 @@ class StoreDB {
     deleteBookmark(key) {
         const store = this
         return this.checkInit().then(() => {
-            return new Promise((resolve, result) => {
+            return new Promise((resolve, reject) => {
                 const transaction = store.db.transaction(["bookmarks"], "readwrite")
 
                 transaction.onerror = function (event) {

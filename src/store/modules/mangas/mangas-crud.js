@@ -18,7 +18,15 @@ export const crudActions = {
      * Add a manga in the store
      */
     async addManga({ dispatch, getters, rootState, state }, { manga, fromSync }) {
-        await storedb.storeManga(manga)
+        console.log("[DEBUG] addManga called, saving to database:", manga?.key, manga?.name)
+        try {
+            // Convert reactive Proxy to plain object for IndexedDB storage
+            const plainManga = JSON.parse(JSON.stringify(manga))
+            await storedb.storeManga(plainManga)
+            console.log("[DEBUG] storedb.storeManga completed successfully for:", manga?.key)
+        } catch (e) {
+            console.error("[DEBUG] storedb.storeManga FAILED:", e)
+        }
         await dispatch("exportManga", manga, { root: true })
         if (!fromSync) {
             let syncManager = getSyncManagerInstance()
@@ -42,7 +50,9 @@ export const crudActions = {
      */
     async findAndUpdateManga({ dispatch, commit }, manga) {
         try {
-            await storedb.findAndUpdate(manga)
+            // Convert reactive Proxy to plain object for IndexedDB storage
+            const plainManga = JSON.parse(JSON.stringify(manga))
+            await storedb.findAndUpdate(plainManga)
             dispatch("setOption", { key: "updated", value: Date.now() })
             dispatch("setOption", { key: "changesSinceSync", value: 1 })
         } catch (e) {
@@ -77,22 +87,26 @@ export const crudActions = {
             language: message.language,
             rootState: { state: rootState }
         })
+        console.log("[DEBUG] createUnlistedManga called for key:", key)
         commit("createManga", {
             key,
             webtoon: rootState.options.webtoonDefault === 1,
             ...message
         })
         const mg = state.all.find(manga => manga.key === key)
+        console.log("[DEBUG] After createManga commit, found manga in state:", mg?.name || "NOT FOUND")
         try {
             await dispatch("refreshLastChapters", message)
         } catch (e) {
             if (e === ABSTRACT_MANGA_MSG) {
+                console.log("[DEBUG] Skipping abstract manga")
                 return
             }
-            console.error(e)
+            console.error("[DEBUG] refreshLastChapters error:", e)
         }
 
-        dispatch("addManga", { manga: mg, fromSync: message.isSync })
+        console.log("[DEBUG] Calling addManga to save to database:", mg?.key)
+        await dispatch("addManga", { manga: mg, fromSync: message.isSync })
         dispatch("updateLanguageCategories")
     },
 
