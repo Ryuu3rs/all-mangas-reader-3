@@ -70,6 +70,8 @@ export class LugnicaScan extends BaseMirror implements MirrorImplementation {
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
+        // Reset lastIndex to avoid issues with global regex flag
+        this.chapter_url.lastIndex = 0
         return this.chapter_url.test(new URL(curUrl).pathname)
     }
 

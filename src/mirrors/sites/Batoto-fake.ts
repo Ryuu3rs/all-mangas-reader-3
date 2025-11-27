@@ -13,7 +13,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
     languages = "en"
     domains = ["bato.to", "batotoo.com", "comiko.net", "mto.to", "mangatoto.com", "dto.to"]
     home = "https://bato.to"
-    chapter_url = /^\/chapter\/.+$/g
+    chapter_url = /^\/chapter\/.+$/
 
     globalVariables = ["batoPass", "batoWord"]
 
@@ -48,9 +48,31 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
         const res = []
         const self = this
         const $ = this.parseHtml(doc)
-        $(".main a.chapt").each(function (index) {
-            res.push([$(this).text(), self.home + $(this).attr("href")])
+
+        // Try multiple selectors - bato.to has changed their HTML structure
+        // New structure: chapter links are in divs with data-hk attributes, containing <a> with href="/chapter/..."
+        let chapterLinks = $("a[href*='/chapter/']")
+
+        // Filter to only get chapter links (not other links that might contain /chapter/)
+        chapterLinks.each(function () {
+            const href = $(this).attr("href")
+            // Only include links that look like chapter links (start with /chapter/)
+            if (href && href.startsWith("/chapter/")) {
+                const text = $(this).text().trim()
+                // Skip empty text or navigation links
+                if (text && text.length > 0) {
+                    res.push([text, self.home + href])
+                }
+            }
         })
+
+        // Fallback to old selector if new one doesn't work
+        if (res.length === 0) {
+            $(".main a.chapt").each(function () {
+                res.push([$(this).text(), self.home + $(this).attr("href")])
+            })
+        }
+
         return res
     }
 

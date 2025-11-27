@@ -104,11 +104,14 @@ export class MirrorHelper {
     }
 
     private getConfig(options: LoadOptions = {}, defaultHeaders?: Record<string, string>): RequestInit {
+        // In browser extensions, we have host_permissions so we can use 'cors' mode
+        // for cross-domain requests. 'no-cors' mode makes responses opaque and unreadable.
+        // Don't specify mode at all - let the browser use the default which works with permissions
         return {
             credentials: options.credentials,
             cache: options.nocache ? "no-cache" : "default",
             method: options.post ? "POST" : options.method ?? "GET",
-            mode: options.crossdomain ? "no-cors" : "same-origin",
+            // mode is intentionally not set - extensions have host_permissions for cross-origin
             headers: this.getDefaultHeaders(options, defaultHeaders),
             body: this.getData(options),
             redirect: options.redirect,

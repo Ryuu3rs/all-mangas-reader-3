@@ -42,7 +42,7 @@ export class MangaFox extends BaseMirror implements MirrorImplementation {
     domains = ["fanfox.net", "mangafox.me"]
     languages = "en"
     home = "https://fanfox.net/"
-    chapter_url = /\/manga\/.*\/.+\/.*/g
+    chapter_url = /\/manga\/.*\/.+\/.*/
     /** Use it to generate default schema with https **/
     currentDomain = "https://fanfox.net"
 
@@ -111,10 +111,9 @@ export class MangaFox extends BaseMirror implements MirrorImplementation {
         const url = `${chapfunurl}?${queryParams}`
         const data = await this.mirrorHelper.loadPage(url, {
             nocontenttype: true,
+            credentials: "include", // Include cookies for authentication
             headers: {
-                "X-Cookie": "isAdult=1",
-                "X-Referer": urlImage,
-                "X-Requested-With": "XMLHttpRequest"
+                // Note: Referer is set by declarativeNetRequest rules
             }
         })
 
@@ -206,9 +205,15 @@ export class MangaFox extends BaseMirror implements MirrorImplementation {
     }
 
     async getListImages(doc: string, curUrl: string) {
-        // Check if we have embedded list of images
-        if (doc.includes("eval(function") && doc.includes("zjcdn")) {
-            return extractListOfImages(doc)
+        // Check if we have embedded list of images - look for the specific pattern with newImgs array
+        // The pattern is: eval(function...) containing 'newImgs' and 'zjcdn' URLs
+        // We need to be careful not to match the dm5_key eval which only contains the key
+        if (doc.includes("eval(function") && doc.includes("newImgs") && doc.includes("zjcdn")) {
+            const result = await extractListOfImages(doc)
+            // Only use extracted images if we got valid URLs, not garbage
+            if (result && result.length > 0 && result[0].includes("//")) {
+                return result
+            }
         }
 
         const lastPage = this.getVariable({ doc, variableName: "imagecount" })

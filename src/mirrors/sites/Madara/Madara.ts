@@ -87,8 +87,17 @@ export class Madara extends BaseMirror implements MirrorImplementation {
         return res
     }
 
-    async getListChaps(urlManga) {
-        let doc = await this.mirrorHelper.loadPage(urlManga, { nocache: true, preventimages: true })
+    async getListChaps(urlManga, htmlContent?: string) {
+        // Use provided HTML content if available (for Cloudflare-protected sites)
+        // Otherwise, make a request (may fail on protected sites)
+        let doc: string
+        if (htmlContent) {
+            console.log("[Madara] getListChaps using provided htmlContent, length:", htmlContent.length)
+            doc = htmlContent
+        } else {
+            console.log("[Madara] getListChaps fetching page:", urlManga)
+            doc = await this.mirrorHelper.loadPage(urlManga, { nocache: true, preventimages: true })
+        }
         const _self = this
 
         let $ = this.parseHtml(doc)
@@ -213,13 +222,37 @@ export class Madara extends BaseMirror implements MirrorImplementation {
             return preloadImages
         }
         const $ = this.parseHtml(doc)
+
+        // Try configured selector first
         $(this.options.img_sel).each(function () {
             let img = $(this).attr(_self.options.img_src)
             if (_self.options.hasOwnProperty("secondary_img_src") && img === undefined) {
                 img = $(this).attr(_self.options.secondary_img_src)
             }
-            res.push(img)
+            if (img) res.push(img)
         })
+
+        // If no images found, try alternative selectors common in Madara-based sites
+        if (res.length === 0) {
+            const alternativeSelectors = [
+                "div.read-container img",
+                "div.entry-content img",
+                ".reading-content img",
+                ".chapter-content img",
+                "#chapter-content img",
+                ".wp-manga-chapter-img",
+                ".page-break img",
+                "img.wp-manga-chapter-img"
+            ]
+            for (const selector of alternativeSelectors) {
+                $(selector).each(function () {
+                    let img = $(this).attr("src") || $(this).attr("data-src") || $(this).attr("data-lazy-src")
+                    if (img) res.push(img)
+                })
+                if (res.length > 0) break
+            }
+        }
+
         return res
     }
 
@@ -277,7 +310,41 @@ export class Madara extends BaseMirror implements MirrorImplementation {
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
-        return this.queryHtml(doc, this.options.page_container_sel).length > 0
+        console.log("[Madara] isCurrentPageAChapterPage called for:", curUrl)
+        console.log("[Madara] doc length:", doc?.length || 0)
+        console.log("[Madara] page_container_sel:", this.options.page_container_sel)
+
+        // Check for configured selector first
+        const configuredResult = this.queryHtml(doc, this.options.page_container_sel)
+        console.log("[Madara] configured selector result:", configuredResult.length)
+        if (configuredResult.length > 0) {
+            console.log("[Madara] Found page container with configured selector")
+            return true
+        }
+        // Also check for common alternative selectors used by Madara-based sites
+        // as site structures often change over time
+        const alternativeSelectors = [
+            "div.read-container",
+            "div.entry-content",
+            "div.c-blog-post",
+            ".reading-content",
+            ".chapter-content",
+            "#chapter-content",
+            ".wp-manga-chapter-img",
+            ".page-break img"
+        ]
+        for (const selector of alternativeSelectors) {
+            const result = this.queryHtml(doc, selector)
+            console.log(`[Madara] selector "${selector}" result:`, result.length)
+            if (result.length > 0) {
+                console.log("[Madara] Found page container with alternative selector:", selector)
+                return true
+            }
+        }
+        console.log("[Madara] No page container found, returning false")
+        // Log a snippet of the doc to help debug
+        console.log("[Madara] doc snippet (first 500 chars):", doc?.substring(0, 500))
+        return false
     }
 
     makeChapterUrl(url) {

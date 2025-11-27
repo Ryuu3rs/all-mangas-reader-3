@@ -67,7 +67,7 @@ export class MangaPark extends BaseMirror implements MirrorImplementation {
                         title
                         urlPath
                     }
-                } 
+                }
             }
         `
         const variables = {
@@ -142,6 +142,8 @@ export class MangaPark extends BaseMirror implements MirrorImplementation {
 
     isCurrentPageAChapterPage(doc, curUrl) {
         const pathname = new URL(curUrl).pathname
+        // Reset lastIndex to avoid issues with global regex flag
+        this.chapter_url.lastIndex = 0
         return this.chapter_url.test(pathname)
     }
 

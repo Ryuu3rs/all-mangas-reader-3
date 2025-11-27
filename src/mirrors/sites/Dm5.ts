@@ -104,6 +104,8 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
 
     isCurrentPageAChapterPage(doc, curUrl) {
         //return this.queryHtml(doc, "#cp_img").length > 0
+        // Reset lastIndex to avoid issues with global regex flag
+        this.chapter_url.lastIndex = 0
         return this.chapter_url.test(new URL(curUrl).pathname)
     }
 
