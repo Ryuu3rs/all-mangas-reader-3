@@ -34,6 +34,7 @@
 
 <script>
 import Scan from "./Scan"
+import EventBus from "../helpers/EventBus"
 
 export default {
     data() {
@@ -74,20 +75,20 @@ export default {
     name: "Page",
     components: { Scan },
     created() {
-        /* Listen for scroll event to check if page is in viewport */
-        this.scrollHandler = () => {
-            this.checkInViewPort()
-        }
-        window.addEventListener("scroll", this.scrollHandler)
+        /**
+         * Listen for centralized viewport check events (Performance Fix B)
+         * Instead of each Page having its own scroll listener, Reader.vue
+         * broadcasts a throttled event that all Pages listen to
+         */
+        EventBus.$on("check-viewport", this.checkInViewPort)
     },
     mounted() {
         // first set in viewport values
         this.$nextTick(() => this.checkInViewPort())
     },
     beforeUnmount() {
-        if (this.scrollHandler) {
-            window.removeEventListener("scroll", this.scrollHandler)
-        }
+        // Clean up EventBus listener (Performance Fix B)
+        EventBus.$off("check-viewport", this.checkInViewPort)
     },
     methods: {
         /* Check which part of the page is in viewport (in height) */
