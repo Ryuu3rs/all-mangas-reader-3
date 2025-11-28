@@ -9,8 +9,8 @@
                 rootMargin: '190px 0px 190px 0px' // 38px = 1 row height
             }
         }"
-        :class="color(3, true) + ' amr-manga-row' + (manga.update === 0 ? ' amr-noupdates' : '')">
-        <v-row :class="isDarkText ? 'dark-text' : 'light-text'" align="center" no-gutters class="py-1">
+        :class="[color(3, true), 'amr-manga-row', { 'amr-noupdates': manga.update === 0, 'compact-card': compact }]">
+        <v-row :class="[isDarkText ? 'dark-text' : 'light-text', compact ? 'py-0' : 'py-1']" align="center" no-gutters>
             <!-- Checkbox for multi-select -->
             <v-col cols="auto" class="pr-1" v-if="selectable">
                 <v-checkbox v-model="selected" hide-details density="compact" class="shrink mt-0"></v-checkbox>
@@ -61,8 +61,8 @@
                     {{ fullMangaName }}
                 </v-tooltip>
             </v-col>
-            <!-- Timer off icon if manga stopped updating -->
-            <v-col cols="auto" class="d-flex align-center">
+            <!-- Timer off icon if manga stopped updating - fixed width -->
+            <v-col cols="auto" class="d-flex align-center status-icons">
                 <v-tooltip v-if="manga.update === 0" location="top" content-class="icon-ttip">
                     <template v-slot:activator="{ props }">
                         <v-icon size="small" v-bind="props" class="mr-1">mdi-timer-off</v-icon>
@@ -85,8 +85,8 @@
                 </v-tooltip>
             </v-col>
 
-            <!-- Chapter info - always visible -->
-            <v-col cols="4" lg="4" class="px-1">
+            <!-- Chapter info - always visible with fixed width -->
+            <v-col class="px-1 chapter-col">
                 <div v-if="listChaps.length" class="d-flex align-center">
                     <!-- Progress indicator -->
                     <v-tooltip v-if="showProgress" location="top" content-class="icon-ttip">
@@ -130,6 +130,22 @@
                     <span v-else-if="!isMirrorEnabled" class="text-caption">{{
                         i18n("list_mirror_disabled", manga.mirror)
                     }}</span>
+                    <v-tooltip v-else-if="loadError === 'cloudflare'" location="top">
+                        <template v-slot:activator="{ props }">
+                            <span
+                                v-bind="props"
+                                class="text-caption text-warning d-flex align-center cursor-pointer"
+                                @click="openManga">
+                                <v-icon size="small" class="mr-1">mdi-shield-alert</v-icon>
+                                Click to open
+                            </span>
+                        </template>
+                        <span>Site is protected. Click to open manga page and load chapters.</span>
+                    </v-tooltip>
+                    <span v-else-if="loadError === 'error'" class="text-caption text-error">
+                        <v-icon size="small" class="mr-1">mdi-alert-circle</v-icon>
+                        Failed to load
+                    </span>
                     <span v-else class="text-caption text-grey">Loading...</span>
                 </div>
             </v-col>
@@ -432,7 +448,13 @@
 import i18n from "../../amr/i18n"
 import browser from "webextension-polyfill"
 import { chapPath, darkText, getColor, mangaKey } from "../../shared/utils"
+import { debugLog, debugWarn, debugError } from "../../shared/debug"
 import Flag from "./Flag"
+
+// Request queue to throttle chapter loading - shared across all Manga components
+// This prevents flooding the background script with too many simultaneous requests
+let requestQueue = Promise.resolve()
+const REQUEST_DELAY_MS = 100 // 100ms delay between requests
 
 export default {
     data() {
@@ -448,7 +470,8 @@ export default {
             displayChapterSelectMenu: false,
             displayActionMenu: false,
             lazyLoad: false,
-            listChaps: []
+            listChaps: [],
+            loadError: null // Error message when chapter loading fails (e.g., Cloudflare 403)
         }
     },
     // property to load the component with --> the manga it represents
@@ -461,7 +484,9 @@ export default {
         "isFirst",
         // is the group currently expanded
         "groupExpanded",
-        "groupIndex"
+        "groupIndex",
+        // compact mode for high-density view
+        "compact"
     ],
     computed: {
         shouldShow: function () {
@@ -485,15 +510,15 @@ export default {
         mirror: function () {
             const found = this.$store.state.mirrors.all.find(mir => mir.mirrorName === this.manga.mirror)
             if (!found) {
-                console.log(
-                    "[DEBUG] Manga.vue mirror not found for:",
+                debugLog(
+                    "Manga.vue mirror not found for:",
                     this.manga.mirror,
                     "available mirrors:",
                     this.$store.state.mirrors.all.map(m => m.mirrorName)
                 )
             } else {
-                console.log(
-                    "[DEBUG] Manga.vue mirror found:",
+                debugLog(
+                    "Manga.vue mirror found:",
                     found.mirrorName,
                     "icon:",
                     found.mirrorIcon ? found.mirrorIcon.substring(0, 50) + "..." : "NO ICON",
@@ -593,11 +618,13 @@ export default {
         },
         // Full manga name for tooltip
         fullMangaName: function () {
-            return this.manga.displayName && this.manga.displayName !== "" ? this.manga.displayName : this.manga.name
+            const name =
+                this.manga.displayName && this.manga.displayName !== "" ? this.manga.displayName : this.manga.name
+            return name || "Unknown Manga"
         },
         // Truncated manga name (max 40 chars with ellipsis)
         truncatedName: function () {
-            const name = this.fullMangaName
+            const name = this.fullMangaName || ""
             const maxLength = 40
             if (name.length > maxLength) {
                 return name.substring(0, maxLength) + "..."
@@ -623,50 +650,73 @@ export default {
     },
     methods: {
         /**
-         * Load chapters for this manga - called on component creation
+         * Load chapters for this manga - called when visible via intersection observer
          */
         async loadChapters() {
             if (this.listChaps.length > 0 || this.refreshing) {
                 return // Already loaded or loading
             }
 
-            // First try to get chapters from the store
+            // Clear any previous error
+            this.loadError = null
+
+            // First try to get chapters from the store (no network request)
             const mangaFromStore = this.$store.state.mangas.all.find(manga => manga.key === this.manga.key)
 
-            if (mangaFromStore && mangaFromStore.listChaps && mangaFromStore.listChaps.length > 0) {
+            if (
+                mangaFromStore &&
+                mangaFromStore.listChaps &&
+                Array.isArray(mangaFromStore.listChaps) &&
+                mangaFromStore.listChaps.length > 0
+            ) {
                 this.listChaps = mangaFromStore.listChaps
-                console.log("[DEBUG] Loaded chapters from store:", this.manga?.name, this.listChaps.length)
+                debugLog("Loaded chapters from store:", this.manga?.name, this.listChaps.length)
             } else if (this.isMirrorEnabled) {
-                // If not in store, fetch from mirror
+                // If not in store, fetch from mirror using the throttled queue
                 this.refreshing = true
-                console.log("[DEBUG] Fetching chapters from mirror for:", this.manga?.name, this.manga?.mirror)
-                try {
-                    const loadedChaps = await browser.runtime.sendMessage({
-                        action: "loadListChaps",
-                        url: this.manga.url,
-                        mirror: this.manga.mirror
-                    })
-                    console.log(
-                        "[DEBUG] loadListChaps response:",
-                        this.manga?.name,
-                        loadedChaps?.length || 0,
-                        "chapters"
-                    )
-                    if (loadedChaps && loadedChaps.length > 0) {
-                        this.listChaps = loadedChaps
-                        // Also update the store
-                        this.$store.commit("updateMangaListChaps", {
-                            key: this.manga.key,
-                            listChaps: loadedChaps
+                debugLog("Queuing chapter fetch for:", this.manga?.name, this.manga?.mirror)
+
+                // Use request queue to throttle - prevents flooding background script
+                requestQueue = requestQueue.then(async () => {
+                    try {
+                        const loadedChaps = await browser.runtime.sendMessage({
+                            action: "loadListChaps",
+                            url: this.manga.url,
+                            mirror: this.manga.mirror
                         })
-                    } else {
-                        console.warn("[DEBUG] No chapters returned for:", this.manga?.name)
+                        debugLog("loadListChaps response:", this.manga?.name, loadedChaps?.length || 0, "chapters")
+                        if (loadedChaps && loadedChaps.length > 0) {
+                            this.listChaps = loadedChaps
+                            // Update the store and persist to IndexedDB
+                            this.$store.commit("updateMangaListChaps", {
+                                key: this.manga.key,
+                                listChaps: loadedChaps
+                            })
+                            // Persist to IndexedDB so other pages (dashboard) don't re-fetch
+                            const mangaToUpdate = this.$store.state.mangas.all.find(m => m.key === this.manga.key)
+                            if (mangaToUpdate) {
+                                this.$store.dispatch("findAndUpdateManga", mangaToUpdate)
+                            }
+                        } else {
+                            // No chapters returned - could be Cloudflare protection or site issue
+                            debugWarn("No chapters returned for:", this.manga?.name)
+                            this.loadError = "cloudflare"
+                        }
+                    } catch (e) {
+                        debugError("Failed to load chapters for", this.manga?.name, e)
+                        // Check if it's a network/Cloudflare error
+                        const errorMsg = e?.message || String(e)
+                        if (errorMsg.includes("403") || errorMsg.includes("Failed to load")) {
+                            this.loadError = "cloudflare"
+                        } else {
+                            this.loadError = "error"
+                        }
+                    } finally {
+                        this.refreshing = false
                     }
-                } catch (e) {
-                    console.error("[DEBUG] Failed to load chapters for", this.manga?.name, e)
-                } finally {
-                    this.refreshing = false
-                }
+                    // Add delay before next request
+                    await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY_MS))
+                })
             }
         },
 
@@ -705,7 +755,7 @@ export default {
         markAsRead() {
             // Guard against empty listChaps
             if (!this.listChaps || this.listChaps.length === 0 || !this.listChaps[0]) {
-                console.warn("[DEBUG] markAsRead called but no chapters loaded for:", this.manga?.name)
+                debugWarn("markAsRead called but no chapters loaded for:", this.manga?.name)
                 return
             }
             const mg = {
@@ -776,7 +826,7 @@ export default {
         play(which) {
             // Guard against empty listChaps
             if (!this.listChaps || this.listChaps.length === 0) {
-                console.warn("[DEBUG] play called but no chapters loaded for:", this.manga?.name)
+                debugWarn("play called but no chapters loaded for:", this.manga?.name)
                 return
             }
             let pos
@@ -788,7 +838,7 @@ export default {
             }
             // Guard against invalid position
             if (!this.listChaps[pos] || !this.listChaps[pos][1]) {
-                console.warn("[DEBUG] play: invalid chapter position", pos, "for:", this.manga?.name)
+                debugWarn("play: invalid chapter position", pos, "for:", this.manga?.name)
                 return
             }
             browser.runtime.sendMessage({
@@ -898,8 +948,18 @@ export default {
         }
     },
     async created() {
-        // Load chapters immediately on component creation
-        await this.loadChapters()
+        // Note: Don't load chapters here - use intersection observer (onIntersect) instead
+        // This prevents flooding the background script with 100+ simultaneous requests
+        // Only load chapters from store if already available (no network request)
+        const mangaFromStore = this.$store.state.mangas.all.find(manga => manga.key === this.manga.key)
+        if (
+            mangaFromStore &&
+            mangaFromStore.listChaps &&
+            Array.isArray(mangaFromStore.listChaps) &&
+            mangaFromStore.listChaps.length > 0
+        ) {
+            this.listChaps = mangaFromStore.listChaps
+        }
 
         this.$eventBus.$on("multi-manga:open-latest:" + this.manga.key, () => {
             if (!this.canOpenTab) return
@@ -1036,8 +1096,43 @@ export default {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Compact mode styles */
+.compact-card.amr-manga-row {
+    padding: 2px 6px !important;
+    margin-bottom: 2px;
+    border-radius: 2px !important;
+}
+
+.compact-card .amr-manga-title {
+    font-size: 0.85rem;
+}
+
+.compact-card .chapter-select :deep(.v-field) {
+    min-height: 24px !important;
+}
+
+.compact-card .action-btn-slot {
+    width: 22px;
+    height: 22px;
+}
+
+/* Status icons column - fixed width */
+.status-icons {
+    min-width: 60px;
+    max-width: 60px;
+    justify-content: flex-end;
+}
+
+/* Chapter column - fixed width for consistent layout */
+.chapter-col {
+    min-width: 200px;
+    max-width: 280px;
+    flex: 0 0 auto !important;
+}
+
 .chapter-select {
-    max-width: 300px;
+    max-width: 100%;
+    width: 100%;
 }
 
 .chapter-select :deep(.v-field) {
@@ -1052,6 +1147,12 @@ export default {
 
 .chapter-select :deep(.v-select__selection) {
     margin: 0 !important;
+}
+
+/* Action buttons container - fixed width */
+.action-buttons {
+    min-width: 200px;
+    flex: 0 0 auto !important;
 }
 
 .det-sel-wrapper {

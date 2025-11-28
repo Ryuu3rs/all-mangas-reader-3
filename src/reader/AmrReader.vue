@@ -762,6 +762,10 @@ export default {
 
         bookmarkMenuOpen: false /* State of bookmark menu */,
 
+        // Reading time tracking
+        sessionStartTime: null /* Timestamp when reading session started */,
+        chaptersReadInSession: 0 /* Number of chapters read in this session */,
+
         icons: {
             mdiMenu,
             mdiChevronRight,
@@ -798,6 +802,8 @@ export default {
     }),
     created() {
         this.util = new Util(this.mirror)
+        /** Start reading session timer */
+        this.sessionStartTime = Date.now()
         /** Register keys */
         this.handlekeys()
         /** Check if manga exists */
@@ -871,6 +877,15 @@ export default {
         if (options.markwhendownload === 0) {
             this.consultManga()
         }
+
+        // Record reading time when page is closed
+        window.addEventListener("beforeunload", this.recordReadingSession)
+    },
+    beforeUnmount() {
+        // Clean up event listener
+        window.removeEventListener("beforeunload", this.recordReadingSession)
+        // Record reading session when component unmounts
+        this.recordReadingSession()
     },
     watch: {
         /** Change resize value if passing from !fullchapter to fullchapter (height and container are no more available) */
@@ -1023,10 +1038,28 @@ export default {
         backcolor(light = 0) {
             return "grey " + (!this.darkreader ? "lighten-" + (4 - light) : "darken-" + (4 - light))
         },
+        /** Record reading session duration to statistics */
+        recordReadingSession() {
+            if (!this.sessionStartTime) return
+            const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000) // duration in seconds
+            if (duration > 5) {
+                // Only record if session was longer than 5 seconds
+                browser.runtime.sendMessage({
+                    action: "recordReadingTime",
+                    duration: duration,
+                    mirror: this.mirror?.mirrorName,
+                    chaptersRead: this.chaptersReadInSession
+                })
+            }
+            // Reset to prevent double recording
+            this.sessionStartTime = null
+        },
         /** Inform background that current chapter has been read (will update reading state and eventually add manga to list) */
         async consultManga(force) {
             await this.util.consultManga(force)
             await this.loadMangaInformations() // reload last chapter read
+            // Increment chapters read in this session
+            this.chaptersReadInSession++
         },
         /** Decrement Zoom value */
         zoomOut() {

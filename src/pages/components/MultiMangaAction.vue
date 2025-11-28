@@ -76,6 +76,54 @@
                     </div>
                 </v-col>
             </v-row>
+            <v-divider class="my-2" />
+            <v-row>
+                <v-col cols="12">
+                    <div class="text-caption text-grey mb-2">Quick Actions</div>
+                    <v-btn
+                        @click="markAllRead()"
+                        :disabled="!selected.length"
+                        variant="outlined"
+                        size="small"
+                        color="success"
+                        class="mr-2 mb-2">
+                        <v-icon start size="small">mdi-check-all</v-icon>Mark Read
+                    </v-btn>
+                    <v-btn
+                        @click="refreshSelected()"
+                        :disabled="!selected.length"
+                        variant="outlined"
+                        size="small"
+                        color="primary"
+                        class="mr-2 mb-2">
+                        <v-icon start size="small">mdi-refresh</v-icon>Refresh
+                    </v-btn>
+                    <v-btn
+                        @click="confirmDelete()"
+                        :disabled="!selected.length"
+                        variant="outlined"
+                        size="small"
+                        color="error"
+                        class="mb-2">
+                        <v-icon start size="small">mdi-delete</v-icon>Delete
+                    </v-btn>
+                </v-col>
+            </v-row>
+            <!-- Delete Confirmation Dialog -->
+            <v-dialog v-model="deleteDialog" max-width="400">
+                <v-card>
+                    <v-card-title class="text-h6">Confirm Delete</v-card-title>
+                    <v-card-text
+                        >Are you sure you want to delete {{ selected.length }} manga(s)? This cannot be
+                        undone.</v-card-text
+                    >
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
+                        <v-btn color="error" variant="flat" @click="deleteSelected()">Delete</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
         </v-card>
     </div>
 </template>
@@ -89,6 +137,7 @@ export default {
     data() {
         return {
             selectedCategory: "",
+            deleteDialog: false,
             positions: {
                 clientX: undefined,
                 clientY: undefined,
@@ -149,6 +198,36 @@ export default {
             for (const manga of this.selected) {
                 this.$eventBus.$emit("multi-manga:open-first-new:" + manga.key)
             }
+        },
+        markAllRead: async function () {
+            for (const manga of this.selected) {
+                if (manga.listChaps && manga.listChaps.length > 0) {
+                    const latestChapter = manga.listChaps[0]
+                    await this.$store.dispatch("readManga", {
+                        key: manga.key,
+                        url: latestChapter[1],
+                        lastChapterReadName: latestChapter[0],
+                        lastChapterReadURL: latestChapter[1]
+                    })
+                }
+            }
+            this.clearSelect()
+        },
+        refreshSelected: function () {
+            for (const manga of this.selected) {
+                this.$eventBus.$emit("multi-manga:refresh:" + manga.key)
+            }
+        },
+        confirmDelete: function () {
+            this.deleteDialog = true
+        },
+        deleteSelected: async function () {
+            for (const manga of this.selected) {
+                await this.$store.dispatch("deleteManga", { key: manga.key })
+            }
+            this.deleteDialog = false
+            this.clearSelect()
+            this.$emit("unselect")
         },
         unselect: function () {
             this.$emit("unselect")

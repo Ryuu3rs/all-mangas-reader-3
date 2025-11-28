@@ -53,6 +53,15 @@ export class HandleManga {
                 this.logger.debug("Read manga " + message.url)
                 // call store method to update reading list appropriately
                 const result = await this.store.dispatch("readManga", message)
+                // Record chapter read in statistics
+                await this.store.dispatch("recordChapterRead", {
+                    mirror: (message as any).mirror,
+                    chapterName: (message as any).lastChapterReadName,
+                    mangaName: (message as any).name,
+                    chapterUrl: (message as any).url
+                })
+                // Check for new achievements
+                await this.store.dispatch("checkAchievements")
                 console.log("[DEBUG] handle-manga readManga dispatch completed")
                 return result
             }
@@ -92,6 +101,12 @@ export class HandleManga {
                 return this.store.dispatch("addCategoryToManga", message)
             case "importSamples":
                 return this.store.dispatch("importSamples")
+            case "recordReadingTime":
+                return this.store.dispatch("recordReadingTime", {
+                    duration: (message as any).duration,
+                    mirror: (message as any).mirror,
+                    chaptersRead: (message as any).chaptersRead || 0
+                })
             case "refreshMangas":
                 return this.store.dispatch("refreshMangas", message)
             case "updateChaptersLists":

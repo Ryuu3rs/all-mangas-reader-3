@@ -20,6 +20,7 @@ const config = {
         "background-worker": "./background-worker.ts",
         "reader/init-reading": "./reader/init-reading.js",
         "pages/popup/popup": "./pages/popup/popup.js",
+        "pages/dashboard/dashboard": "./pages/dashboard/dashboard.js",
         "pages/lab/lab": "./pages/lab/lab.js",
         "pages/options/options": "./pages/options/options.js",
         "pages/bookmarks/bookmarks": "./pages/bookmarks/bookmarks.js",
@@ -88,6 +89,11 @@ const config = {
             patterns: [
                 { from: "icons", to: "icons", globOptions: { ignore: ["icon.xcf"] } },
                 { from: "pages/popup/popup.html", to: "pages/popup/popup.html", transform: transformHtml },
+                {
+                    from: "pages/dashboard/dashboard.html",
+                    to: "pages/dashboard/dashboard.html",
+                    transform: transformHtml
+                },
                 { from: "pages/lab/lab.html", to: "pages/lab/lab.html", transform: transformHtml },
                 { from: "pages/options/options.html", to: "pages/options/options.html", transform: transformHtml },
                 {

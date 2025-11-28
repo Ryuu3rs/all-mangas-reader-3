@@ -1,6 +1,6 @@
 <!-- The prop "mangas" used to initialize this component is a list of manga objects with the same name : a manga read on multiple sites -->
 <template>
-    <div>
+    <div :class="{ 'compact-group': compact }">
         <Manga
             v-for="(manga, index) in group.mangas"
             :key="manga.key"
@@ -9,6 +9,7 @@
             :is-first="index == 0"
             :group-index="groupIndex"
             :group-expanded="expanded"
+            :compact="compact"
             @expand-group="expanded = !expanded"
             @search-request="propagateSR"
             @rename-manga="renameManga" />
@@ -26,7 +27,7 @@ export default {
         }
     },
     // property to load the component with --> a group of manga
-    props: ["group", "groupIndex"],
+    props: ["group", "groupIndex", "compact"],
     components: { Manga },
     methods: {
         /**

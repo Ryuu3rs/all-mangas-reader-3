@@ -48,7 +48,8 @@ export const getters = {
      */
     hasNewMangas: state => {
         for (const mg of state.all) {
-            if (mg.listChaps.length > 0) {
+            // Ensure listChaps is an array before accessing
+            if (mg.listChaps && Array.isArray(mg.listChaps) && mg.listChaps.length > 0) {
                 if (chapPath(mg.listChaps[0][1]) != chapPath(mg.lastChapterReadURL) && mg.read == 0) {
                     return true
                 }

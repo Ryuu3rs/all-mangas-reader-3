@@ -18,7 +18,7 @@ class StoreDB {
      */
     initDB() {
         this.status = 3
-        this.dbversion = 2
+        this.dbversion = 4 // Bumped for achievements store
         this.db = undefined
         const store = this
         return new Promise((resolve, reject) => {
@@ -58,6 +58,14 @@ class StoreDB {
                 }
                 if (!db.objectStoreNames.contains("bookmarks")) {
                     db.createObjectStore("bookmarks", { keyPath: "key" })
+                }
+                // V3: Add statistics store
+                if (!db.objectStoreNames.contains("statistics")) {
+                    db.createObjectStore("statistics", { keyPath: "id" })
+                }
+                // V3: Add achievements store
+                if (!db.objectStoreNames.contains("achievements")) {
+                    db.createObjectStore("achievements", { keyPath: "id" })
                 }
             }
             request.onsuccess = function (event) {
@@ -401,6 +409,96 @@ class StoreDB {
 
                 const objectStore = transaction.objectStore("bookmarks")
                 const request = objectStore.delete(key)
+                request.onsuccess = function (event) {
+                    resolve(event.target.result)
+                }
+            })
+        })
+    }
+
+    /**
+     * Get statistics from database
+     * @returns {Promise<Object>} Statistics object or null
+     */
+    getStatistics() {
+        const store = this
+        return this.checkInit().then(() => {
+            return new Promise((resolve, reject) => {
+                const transaction = store.db.transaction(["statistics"], "readonly")
+
+                transaction.onerror = function (event) {
+                    reject("Impossible to get statistics. Error code : " + event.target.errorCode)
+                }
+
+                const objectStore = transaction.objectStore("statistics")
+                const request = objectStore.get("main")
+                request.onsuccess = function (event) {
+                    resolve(event.target.result || null)
+                }
+            })
+        })
+    }
+
+    /**
+     * Store statistics to database
+     * @param {Object} stats Statistics object to store
+     */
+    storeStatistics(stats) {
+        const store = this
+        return this.checkInit().then(() => {
+            return new Promise((resolve, reject) => {
+                const transaction = store.db.transaction(["statistics"], "readwrite")
+
+                transaction.onerror = function (event) {
+                    reject("Impossible to store statistics. Error code : " + event.target.errorCode)
+                }
+
+                const objectStore = transaction.objectStore("statistics")
+                // Add id for keyPath
+                stats.id = "main"
+                const request = objectStore.put(stats)
+                request.onsuccess = function (event) {
+                    resolve(event.target.result)
+                }
+            })
+        })
+    }
+
+    /**
+     * Get achievements from database
+     * @returns {Promise<Object>} Achievements object or null
+     */
+    getAchievements() {
+        const store = this
+        return this.checkInit().then(() => {
+            return new Promise((resolve, reject) => {
+                const transaction = store.db.transaction(["achievements"], "readonly")
+                const objectStore = transaction.objectStore("achievements")
+                const request = objectStore.get("achievements")
+                request.onerror = function (event) {
+                    reject(event.target.error)
+                }
+                request.onsuccess = function (event) {
+                    resolve(event.target.result?.data || null)
+                }
+            })
+        })
+    }
+
+    /**
+     * Store achievements to database
+     * @param {Object} achievements Achievements object to store
+     */
+    storeAchievements(achievements) {
+        const store = this
+        return this.checkInit().then(() => {
+            return new Promise((resolve, reject) => {
+                const transaction = store.db.transaction(["achievements"], "readwrite")
+                const objectStore = transaction.objectStore("achievements")
+                transaction.onerror = function (event) {
+                    reject(event.target.error)
+                }
+                const request = objectStore.put({ id: "achievements", data: achievements })
                 request.onsuccess = function (event) {
                     resolve(event.target.result)
                 }

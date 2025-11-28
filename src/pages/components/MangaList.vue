@@ -181,6 +181,76 @@
                         </template>
                         <span>{{ i18n("list_select_action") }}</span>
                     </v-tooltip>
+                    <!-- Smart Filters Menu -->
+                    <v-menu location="bottom" :close-on-content-click="false" v-model="showSmartFilters">
+                        <template #activator="{ props: smartFilterProps }">
+                            <v-tooltip location="top">
+                                <template #activator="{ props: smartFilterTooltipProps }">
+                                    <v-icon
+                                        v-bind="{ ...smartFilterProps, ...smartFilterTooltipProps }"
+                                        :class="['amr-filter', { activated: activeSmartFilter !== 'none' }]">
+                                        mdi-filter-variant
+                                    </v-icon>
+                                </template>
+                                <span>Smart Filters</span>
+                            </v-tooltip>
+                        </template>
+                        <v-card min-width="220">
+                            <v-list density="compact">
+                                <v-list-subheader>Smart Filters</v-list-subheader>
+                                <v-list-item @click="setSmartFilter('none')" :active="activeSmartFilter === 'none'">
+                                    <template v-slot:prepend><v-icon>mdi-filter-off</v-icon></template>
+                                    <v-list-item-title>No Filter</v-list-item-title>
+                                </v-list-item>
+                                <v-list-item
+                                    @click="setSmartFilter('newChapters')"
+                                    :active="activeSmartFilter === 'newChapters'">
+                                    <template v-slot:prepend><v-icon color="success">mdi-new-box</v-icon></template>
+                                    <v-list-item-title>New Chapters</v-list-item-title>
+                                    <template v-slot:append
+                                        ><v-chip size="x-small" color="success">{{
+                                            visNewMangas.length
+                                        }}</v-chip></template
+                                    >
+                                </v-list-item>
+                                <v-list-item
+                                    @click="setSmartFilter('notRead30Days')"
+                                    :active="activeSmartFilter === 'notRead30Days'">
+                                    <template v-slot:prepend
+                                        ><v-icon color="warning">mdi-clock-alert-outline</v-icon></template
+                                    >
+                                    <v-list-item-title>Not Read in 30 Days</v-list-item-title>
+                                    <template v-slot:append
+                                        ><v-chip size="x-small" color="warning">{{
+                                            staleMangas.length
+                                        }}</v-chip></template
+                                    >
+                                </v-list-item>
+                                <v-list-item
+                                    @click="setSmartFilter('completed')"
+                                    :active="activeSmartFilter === 'completed'">
+                                    <template v-slot:prepend><v-icon color="info">mdi-check-circle</v-icon></template>
+                                    <v-list-item-title>Completed Series</v-list-item-title>
+                                    <template v-slot:append
+                                        ><v-chip size="x-small" color="info">{{
+                                            completedMangas.length
+                                        }}</v-chip></template
+                                    >
+                                </v-list-item>
+                                <v-list-item
+                                    @click="setSmartFilter('recentlyAdded')"
+                                    :active="activeSmartFilter === 'recentlyAdded'">
+                                    <template v-slot:prepend><v-icon color="primary">mdi-plus-circle</v-icon></template>
+                                    <v-list-item-title>Recently Added (7 days)</v-list-item-title>
+                                    <template v-slot:append
+                                        ><v-chip size="x-small" color="primary">{{
+                                            recentlyAddedMangas.length
+                                        }}</v-chip></template
+                                    >
+                                </v-list-item>
+                            </v-list>
+                        </v-card>
+                    </v-menu>
                 </v-card>
                 <v-card v-if="visMangas.length" class="hover-card">
                     <v-tooltip v-if="visNewMangas.length" location="top" content-class="icon-ttip">
@@ -199,95 +269,77 @@
             </v-col>
         </v-row>
         <br />
-        <!-- Manga List -->
-        <v-data-table
-            :items="groupedMangas"
-            :loading="!loaded"
-            :headers="[{ value: 'name' }]"
-            v-model:page="pagination.currentPage"
-            :items-per-page="itemsPerPage"
-            hide-default-header
-            hide-default-footer
-            :search="searchText"
-            @update:page-count="pagination.pageCount = $event">
-            <template v-slot:[pageNavigationPosition]>
-                <v-row class="mx-2" :class="pageNavigationPosition === 'footer' ? 'my-6' : ''">
-                    <v-col cols="3">
-                        <v-lazy>
-                            <v-select
-                                density="compact"
-                                variant="outlined"
-                                :items="pagination.pageOptions"
-                                v-model="itemsPerPage"
-                                :label="i18n('list_page_label')">
-                                <template v-slot:item="{ item, props }">
-                                    <v-list-item v-bind="props">
-                                        <v-list-item-title>
-                                            {{ item.value === -1 ? i18n("list_page_all") : item.value }}
-                                        </v-list-item-title>
-                                    </v-list-item>
-                                </template>
-                                <template v-slot:selection="{ item }">
-                                    {{ item.value === -1 ? i18n("list_page_all") : item.value }}
-                                </template>
-                            </v-select>
-                        </v-lazy>
-                    </v-col>
-                    <v-col>
-                        <v-lazy v-if="itemsPerPage > 0">
-                            <v-pagination
-                                :total-visible="$isPopup ? 5 : 10"
-                                v-model="pagination.currentPage"
-                                :length="pagination.pageCount"></v-pagination>
-                        </v-lazy>
-                    </v-col>
-                    <v-col cols="1">
-                        <v-tooltip location="top" content-class="icon-ttip">
-                            <template v-slot:activator="{ props }">
-                                <v-lazy>
-                                    <v-btn color="blue" icon size="x-large" @click="moveNavigation()" v-bind="props">
-                                        <v-icon>{{
-                                            pageNavigationPosition === "top" ? "mdi-arrow-down-box" : "mdi-arrow-up-box"
-                                        }}</v-icon>
-                                    </v-btn>
-                                </v-lazy>
-                            </template>
-                            <span>{{ i18n("list_move_navigation") }}</span>
-                        </v-tooltip>
-                    </v-col>
-                </v-row>
-            </template>
-            <!-- Loading progress bar -->
-            <template v-slot:progress>
-                <v-progress-linear color="purple" :height="10" indeterminate></v-progress-linear>
-            </template>
-            <!-- Table Body, manga entries -->
-            <template v-slot:item="{ item }">
-                <tr class="">
-                    <td>
-                        <MangaGroup
-                            :group="item"
-                            :group-index="item.key"
-                            @search-request="propagateSR"
-                            @rename-manga="renameManga" />
-                    </td>
-                </tr>
-            </template>
-            <template v-slot:no-data>
-                <div v-if="allMangas.length > 0">
-                    <p v-html="i18n('list_no_manga_catstate_message')"></p>
+        <!-- Stats Bar -->
+        <v-row no-gutters class="mb-2">
+            <v-col cols="12">
+                <v-card class="pa-2 d-flex align-center justify-space-between" variant="tonal" density="compact">
+                    <div class="d-flex align-center">
+                        <v-chip size="small" color="primary" class="mr-2">
+                            {{ filteredGroupedMangas.length }} {{ i18n("list_manga_count") || "manga" }}
+                        </v-chip>
+                        <v-chip v-if="visNewMangas.length > 0" size="small" color="success" class="mr-2">
+                            {{ visNewMangas.length }} {{ i18n("list_with_updates") || "with updates" }}
+                        </v-chip>
+                        <v-chip v-if="searchText" size="small" color="info">
+                            {{ i18n("list_search_results") || "filtered" }}
+                        </v-chip>
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                        {{ i18n("list_scroll_hint") || "Scroll to load more" }}
+                    </div>
+                </v-card>
+            </v-col>
+        </v-row>
+        <!-- Loading State -->
+        <div v-if="!loaded" class="manga-skeleton-container">
+            <v-skeleton-loader
+                v-for="n in 5"
+                :key="'skeleton-' + n"
+                type="list-item-avatar-two-line"
+                class="mb-2"></v-skeleton-loader>
+        </div>
+        <!-- Empty State -->
+        <div v-else-if="filteredGroupedMangas.length === 0" class="text-center pa-4">
+            <div v-if="allMangas.length > 0">
+                <v-icon size="64" color="grey">mdi-magnify-remove-outline</v-icon>
+                <p class="mt-2" v-html="i18n('list_no_manga_catstate_message')"></p>
+            </div>
+            <div v-else>
+                <v-icon size="64" color="grey">mdi-book-open-page-variant-outline</v-icon>
+                <p class="mt-2" v-html="convertIcons(i18n('list_no_manga_message'))"></p>
+                <div class="d-flex justify-center align-center ga-3 flex-wrap">
+                    <v-btn color="primary" variant="tonal" @click="importSamples()">
+                        {{ i18n("list_import_samples") }}
+                    </v-btn>
+                    <span class="text-grey">or</span>
+                    <v-btn color="secondary" variant="outlined" @click="triggerImportOwn">
+                        <v-icon start>mdi-import</v-icon>
+                        Import your own
+                    </v-btn>
                 </div>
-                <div v-else>
-                    <p v-html="convertIcons(i18n('list_no_manga_message'))"></p>
-                    <p>
-                        <a @click.prevent="importSamples()">{{ i18n("list_import_samples") }}</a>
-                    </p>
-                </div>
-            </template>
-            <template v-slot:no-results>
-                <p v-html="i18n('list_no_manga_search_message')"></p>
-            </template>
-        </v-data-table>
+                <!-- Hidden file input for importing own manga list -->
+                <input
+                    ref="importFileInput"
+                    type="file"
+                    accept=".json"
+                    style="display: none"
+                    @change="handleImportFile" />
+            </div>
+        </div>
+        <!-- Manga List - Using standard rendering for reliability -->
+        <div v-else class="manga-list-container" :style="{ maxHeight: virtualScrollHeight + 'px', overflowY: 'auto' }">
+            <div
+                v-for="item in filteredGroupedMangas"
+                :key="item.key"
+                :class="['manga-list-item', { compact: compactMode }]">
+                <MangaGroup
+                    :group="item"
+                    :group-index="item.key"
+                    :compact="compactMode"
+                    @search-request="propagateSR"
+                    @rename-manga="renameManga" />
+            </div>
+        </div>
         <v-dialog v-model="showDialog" max-width="500px">
             <v-card>
                 <v-card-title>
@@ -337,6 +389,7 @@ import Categories from "./Categories"
 import MultiMangaAction from "./MultiMangaAction"
 import browser from "webextension-polyfill"
 import { convertIcons, displayFilterCats, formatMangaName, hasNew } from "../../shared/utils"
+import { debugLog } from "../../shared/debug"
 
 const default_sort = (a, b) => {
     const af = formatMangaName(a.displayName && a.displayName !== "" ? a.displayName : a.name),
@@ -351,8 +404,11 @@ const default_sort = (a, b) => {
     return res
 }
 const num_chapters_to_read_sort = (a, b) => {
-    const af = a.listChaps.findIndex(ele => ele[1] == a.lastChapterReadURL),
-        bf = b.listChaps.findIndex(ele => ele[1] == b.lastChapterReadURL)
+    // Ensure listChaps is an array before accessing
+    const aChaps = a.listChaps && Array.isArray(a.listChaps) ? a.listChaps : []
+    const bChaps = b.listChaps && Array.isArray(b.listChaps) ? b.listChaps : []
+    const af = aChaps.findIndex(ele => ele[1] == a.lastChapterReadURL)
+    const bf = bChaps.findIndex(ele => ele[1] == b.lastChapterReadURL)
     if (bf - af == 0) {
         return default_sort(a, b)
     } else {
@@ -394,24 +450,24 @@ export default {
             watchSearchLoading: false, // does the search popup needs to wait for search to finish loading before closing
             mirrorSelection: i18n("list_page_all"),
             selectedManga: [],
-            pagination: {
-                pageOptions: [5, 25, 50, 100, -1],
-                currentPage: 1,
-                pageCount: 0
-            },
-            itemsPerPage: this.$store.state.options.perPageMangas,
-            pageNavigationPosition: this.$store.state.options.pageNavigationPosition === "bottom" ? "footer" : "top",
             alpha_asc_desc: this.$store.state.options.alpha_asc_desc, // Toggle Manga List select behaviour
             searchMenu: false,
-            showErrorsOnly: false
+            showErrorsOnly: false,
+            // Cache for memoized groupedMangas
+            groupedMangasCache: null,
+            groupedMangasCacheKey: null,
+            // Compact mode for high-density view
+            compactMode: this.$store.state.options.compactMode || false,
+            // Smart filters
+            showSmartFilters: false,
+            activeSmartFilter: "none"
         }
     },
     watch: {
-        itemsPerPage: function (newValue) {
-            this.$store.dispatch("setOption", { key: "perPageMangas", value: newValue })
-        },
         sort: function (newValue) {
             this.$store.dispatch("setOption", { key: "sortOrder", value: newValue })
+            // Invalidate cache when sort changes
+            this.groupedMangasCache = null
         },
 
         searchTextBuffer: function (val) {
@@ -457,6 +513,8 @@ export default {
         },
         alpha_asc_desc: function (newValue) {
             this.$store.dispatch("setOption", { key: "alpha_asc_desc", value: newValue })
+            // Invalidate cache when sort order changes
+            this.groupedMangasCache = null
         }
     },
     computed: {
@@ -475,24 +533,23 @@ export default {
          * Return all visible mangas
          */
         visMangas: function () {
-            console.log("[DEBUG] visMangas computed - allMangas count:", this.allMangas.length)
+            debugLog("visMangas computed - allMangas count:", this.allMangas.length)
 
             if (this.showErrorsOnly) {
                 const result = this.allMangas.filter(mg => mg.updateError == 1)
-                console.log("[DEBUG] visMangas (errors only):", result.length)
+                debugLog("visMangas (errors only):", result.length)
                 return result
             }
             if (this.mirrorSelection !== i18n("list_page_all")) {
                 const result = this.allMangas.filter(mg => mg.mirror == this.mirrorSelection)
-                console.log("[DEBUG] visMangas (mirror filter):", result.length, "for mirror:", this.mirrorSelection)
+                debugLog("visMangas (mirror filter):", result.length, "for mirror:", this.mirrorSelection)
                 return result
             }
 
-            // Debug: check what displayFilterCats returns for each manga
             const filtered = this.allMangas.filter(mg => {
                 const visible = displayFilterCats(mg, this.options.categoriesStates, this.mirrors)
                 if (!visible) {
-                    console.log("[DEBUG] Manga filtered out by displayFilterCats:", mg.name, {
+                    debugLog("Manga filtered out by displayFilterCats:", mg.name, {
                         key: mg.key,
                         cats: mg.cats,
                         listChapsLength: mg.listChaps?.length || 0
@@ -500,7 +557,7 @@ export default {
                 }
                 return visible
             })
-            console.log("[DEBUG] visMangas (category filter):", filtered.length, "of", this.allMangas.length)
+            debugLog("visMangas (category filter):", filtered.length, "of", this.allMangas.length)
             return filtered
         },
         /**
@@ -525,10 +582,70 @@ export default {
             return this.visMangas.filter(mg => hasNew(mg))
         },
         /**
-         * Build mangas groups (by name)
+         * Return mangas not read in 30 days
+         */
+        staleMangas: function () {
+            const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
+            return this.visMangas.filter(mg => {
+                const lastRead = mg.lastChapterReadDate || mg.ts || 0
+                return lastRead < thirtyDaysAgo
+            })
+        },
+        /**
+         * Return completed series (all chapters read)
+         */
+        completedMangas: function () {
+            return this.visMangas.filter(
+                mg => !hasNew(mg) && mg.listChaps && Array.isArray(mg.listChaps) && mg.listChaps.length > 0
+            )
+        },
+        /**
+         * Return mangas added in the last 7 days
+         */
+        recentlyAddedMangas: function () {
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+            return this.visMangas.filter(mg => {
+                const addedDate = mg.addedDate || mg.ts || 0
+                return addedDate > sevenDaysAgo
+            })
+        },
+        /**
+         * Apply smart filter to visMangas
+         */
+        smartFilteredMangas: function () {
+            switch (this.activeSmartFilter) {
+                case "newChapters":
+                    return this.visNewMangas
+                case "notRead30Days":
+                    return this.staleMangas
+                case "completed":
+                    return this.completedMangas
+                case "recentlyAdded":
+                    return this.recentlyAddedMangas
+                default:
+                    return this.visMangas
+            }
+        },
+        /**
+         * Build mangas groups (by name) with memoization
          */
         groupedMangas: function () {
-            return this.sortMangaList(this.visMangas).reduce((groups, manga) => {
+            // Create cache key based on manga count, sort settings, and smart filter
+            const cacheKey = `${this.smartFilteredMangas.length}-${this.sort}-${this.alpha_asc_desc}-${this.options.groupmgs}-${this.activeSmartFilter}`
+
+            // Return cached result if available
+            if (this.groupedMangasCache && this.groupedMangasCacheKey === cacheKey) {
+                return this.groupedMangasCache
+            }
+
+            // Filter out invalid manga entries before processing
+            const validMangas = this.smartFilteredMangas.filter(manga => {
+                const hasValidKey = manga.key && manga.key !== "_no_key_"
+                const hasValidName = manga.name || manga.displayName
+                return hasValidKey && hasValidName
+            })
+
+            const result = this.sortMangaList(validMangas).reduce((groups, manga) => {
                 // make a copy of manga add a "hasNew" key and remove chapters
                 const mangaCopy = Object.assign({}, manga)
                 delete mangaCopy.listChaps
@@ -556,6 +673,44 @@ export default {
                 groups[index].mangas = groups[index].mangas.sort((a, b) => a.read - b.read)
                 return groups
             }, [])
+
+            // Cache the result
+            this.groupedMangasCache = result
+            this.groupedMangasCacheKey = cacheKey
+            return result
+        },
+
+        /**
+         * Filter grouped mangas by search text
+         */
+        filteredGroupedMangas: function () {
+            if (!this.searchText) {
+                return this.groupedMangas
+            }
+            const searchLower = this.searchText.toLowerCase()
+            return this.groupedMangas.filter(
+                group =>
+                    group.name.toLowerCase().includes(searchLower) ||
+                    group.mangas.some(
+                        m =>
+                            m.name.toLowerCase().includes(searchLower) ||
+                            (m.displayName && m.displayName.toLowerCase().includes(searchLower)) ||
+                            (m.mirror && m.mirror.toLowerCase().includes(searchLower))
+                    )
+            )
+        },
+
+        /**
+         * Calculate scroll container height based on context
+         */
+        virtualScrollHeight: function () {
+            // In popup, use smaller height; in dashboard/full page, use viewport-based height
+            if (this.$isPopup) {
+                return 400
+            }
+            // For dashboard, calculate based on viewport minus header/nav (approx 150px)
+            const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800
+            return Math.max(viewportHeight - 150, 400)
         },
 
         selectedMangaExpanded: function () {
@@ -587,6 +742,10 @@ export default {
             this.dialogAction = () => {
                 self.showDialog = false
                 self.visNewMangas.forEach(async mg => {
+                    // Ensure listChaps is an array before accessing
+                    if (!mg.listChaps || !Array.isArray(mg.listChaps) || mg.listChaps.length === 0) {
+                        return
+                    }
                     const newMG = {
                         ...mg,
                         lastChapterReadName: mg.listChaps[0][0],
@@ -617,6 +776,15 @@ export default {
                 this.searchTextBuffer = ""
                 this.watchSearchLoading = true
             }
+        },
+        /**
+         * Set active smart filter
+         */
+        setSmartFilter(filter) {
+            this.activeSmartFilter = filter
+            this.showSmartFilters = false
+            // Invalidate cache when filter changes
+            this.groupedMangasCache = null
         },
         /**
          * Propagate search request event from MangaGroup to parent
@@ -669,16 +837,6 @@ export default {
             const sortOption = this.$store.getters.options.alpha_asc_desc
             return items.sort((a, b) => (sortOption ? cmp(b, a) : cmp(a, b)))
         },
-        moveNavigation: function () {
-            let newDir = ""
-            if (this.pageNavigationPosition == "top") {
-                newDir = "bottom"
-            } else {
-                newDir = "top"
-            }
-            this.pageNavigationPosition = newDir
-            this.$store.dispatch("setOption", { key: "pageNavigationPosition", value: newDir })
-        },
         /**
          * Pull up the dialog for renaming a manga
          */
@@ -704,13 +862,62 @@ export default {
             this.renameKey = ""
             this.renameInput = ""
             this.renameDialog = false
+        },
+        /**
+         * Set compact mode for the manga list
+         * @param {boolean} isCompact - Whether to enable compact mode
+         */
+        setCompactMode(isCompact) {
+            this.compactMode = isCompact
+            this.$store.dispatch("setOption", { key: "compactMode", value: isCompact })
+        },
+        /**
+         * Trigger file input for importing manga list
+         */
+        triggerImportOwn() {
+            this.$refs.importFileInput?.click()
+        },
+        /**
+         * Handle file selection for import
+         */
+        handleImportFile(event) {
+            const file = event.target.files?.[0]
+            if (!file) return
+            const reader = new FileReader()
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result)
+                    this.processImportData(data)
+                } catch (err) {
+                    console.error("Failed to parse import file:", err)
+                    alert("Invalid JSON file. Please select a valid AMR export file.")
+                }
+            }
+            reader.readAsText(file)
+            event.target.value = "" // Reset so same file can be selected again
+        },
+        /**
+         * Process imported manga data
+         */
+        processImportData(data) {
+            // Check if this is a valid AMR export
+            if (data.mangas && Array.isArray(data.mangas)) {
+                browser.runtime.sendMessage({
+                    action: "importMangas",
+                    importcat: "",
+                    imports: data
+                })
+                alert(`Importing ${data.mangas.length} manga(s)...`)
+            } else {
+                alert("Invalid AMR export file. No manga list found.")
+            }
         }
     },
     beforeUnmount() {
         clearInterval(this.searchTextTimeout)
     },
     async created() {
-        console.log("[DEBUG] MangaList created - starting initialization")
+        debugLog("MangaList created - starting initialization")
 
         // initialize state for store in popup from background
         await this.$store.dispatch("getStateFromReference", {
@@ -718,11 +925,11 @@ export default {
             key: "all",
             mutation: "setMangas"
         })
-        console.log("[DEBUG] Mangas loaded from background:", this.$store.state.mangas.all.length)
+        debugLog("Mangas loaded from background:", this.$store.state.mangas.all.length)
 
-        // Log each manga's basic info
+        // Log each manga's basic info (only in debug mode)
         this.$store.state.mangas.all.forEach(mg => {
-            console.log("[DEBUG] Manga in store:", mg.name, {
+            debugLog("Manga in store:", mg.name, {
                 key: mg.key,
                 mirror: mg.mirror,
                 listChapsLength: mg.listChaps?.length || 0
@@ -735,10 +942,10 @@ export default {
             key: "all",
             mutation: "setBookmarks"
         })
-        console.log("[DEBUG] Bookmarks loaded:", this.$store.state.bookmarks.all.length)
+        debugLog("Bookmarks loaded:", this.$store.state.bookmarks.all.length)
 
         this.loaded = true
-        console.log("[DEBUG] MangaList initialization complete")
+        debugLog("MangaList initialization complete")
         setTimeout(() => this.$emit("manga-loaded"), 1000)
 
         this.$eventBus.$on("multi-manga:select-manga", key => {
@@ -795,27 +1002,58 @@ export default {
     font-size: 20px;
 }
 
-tr:hover {
-    background-color: transparent !important;
-}
-
-td {
-    height: auto !important;
-    border-bottom: none !important;
-}
-
-.v-data-table__wrapper {
-    padding-right: 4px !important;
-    padding-left: 4px !important;
-}
-
 .no-bg-hover::before {
     background-color: transparent !important;
 }
 
-.v-progress-linear--absolute {
-    position: absolute;
-    width: 90% !important;
-    margin-left: 5% !important;
+/* Virtual Scroll Styles */
+.manga-virtual-scroll {
+    border-radius: 8px;
+    background: transparent;
+}
+
+.manga-list-item {
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    transition: background-color 0.15s ease;
+}
+
+.manga-list-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.theme--dark .manga-list-item {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.theme--dark .manga-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Skeleton loading */
+.manga-skeleton-container {
+    padding: 8px;
+}
+
+/* Stats bar chip styling */
+.v-chip {
+    font-weight: 500;
+}
+
+/* Compact mode styles */
+.manga-virtual-scroll.compact-mode .manga-list-item {
+    padding: 2px 8px;
+}
+
+.manga-list-item.compact {
+    padding: 2px 4px;
+}
+
+.compact-mode .amr-manga-row {
+    padding: 2px 4px !important;
+}
+
+.compact-mode .v-card {
+    margin-bottom: 2px !important;
 }
 </style>

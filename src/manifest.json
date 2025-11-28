@@ -11,8 +11,7 @@
         "128": "icons/icon_128.png"
     },
     "action": {
-        "default_title": "All Mangas Reader",
-        "default_popup": "pages/popup/popup.html"
+        "default_title": "All Mangas Reader"
     },
     "options_ui": {
         "page": "pages/options/options.html"

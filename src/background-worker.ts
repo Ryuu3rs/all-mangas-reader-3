@@ -85,6 +85,18 @@ const init = async () => {
     await store.dispatch("initBookmarksFromDB")
 
     /**
+     * Initialize statistics from DB
+     */
+    logger.debug("Initialize statistics")
+    await store.dispatch("initStatisticsFromDB")
+
+    /**
+     * Initialize achievements from DB
+     */
+    logger.debug("Initialize achievements")
+    await store.dispatch("initAchievementsFromDB")
+
+    /**
      * Call function if there is anything to do after mirrors and mangas loading
      */
     if (typeof afterLoadingCall === "function") {
@@ -207,6 +219,22 @@ if (browser.notifications) {
     // To prevent the notification array from growing
     browser.notifications.onClosed.addListener(notifications.notificationCloseCallback)
 }
+
+// Handle extension icon click - open dashboard directly
+browser.action.onClicked.addListener(async () => {
+    // Check if dashboard is already open
+    const dashboardUrl = browser.runtime.getURL("/pages/dashboard/dashboard.html")
+    const tabs = await browser.tabs.query({ url: dashboardUrl })
+
+    if (tabs.length > 0) {
+        // Dashboard already open, focus it
+        await browser.tabs.update(tabs[0].id, { active: true })
+        await browser.windows.update(tabs[0].windowId, { focused: true })
+    } else {
+        // Open new dashboard tab
+        await browser.tabs.create({ url: dashboardUrl })
+    }
+})
 
 logger.info("Initialize message handler")
 browser.runtime.onMessage.addListener(async (msg, sender) => {

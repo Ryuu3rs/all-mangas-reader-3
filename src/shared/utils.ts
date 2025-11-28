@@ -21,15 +21,19 @@ export function isFirefoxAndroid() {
 }
 
 export function hasBeenRead(manga: AppManga) {
-    return manga.listChaps.length && chapPath(manga.lastChapterReadURL) === chapPath(manga.listChaps[0][1])
+    // Ensure listChaps is an array before accessing
+    if (!manga.listChaps || !Array.isArray(manga.listChaps) || manga.listChaps.length === 0) {
+        return false
+    }
+    return chapPath(manga.lastChapterReadURL) === chapPath(manga.listChaps[0][1])
 }
 
 export function hasNew(manga) {
-    return (
-        manga.read === 0 &&
-        manga.listChaps.length > 0 &&
-        chapPath(manga.lastChapterReadURL) !== chapPath(manga.listChaps[0][1])
-    )
+    // Ensure listChaps is an array before accessing
+    if (!manga.listChaps || !Array.isArray(manga.listChaps) || manga.listChaps.length === 0) {
+        return false
+    }
+    return manga.read === 0 && chapPath(manga.lastChapterReadURL) !== chapPath(manga.listChaps[0][1])
 }
 
 /** replace string inside brackets by html tag for icon */
@@ -288,7 +292,10 @@ export function countUsed(category: Category, mangas: AppManga[], mirrors: Mirro
             return mangas.reduce((nb, mg) => (!hasBeenRead(mg) ? nb + 1 : nb), 0)
         }
         if (category.name === "category_oneshots") {
-            return mangas.reduce((nb, mg) => (mg.listChaps.length === 1 ? nb + 1 : nb), 0)
+            return mangas.reduce(
+                (nb, mg) => (mg.listChaps && Array.isArray(mg.listChaps) && mg.listChaps.length === 1 ? nb + 1 : nb),
+                0
+            )
         }
     } else if (category.type === "language") {
         return mangas.reduce((nb, mg) => (readLanguage(mg, mirrors) === category.name ? nb + 1 : nb), 0)

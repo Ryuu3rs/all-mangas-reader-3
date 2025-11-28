@@ -27,18 +27,33 @@ import { updateActions } from "./mangas-update"
 const initActions = {
     /**
      * Retrieve manga list from DB, initialize the store
+     * Also cleans up any corrupted entries (e.g., _no_key_ entries from bad imports)
      */
     async initMangasFromDB({ commit, dispatch, rootState }) {
         await dispatch("mdFixLang")
         await storedb.getMangaList().then(async mangasdb => {
-            console.log("[DEBUG] initMangasFromDB - loaded from database:", mangasdb.length, "mangas")
-            if (mangasdb.length > 0) {
-                console.log("[DEBUG] First manga from DB:", mangasdb[0].name, mangasdb[0].key)
+            // Filter out corrupted entries and delete them from DB
+            const corruptedEntries = mangasdb.filter(mg => !mg.key || mg.key === "_no_key_" || !mg.url || !mg.mirror)
+            if (corruptedEntries.length > 0) {
+                console.warn(
+                    `[Cleanup] Found ${corruptedEntries.length} corrupted manga entries, removing from database`
+                )
+                for (const corrupted of corruptedEntries) {
+                    try {
+                        await storedb.deleteManga(corrupted.key || "_no_key_")
+                    } catch (e) {
+                        console.error("Failed to delete corrupted entry:", corrupted.key, e)
+                    }
+                }
             }
+
+            // Filter to only valid entries
+            const validMangas = mangasdb.filter(mg => mg.key && mg.key !== "_no_key_" && mg.url && mg.mirror)
+
             await dispatch("updateLanguageCategories")
             commit(
                 "setMangas",
-                mangasdb.map(
+                validMangas.map(
                     mg =>
                         new Manga(
                             mg,

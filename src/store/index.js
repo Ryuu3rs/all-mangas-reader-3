@@ -5,6 +5,8 @@ import mirrors from "./modules/mirrors"
 import options from "./modules/options"
 import bookmarks from "./modules/bookmarks"
 import importexport from "./modules/importexport"
+import statistics from "./modules/statistics"
+import achievements from "./modules/achievements"
 import VuexMutationSharer from "./sharer/VuexMutationSharer"
 
 /**
@@ -22,7 +24,9 @@ export default createStore({
         mirrors,
         options,
         bookmarks,
-        importexport
+        importexport,
+        statistics,
+        achievements
     },
     plugins: [
         // share the state for every mutation

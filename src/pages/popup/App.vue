@@ -178,6 +178,13 @@
                                     @click="opentab('/pages/popup/popup.html?mode=tab')">
                                     <v-icon>mdi-open-in-new</v-icon>
                                 </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    icon
+                                    color="purple"
+                                    @click="opentab('/pages/dashboard/dashboard.html')">
+                                    <v-icon>mdi-view-dashboard</v-icon>
+                                </v-btn>
                             </v-col>
                         </v-row>
                     </v-col>
@@ -288,12 +295,12 @@ export default {
 
         mangadex: {
             get() {
-                return (
+                return Boolean(
                     this.$store.state.options.mangadexIntegrationEnable &&
-                    !this.$store.state.options.mangadexDontRemindMe &&
-                    !this.options &&
-                    (!this.$store.state.options.mangadexValidCredentials ||
-                        this.$store.state.options.mangadexRefreshExpire < Date.now())
+                        !this.$store.state.options.mangadexDontRemindMe &&
+                        !this.options &&
+                        (!this.$store.state.options.mangadexValidCredentials ||
+                            this.$store.state.options.mangadexRefreshExpire < Date.now())
                 )
             }
         }
