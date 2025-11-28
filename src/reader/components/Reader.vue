@@ -76,6 +76,58 @@ import { isFirefox } from "../../shared/utils"
 const thumbsScroller = scroller()
 let currentlyThumbsScrolling = false
 
+/**
+ * Simple debounce utility function (Performance Fix C)
+ * @param {Function} fn - Function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @returns {Function} Debounced function
+ */
+function debounce(fn, delay) {
+    let timeoutId = null
+    return function (...args) {
+        if (timeoutId) {
+            clearTimeout(timeoutId)
+        }
+        timeoutId = setTimeout(() => {
+            fn.apply(this, args)
+            timeoutId = null
+        }, delay)
+    }
+}
+
+/**
+ * Simple throttle utility function (Performance Fix B)
+ * Executes function at most once per delay period
+ * @param {Function} fn - Function to throttle
+ * @param {number} delay - Minimum time between executions in milliseconds
+ * @returns {Function} Throttled function
+ */
+function throttle(fn, delay) {
+    let lastCall = 0
+    let timeoutId = null
+    return function (...args) {
+        const now = Date.now()
+        const remaining = delay - (now - lastCall)
+
+        if (remaining <= 0) {
+            // Execute immediately
+            if (timeoutId) {
+                clearTimeout(timeoutId)
+                timeoutId = null
+            }
+            lastCall = now
+            fn.apply(this, args)
+        } else if (!timeoutId) {
+            // Schedule execution for when delay expires
+            timeoutId = setTimeout(() => {
+                lastCall = Date.now()
+                timeoutId = null
+                fn.apply(this, args)
+            }, remaining)
+        }
+    }
+}
+
 export default {
     mixins: [i18nmixin],
     data() {
@@ -124,13 +176,41 @@ export default {
         /** Initialize key handlers */
         this.autoNextChapter = false
         this.handlekeys()
-        /** Keep scroll ratio */
-        window.addEventListener("scroll", () => {
+
+        /**
+         * Debounced state save to avoid excessive background messages (Performance Fix C)
+         * Saves at most once every 500ms during rapid page changes
+         */
+        this.debouncedSaveState = debounce(() => {
+            browser.runtime.sendMessage({
+                action: "saveCurrentState",
+                url: this.pageData.currentMangaURL,
+                language: this.pageData.language,
+                mirror: this.mirror.mirrorName,
+                currentChapter: this.pageData.currentChapterURL,
+                currentScanUrl: this.getCurrentScanUrl()
+            })
+        }, 500)
+
+        /**
+         * Throttled scroll handler (Performance Fix B)
+         * Single centralized scroll listener instead of one per Page component
+         * Throttled to 60fps (16ms) for smooth performance
+         */
+        this.throttledScrollHandler = throttle(() => {
+            // Update scroll ratio
             this.scrollRatio = window.pageYOffset / document.documentElement.scrollHeight
-        })
+            // Broadcast to all Page components to check viewport
+            EventBus.$emit("check-viewport")
+        }, 16) // ~60fps
+
+        /** Keep scroll ratio - now using throttled handler */
+        window.addEventListener("scroll", this.throttledScrollHandler)
         /** Keep scroll ratio when resizing */
         window.addEventListener("resize", () => {
             this.keepScrollPos(10)
+            // Also check viewport on resize
+            EventBus.$emit("check-viewport")
         })
         /** Register loaded scans events */
         EventBus.$on("loaded-scan", this.updateProgress)
@@ -185,15 +265,8 @@ export default {
                     }
                 })
             })
-            /** Save current page state */
-            browser.runtime.sendMessage({
-                action: "saveCurrentState",
-                url: this.pageData.currentMangaURL,
-                language: this.pageData.language,
-                mirror: this.mirror.mirrorName,
-                currentChapter: this.pageData.currentChapterURL,
-                currentScanUrl: this.getCurrentScanUrl()
-            })
+            /** Save current page state (debounced - Performance Fix C) */
+            this.debouncedSaveState()
         },
         resize(nVal, oVal) {
             this.keepScrollPos(100) // keep the scrolling ratio when changing resize mode

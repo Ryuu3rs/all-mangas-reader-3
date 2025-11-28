@@ -86,6 +86,7 @@
 import bookmarks from "../state/bookmarks"
 import { scansProvider } from "../helpers/ScansProvider"
 import EventBus from "../helpers/EventBus"
+// Note: scansProvider.getScanByUrl() is used for O(1) lookups (Performance Fix A)
 import i18n from "../../amr/i18n"
 import { i18nmixin } from "../../mixins/i18n-mixin"
 import { mdiImageBroken } from "@mdi/js"
@@ -131,9 +132,9 @@ export default {
         }
     },
     computed: {
-        /* the scan (loaded through scansProvider) */
+        /* the scan (loaded through scansProvider) - O(1) lookup via Map (Performance Fix A) */
         scan() {
-            return this.scansProvider.scans.find(sc => sc.url === this.src)
+            return scansProvider.getScanByUrl(this.src)
         },
         /* is currently loading */
         loading() {
@@ -149,17 +150,20 @@ export default {
         mixed() {
             return (this.loading ? "1" : "0") + (this.error ? "1" : "0") + this.src
         },
+        /**
+         * Combined bookmark data lookup (Performance Fix G)
+         * Single find() instead of two separate lookups for scanbooked and note
+         */
+        bookmarkData() {
+            return this.bookstate.scans.find(sc => sc.url === this.src) || null
+        },
         /* is the scan bookmarked ? */
         scanbooked() {
-            const sc = this.bookstate.scans.find(sc => sc.url === this.src)
-            if (sc) return sc.booked
-            return false
+            return this.bookmarkData?.booked || false
         },
         /* the bookmark note */
         note() {
-            const sc = this.bookstate.scans.find(sc => sc.url === this.src)
-            if (sc) return sc.note
-            return undefined
+            return this.bookmarkData?.note
         }
     },
     watch: {
@@ -231,19 +235,43 @@ export default {
         reloadScan(force = false) {
             if (this.error || force) this.scan.load()
         },
-        /* Loads the scan, only called on nexttick so all computed properties have been refreshed */
+        /**
+         * Loads the scan, only called on nexttick so all computed properties have been refreshed
+         * (Performance Fix F) - Only update DOM if image actually changed to avoid layout thrashing
+         */
         insertScanInDOM() {
-            /** Do not load image in DOM if image is still loading, is in error or if we already loaded the same. This method is called **too much times** on purpose, here is the gatekeeper */
+            /** Do not load image in DOM if image is still loading */
             if (this.loading) return
-            // remove existing image
-            const alreadyImg = this.$refs.scanDiv.getElementsByTagName("img")
-            if (alreadyImg && alreadyImg.length > 0) {
-                this.$refs.scanDiv.removeChild(alreadyImg[0])
+
+            const scanDiv = this.$refs.scanDiv
+            if (!scanDiv) return
+
+            const existingImg = scanDiv.querySelector("img")
+            const newSrc = this.scan?.scan?.src
+
+            // If there's an error, just remove existing image if any
+            if (this.error) {
+                if (existingImg) {
+                    scanDiv.removeChild(existingImg)
+                }
+                return
             }
-            if (this.error) return // remove image if error
-            // clone the HTMLImage element
-            const img = this.scan.scan.cloneNode(true)
-            this.$refs.scanDiv.appendChild(img)
+
+            // Skip if same image is already displayed (Performance Fix F)
+            if (existingImg && existingImg.src === newSrc) {
+                return
+            }
+
+            // Remove existing image if different
+            if (existingImg) {
+                scanDiv.removeChild(existingImg)
+            }
+
+            // Clone and append the new image
+            if (this.scan?.scan) {
+                const img = this.scan.scan.cloneNode(true)
+                scanDiv.appendChild(img)
+            }
         },
         /** Open bookmarks dialog */
         bookmarkScan(e) {

@@ -19,9 +19,30 @@ export const scansProvider = {
     /** Current shared state of scans */
     state: reactive({
         scans: [], // list of scans [{url, loading, error, doublepage, scan HTMLImage}]
+        scansMap: new Map(), // URL -> scan object for O(1) lookups (Performance Fix A)
         progress: 0, // percentage (0 - 100) loaded of the whole chapter
         loaded: false // top indicating all scans are loaded
     }),
+
+    /**
+     * Get a scan by URL with O(1) lookup instead of O(n) find()
+     * @param {string} url - The scan URL to look up
+     * @returns {ScanLoader|null} The scan object or null if not found
+     */
+    getScanByUrl(url) {
+        return this.state.scansMap.get(url) || null
+    },
+
+    /**
+     * Rebuild the scansMap from the scans array
+     * Called when scans are initialized or modified
+     */
+    rebuildScansMap() {
+        this.state.scansMap.clear()
+        for (const scan of this.state.scans) {
+            this.state.scansMap.set(scan.url, scan)
+        }
+    },
 
     /**
      * Init current state with a ScansProvider
@@ -30,7 +51,10 @@ export const scansProvider = {
     initWithProvider(scp) {
         // Clear existing scans and push new ones to maintain reactivity
         this.state.scans.length = 0
+        this.state.scansMap.clear()
         this.state.scans.push(...scp.scans)
+        // Rebuild the URL -> scan map for O(1) lookups
+        this.rebuildScansMap()
         // Listen to state change
         scp.onloadchapter = () => EventBus.$emit("chapter-loaded")
         scp.onloadscan = () => {
@@ -81,29 +105,77 @@ export const ScansLoader = class {
         this.scans.push(...scansUrl.map(url => reactive(new ScanLoader(url, mirror))))
     }
 
-    /** Load all scans */
-    async load(inorder = false) {
-        // we create a new Promise to encapsulate the scan's load function because we need to call onloadscan after each load unitarily. We can't use then() to chain the load because that will trigger the load promise and we want to be able to call it in order OR all at the same time)
-        const pload = this.scans.map(
-            sc =>
-                new Promise(async (resolve, reject) => {
-                    await sc.load() // loads the scan
-                    this.onloadscan() // raise event to notify than the scan has been loaded (for example to update progress)
-                    resolve() // resolve current promise (in case scans are loaded in order, allows to load next scan)
-                })
-        )
+    /**
+     * Load all scans with concurrency limit and priority (Performance Fix D & E)
+     * @param {boolean} inorder - If true, load strictly in order (1 at a time)
+     * @param {number} concurrency - Max concurrent requests (default 6, browser limit)
+     * @param {number} startIndex - Starting page index for priority loading (default 0)
+     * @param {number} priorityRadius - Number of pages around startIndex to load first (default 2)
+     */
+    async load(inorder = false, concurrency = 6, startIndex = 0, priorityRadius = 2) {
         if (inorder) {
-            // Load scans in their appearing order
-            await pload.reduce(
-                (promise, func) => promise.then(result => func.then(Array.prototype.concat.bind(result))),
-                Promise.resolve([])
-            )
+            // Load scans strictly in order (1 at a time)
+            for (const sc of this.scans) {
+                await sc.load()
+                this.onloadscan()
+            }
         } else {
-            // Load all scans at once
-            await Promise.all(pload)
+            // Performance Fix E: Priority loading
+            // Load pages around the starting position first for faster time-to-first-image
+            const priorityScans = []
+            const remainingScans = []
+
+            // Build priority queue: startIndex ± priorityRadius first
+            for (let i = 0; i < this.scans.length; i++) {
+                if (i >= startIndex - priorityRadius && i <= startIndex + priorityRadius) {
+                    priorityScans.push(this.scans[i])
+                } else {
+                    remainingScans.push(this.scans[i])
+                }
+            }
+
+            // Combined queue: priority scans first, then remaining
+            const queue = [...priorityScans, ...remainingScans]
+            const inProgress = new Set()
+
+            const loadNext = async () => {
+                if (queue.length === 0) return
+
+                const sc = queue.shift()
+                inProgress.add(sc)
+
+                try {
+                    await sc.load()
+                    this.onloadscan()
+                } finally {
+                    inProgress.delete(sc)
+                    // Start next load if queue not empty
+                    if (queue.length > 0) {
+                        loadNext()
+                    }
+                }
+            }
+
+            // Start initial batch of concurrent loads
+            const initialBatch = Math.min(concurrency, queue.length)
+            for (let i = 0; i < initialBatch; i++) {
+                loadNext()
+            }
+
+            // Wait for all loads to complete
+            await new Promise(resolve => {
+                const checkComplete = setInterval(() => {
+                    if (queue.length === 0 && inProgress.size === 0) {
+                        clearInterval(checkComplete)
+                        resolve()
+                    }
+                }, 50)
+            })
         }
         this.loaded = true // done loading scans
-        console.log("All " + this.scans.length + " scans have been loaded")
+        if (process.env.NODE_ENV === "development") {
+            console.log("All " + this.scans.length + " scans have been loaded")
+        }
         this.onloadchapter() // raise an event to notify that chapter has been loaded
     }
 }
