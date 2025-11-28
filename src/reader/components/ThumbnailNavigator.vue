@@ -1,6 +1,7 @@
 <template>
     <div class="amr-thumbs-scrollable">
-        <v-tooltip v-for="(scans, i) in thumbnails()" :key="i" location="top">
+        <!-- Performance Fix H: Use computed property instead of method -->
+        <v-tooltip v-for="(scans, i) in thumbnails" :key="i" location="top">
             <template v-slot:activator="{ props }">
                 <table
                     v-bind="props"
@@ -35,9 +36,10 @@ export default {
         pages: Array,
         shouldInvertKeys: Boolean
     },
-    methods: {
+    computed: {
         /**
-         * Sorts the thumbnails respecting the Invert Keys option
+         * Memoized thumbnails array (Performance Fix H)
+         * Computed property instead of method - only recalculates when pages or shouldInvertKeys changes
          */
         thumbnails() {
             const res = new Array(this.pages.length)
