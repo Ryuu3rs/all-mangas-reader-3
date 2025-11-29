@@ -17,6 +17,24 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.7] - 2024-11-29
+
+### Changed Features
+
+-   **TypeScript Expansion**: Converted core JavaScript modules to TypeScript
+    -   `src/amr/manga.ts` - Manga entity class with full type definitions
+    -   `src/amr/i18n.ts` - Internationalization helper
+    -   `src/amr/samples.ts` - Sample manga data
+    -   `src/amr/sync/utils.ts` - Sync utility constants
+    -   `src/amr/storage/model-storage.ts` - Base storage class
+    -   `src/amr/storage/browser-storage.ts` - Browser sync storage
+    -   `src/amr/storage/gist-storage.ts` - GitHub Gist storage
+    -   `src/amr/storage/local-storage.ts` - Local IndexedDB storage
+    -   `src/amr/storage/error/ToManyRequests.ts` - Throttle error class
+    -   `src/shared/debug.ts` - Debug utilities
+    -   `src/shared/vue-compat.ts` - Vue 3 compatibility utilities
+    -   Added proper interfaces for MangaData, ChapterInfo, StoredManga, etc.
+
 ## [4.0.6] - 2024-11-29
 
 ### Changed Features

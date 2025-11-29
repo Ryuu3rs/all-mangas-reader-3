@@ -1,7 +1,15 @@
 /**
  * Sample mangas imported when list is empty on user action
  */
-export default [
+
+/** Sample manga entry */
+export interface SampleManga {
+    mirror: string
+    name: string
+    url: string
+}
+
+const samples: SampleManga[] = [
     {
         mirror: "Manga-Fox",
         name: "One Piece",
@@ -23,3 +31,5 @@ export default [
         url: "http://fanfox.net/manga/naruto"
     }
 ]
+
+export default samples

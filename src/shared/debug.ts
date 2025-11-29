@@ -7,6 +7,15 @@
  * - Or add ?debug=true to the URL
  */
 
+// Extend Window interface for debug globals
+declare global {
+    interface Window {
+        AMR_DEBUG?: boolean
+        enableAMRDebug?: () => void
+        disableAMRDebug?: () => void
+    }
+}
+
 // Default debug state - set to true to enable debug logging
 const DEBUG_ENABLED = false
 
@@ -14,7 +23,7 @@ const DEBUG_ENABLED = false
  * Check if debug mode is enabled
  * Checks multiple sources: file constant, window global, URL param
  */
-function isDebugEnabled() {
+function isDebugEnabled(): boolean {
     // Check file constant first
     if (DEBUG_ENABLED) return true
 
@@ -32,9 +41,9 @@ function isDebugEnabled() {
 
 /**
  * Debug log - only logs if debug mode is enabled
- * @param  {...any} args - Arguments to pass to console.log
+ * @param args - Arguments to pass to console.log
  */
-export function debugLog(...args) {
+export function debugLog(...args: unknown[]): void {
     if (isDebugEnabled()) {
         console.log("[DEBUG]", ...args)
     }
@@ -42,9 +51,9 @@ export function debugLog(...args) {
 
 /**
  * Debug warn - only logs if debug mode is enabled
- * @param  {...any} args - Arguments to pass to console.warn
+ * @param args - Arguments to pass to console.warn
  */
-export function debugWarn(...args) {
+export function debugWarn(...args: unknown[]): void {
     if (isDebugEnabled()) {
         console.warn("[DEBUG]", ...args)
     }
@@ -52,9 +61,9 @@ export function debugWarn(...args) {
 
 /**
  * Debug error - only logs if debug mode is enabled
- * @param  {...any} args - Arguments to pass to console.error
+ * @param args - Arguments to pass to console.error
  */
-export function debugError(...args) {
+export function debugError(...args: unknown[]): void {
     if (isDebugEnabled()) {
         console.error("[DEBUG]", ...args)
     }
@@ -64,7 +73,7 @@ export function debugError(...args) {
  * Enable debug mode at runtime
  * Call this from browser console: enableAMRDebug()
  */
-export function enableAMRDebug() {
+export function enableAMRDebug(): void {
     if (typeof window !== "undefined") {
         window.AMR_DEBUG = true
         console.log("[DEBUG] Debug mode enabled")
@@ -75,7 +84,7 @@ export function enableAMRDebug() {
  * Disable debug mode at runtime
  * Call this from browser console: disableAMRDebug()
  */
-export function disableAMRDebug() {
+export function disableAMRDebug(): void {
     if (typeof window !== "undefined") {
         window.AMR_DEBUG = false
         console.log("[DEBUG] Debug mode disabled")
