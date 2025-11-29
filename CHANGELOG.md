@@ -17,6 +17,20 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.2] - 2024-11-29
+
+### Removed Features
+
+-   **Legacy Mirror Code Cleanup**: Removed 17 unused legacy JavaScript implementation files (ComiCake, FoolSlide, FunMangaAbs, GenkanAbs, Madara, MangaStream_1_1_4Abs, MangakakalotAbs, MangastreamAbs, MyMangaReaderCMS, NextJs, ReadMangaAbs, PlatinumCrown, ShadowTrad, RizzScans, MangaDemon, EarlyManga, AstraScans)
+
+### Mirror Fixes
+
+-   **GD Scans**: Fixed chapter dropdown not populating - switched to modern `/ajax/chapters/` endpoint
+-   **UToon**: Fixed chapter dropdown - removed restrictive `:contains('Chapter')` selector that was filtering out chapters
+-   **Manhwa Top**: Fixed chapter dropdown not populating - switched to modern `/ajax/chapters/` endpoint
+
+---
+
 ## [4.0.1] - 2024-11-29
 
 ### New Features

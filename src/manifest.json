@@ -2,7 +2,7 @@
     "name": "All Mangas Reader",
     "description": "__MSG_description__",
     "author": "Ryuu3rs",
-    "version": "4.0.1",
+    "version": "4.0.2",
     "manifest_version": 3,
     "default_locale": "en",
     "icons": {

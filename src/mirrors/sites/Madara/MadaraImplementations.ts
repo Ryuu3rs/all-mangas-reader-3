@@ -106,7 +106,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
             },
             {
                 search_url: "https://www.gdscans.com/",
-                chapter_list_ajax: true
+                chapter_list_ajax: true,
+                isekai_chapter_url: true // Use modern /ajax/chapters/ endpoint
             }
         ),
         new Madara(
@@ -277,6 +278,7 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
             {
                 search_url: "https://manhwatop.com/",
                 chapter_list_ajax: true,
+                isekai_chapter_url: true, // Use modern /ajax/chapters/ endpoint
                 img_src: "data-src"
             }
         ),
@@ -400,10 +402,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
             },
             {
                 chapter_list_ajax: true,
-                isekai_chapter_url: true,
-                chapters_a_sel: "li.wp-manga-chapter a:contains('Chapter')"
-                // chapter_list_ajax_selctor_type: "html",
-                // chapter_list_ajax_selctor: "#manga-chapters-holder"
+                isekai_chapter_url: true
+                // Use default chapters_a_sel: "li.wp-manga-chapter > a" which matches all chapters
             }
         )
         // new Madara(
