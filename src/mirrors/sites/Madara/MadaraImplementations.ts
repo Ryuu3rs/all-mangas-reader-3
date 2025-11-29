@@ -89,7 +89,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
             languages: "en",
             domains: ["webtoon.xyz"],
             home: "https://www.webtoon.xyz/",
-            chapter_url: /^\/read\/.*\/.+$/g
+            chapter_url: /^\/read\/.*\/.+$/g,
+            disabledForSearch: true // 403 Forbidden - Cloudflare blocking
         }),
         new Madara(
             mirrorHelper,
@@ -114,7 +115,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 languages: "en",
                 domains: ["manhwahentai.me"],
                 home: "https://manhwahentai.me/",
-                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g
+                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://manhwahentai.me/",
@@ -147,7 +149,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["aquamanga.com", "aquascans.com"],
                 home: "https://aquascans.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series|read)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabled: true // Site is down
             },
             {
                 search_url: "https://aquascans.com/"
@@ -211,7 +214,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["dragontea.ink"],
                 home: "https://dragontea.ink/",
                 canListFullMangas: false,
-                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g
+                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://www.dragontea.ink/",
@@ -296,7 +300,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["kunmanga.com"],
                 home: "https://kunmanga.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://kunmanga.com/"
@@ -388,7 +393,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["mangabob.com"],
                 home: "https://mangabob.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: true
+                canListFullMangas: true,
+                disabledForSearch: true // 405 Method Not Allowed
             },
             {
                 search_url: "https://mangabob.com/",
@@ -507,7 +513,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["mangatx.com"],
                 home: "https://mangatx.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabled: true // Redirects to scam site
             },
             {
                 search_url: "https://mangatx.com/",
@@ -541,7 +548,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["manhuafast.com"],
                 home: "https://manhuafast.com/",
                 chapter_url: /\/manga\/.+\/chapter-.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://manhuafast.com/",
@@ -631,7 +639,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["manytoon.com"],
                 home: "https://manytoon.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 400 Bad Request
             },
             {
                 search_url: "https://manytoon.com/",
@@ -683,7 +692,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["nightcomic.com"],
                 home: "https://www.nightcomic.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://www.nightcomic.com/",
@@ -783,7 +793,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["setsuscans.com"],
                 home: "https://setsuscans.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://setsuscans.com/",
@@ -901,7 +912,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["zinmanga.com"],
                 home: "https://zinmanga.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabled: true // Site is down
             },
             {
                 search_url: "https://zinmanga.com/"
@@ -964,7 +976,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["mangalek.com"],
                 home: "https://mangalek.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://mangalek.com/"
@@ -979,7 +992,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["manhuaus.com"],
                 home: "https://manhuaus.com/",
                 chapter_url: /\/manga\/.+\/chapter\-.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://manhuaus.com/",
@@ -1015,7 +1029,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["platinumscans.com"],
                 home: "https://platinumscans.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://platinumscans.com/",
