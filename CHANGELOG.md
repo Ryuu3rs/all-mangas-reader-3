@@ -17,6 +17,19 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.6] - 2024-11-29
+
+### Changed Features
+
+-   **EventBus Consolidation**: Unified EventBus implementation across popup, dashboard, and reader
+    -   Created shared `src/shared/EventBus.ts` TypeScript singleton with typed events
+    -   Removed duplicate EventBus creation from popup.js and dashboard.js
+    -   Reader's EventBus.js now re-exports from shared module for backwards compatibility
+    -   Added Vue plugin `createEventBusPlugin()` for cleaner app initialization
+    -   Full TypeScript types for all event names and payloads
+
+---
+
 ## [4.0.5] - 2024-11-29
 
 ### Changed Features

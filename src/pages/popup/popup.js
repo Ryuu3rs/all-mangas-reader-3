@@ -5,11 +5,11 @@ import { createApp } from "vue"
 import { createVuetify } from "vuetify"
 import * as components from "vuetify/components"
 import * as directives from "vuetify/directives"
-import mitt from "mitt"
 import App from "./App.vue"
 import store from "../../store"
 import { OptionStorage } from "../../shared/OptionStorage"
 import { isFirefoxAndroid } from "../../shared/utils"
+import { createEventBusPlugin } from "../../shared/EventBus"
 import "vuetify/styles"
 
 function isSmallDevice() {
@@ -44,14 +44,6 @@ const init = async () => {
         document.documentElement.style.fontSize = "16px"
     }
 
-    // Create mitt-based event bus with Vue-compatible API
-    const emitter = mitt()
-    const eventBus = {
-        $on: (event, handler) => emitter.on(event, handler),
-        $off: (event, handler) => emitter.off(event, handler),
-        $emit: (event, ...args) => emitter.emit(event, args.length === 1 ? args[0] : args)
-    }
-
     // Create Vuetify instance
     const vuetify = createVuetify({
         components,
@@ -66,11 +58,11 @@ const init = async () => {
 
     // Provide global properties
     app.config.globalProperties.$isPopup = popup
-    app.config.globalProperties.$eventBus = eventBus
     app.config.globalProperties.$store = store
 
     app.use(store)
     app.use(vuetify)
+    app.use(createEventBusPlugin()) // Shared EventBus singleton
     app.mount("#app")
 
     async function waitForPopup(retries = 10, delay = 50) {

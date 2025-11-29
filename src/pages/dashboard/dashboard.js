@@ -4,10 +4,10 @@ import { createApp } from "vue"
 import { createVuetify } from "vuetify"
 import * as components from "vuetify/components"
 import * as directives from "vuetify/directives"
-import mitt from "mitt"
 import Dashboard from "../components/Dashboard.vue"
 import store from "../../store"
 import { OptionStorage } from "../../shared/OptionStorage"
+import { createEventBusPlugin } from "../../shared/EventBus"
 import "vuetify/styles"
 
 const init = async () => {
@@ -19,14 +19,6 @@ const init = async () => {
 
     document.documentElement.style["overflow-y"] = "auto"
     document.documentElement.style.fontSize = "16px"
-
-    // Create mitt-based event bus with Vue-compatible API
-    const emitter = mitt()
-    const eventBus = {
-        $on: (event, handler) => emitter.on(event, handler),
-        $off: (event, handler) => emitter.off(event, handler),
-        $emit: (event, ...args) => emitter.emit(event, args.length === 1 ? args[0] : args)
-    }
 
     // Create Vuetify instance
     const vuetify = createVuetify({
@@ -42,11 +34,11 @@ const init = async () => {
 
     // Provide global properties
     app.config.globalProperties.$isPopup = false
-    app.config.globalProperties.$eventBus = eventBus
     app.config.globalProperties.$store = store
 
     app.use(store)
     app.use(vuetify)
+    app.use(createEventBusPlugin()) // Shared EventBus singleton
     app.mount("#app")
 }
 init()
