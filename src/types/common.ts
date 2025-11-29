@@ -91,6 +91,11 @@ export interface AppManga {
     // Update error tracking
     updateError?: 0 | 1
     updateErrorCode?: number
+
+    // Orphaned manga tracking - mirror is dead or manga was removed
+    orphaned?: boolean
+    orphanedReason?: string
+    lastKnownUrl?: string
 }
 
 /** Plain javascript object with static properties defined **/
@@ -102,7 +107,10 @@ export interface MirrorObject {
     home: string
     chapter_url: RegExp
     languages: string
+    /** Mirror is completely disabled (not visible anywhere) **/
     disabled?: boolean
+    /** Mirror is disabled for search only (reading existing manga still works) **/
+    disabledForSearch?: boolean
 }
 
 /** Mirror really represent vuex object that have additional activated property **/

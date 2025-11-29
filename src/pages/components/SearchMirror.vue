@@ -38,7 +38,8 @@ export default {
     methods: {
         i18n: (message, ...args) => i18n(message, ...args),
         async search() {
-            if (this.disabled || this.mirror.disabled) {
+            // Skip search if mirror is disabled locally, globally, or specifically for search
+            if (this.disabled || this.mirror.disabled || this.mirror.disabledForSearch) {
                 return
             }
             this.searching = true
@@ -53,8 +54,11 @@ export default {
         }
     },
     watch: {
-        searchPhrase: function () {
-            this.search()
+        searchPhrase: {
+            handler() {
+                this.search()
+            },
+            immediate: true
         },
         disabled: function (nv) {
             if (nv) {

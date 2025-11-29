@@ -89,7 +89,8 @@ export class MirrorLoader {
             home: m.home,
             chapter_url: new RegExp(m.chapter_url),
             languages: m.languages,
-            disabled: m.disabled
+            disabled: m.disabled,
+            disabledForSearch: m.disabledForSearch
         }
     }
 }
