@@ -15,6 +15,7 @@ export class ScyllaScans extends BaseMirror implements MirrorImplementation {
     domains = ["scyllascans.org", "scyllacomics.xyz"]
     home = "https://scyllacomics.xyz/"
     chapter_url = /^\/(manhwa|comic|manga|webtoon|manhua|series|read)\/.*\/.+$/
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaListFromPage(search: string, page: number | string, res: InfoResult[] = []) {
         const searchParams = new URLSearchParams()

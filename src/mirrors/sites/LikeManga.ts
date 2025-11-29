@@ -15,6 +15,7 @@ export class LikeManga extends BaseMirror implements MirrorImplementation {
     domains = ["likemanga.io"]
     home = "https://likemanga.io"
     chapter_url = /^\/.*\/chapter-\d.+/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(

@@ -15,6 +15,7 @@ export class Manhwa18com extends BaseMirror implements MirrorImplementation {
     domains = ["manhwa18.com"]
     home = "http://www.manhwa18.com/"
     chapter_url = /\/manga\/.*\/.*/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(this.home + "tim-kiem?q=" + search, {

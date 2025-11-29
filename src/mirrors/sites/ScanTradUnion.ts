@@ -15,6 +15,7 @@ export class ScanTradUnion extends BaseMirror implements MirrorImplementation {
     domains = ["scantrad-union.com"]
     home = "https://scantrad-union.com/"
     chapter_url = /^\/read\/.+\/chapter-.+/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(this.home + "wp-admin/admin-ajax.php", {

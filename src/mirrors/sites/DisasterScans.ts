@@ -15,6 +15,7 @@ export class DisasterScans extends BaseMirror implements MirrorImplementation {
     domains = ["disasterscans.com"]
     home = "https://disasterscans.com"
     chapter_url = /^\/.*\/.*\/.*-chapter-.*/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(this.home + "/comics", {

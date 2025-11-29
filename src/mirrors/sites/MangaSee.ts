@@ -15,6 +15,7 @@ export class MangaSee extends BaseMirror implements MirrorImplementation {
     domains = ["mangaseeonline.us", "mangasee123.com"]
     home = "https://mangasee123.com"
     chapter_url = /^\/read-online\/.+$/
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(this.home + "/directory/", { nocache: true, preventimages: true })

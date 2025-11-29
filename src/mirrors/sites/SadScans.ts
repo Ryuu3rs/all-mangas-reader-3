@@ -15,6 +15,7 @@ export class SadScans extends BaseMirror implements MirrorImplementation {
     domains = ["sadscans.com"]
     home = "https://sadscans.com/"
     chapter_url = /^\/reader\/.+$/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const _self = this

@@ -15,6 +15,7 @@ export class MangaKawaii extends BaseMirror implements MirrorImplementation {
     domains = ["mangakawaii.io"]
     home = "https://www.mangakawaii.io"
     chapter_url = /\/manga\/.*\/.*\/?.*$/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search: string) {
         const doc = await this.mirrorHelper.loadPage(`${this.home}/search?query=${search}&search_type=manga`, {

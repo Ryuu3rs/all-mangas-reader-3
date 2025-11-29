@@ -170,7 +170,8 @@ export const getFunMangaImplementations = (mirrorHelper: MirrorHelper): MirrorIm
                 languages: "en",
                 domains: ["funmanga.com"],
                 home: "http://www.funmanga.com",
-                chapter_url: /^\/.*\/[0-9]+\.?[0-9]*\/.+$/g
+                chapter_url: /^\/.*\/[0-9]+\.?[0-9]*\/.+$/g,
+                disabledForSearch: true // Network error - site unreachable
             },
             {
                 search_url: "http://www.funmanga.com/service/advanced_search",
@@ -223,7 +224,8 @@ export const getFunMangaImplementations = (mirrorHelper: MirrorHelper): MirrorIm
                 languages: "en",
                 domains: ["readmng.com"],
                 home: "https://www.readmng.com/",
-                chapter_url: /^\/.*\/[0-9]+\.?.+$/g
+                chapter_url: /^\/.*\/[0-9]+\.?.+$/g,
+                disabledForSearch: true // 521 Server Down
             },
             {
                 search_url: "https://www.readmng.com/search",

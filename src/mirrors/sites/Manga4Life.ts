@@ -15,6 +15,7 @@ export class Manga4Life extends BaseMirror implements MirrorImplementation {
     domains = ["manga4life.com"]
     home = "https://manga4life.com"
     chapter_url = /^\/read-online\/.+$/g
+    disabledForSearch = true // 403 Forbidden - Cloudflare blocking
 
     async getMangaList(search) {
         const response = await this.mirrorHelper.loadPage(`${this.home}/directory/`, {
