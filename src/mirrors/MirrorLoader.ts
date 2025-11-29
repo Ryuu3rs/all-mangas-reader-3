@@ -36,6 +36,7 @@ import { LikeManga } from "./sites/LikeManga"
 import { MangaPark } from "./sites/MangaPark"
 import { MangaReaderTo } from "./sites/MangaReaderTo"
 import { MangaBuddy } from "./sites/MangaBuddy"
+import { WeebCentral } from "./sites/WeebCentral"
 import { TestSite } from "./sites/_localTestServer"
 
 export class MirrorLoader {
@@ -113,6 +114,7 @@ export const getMirrorLoader = (mirrorHelper: MirrorHelper) => {
             new MangaPark(mirrorHelper),
             new MangaReaderTo(mirrorHelper),
             new MangaBuddy(mirrorHelper),
+            new WeebCentral(mirrorHelper),
             new TestSite(mirrorHelper),
 
             // Must be last, as we sometimes select based on same matching

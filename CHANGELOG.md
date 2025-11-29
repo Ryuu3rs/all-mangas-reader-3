@@ -17,6 +17,14 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.4] - 2024-11-29
+
+### New Mirrors
+
+-   **Weeb Central**: Added new mirror to replace dead Manga4Life/MangaSee sites. Features search, chapter list, and image loading via HTMX-style API endpoints.
+
+---
+
 ## [4.0.3] - 2024-11-29
 
 ### New Features
