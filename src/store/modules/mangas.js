@@ -3,7 +3,7 @@ import Manga, { MANGA_READ_STOP, MANGA_UPDATE_STOP } from "../../amr/manga"
 import { getNotificationManager } from "../../amr/notifications"
 import samples from "../../amr/samples"
 import * as syncUtils from "../../amr/sync/utils"
-import { getSyncManager } from "../../amr/sync/sync-manager"
+import { getSyncManager } from "../../amr/sync/SyncManager"
 import {
     chapPath,
     findProbableChapter,

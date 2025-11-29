@@ -21,4 +21,4 @@ export type AllActions =
     | AddMangaByUrlAction
     | BaseAction
 
-export type DispatchMethod = (action: string, payload: unknown) => Promise<unknown>
+export type DispatchMethod = (action: string, payload: unknown, silent?: boolean | unknown) => Promise<unknown>

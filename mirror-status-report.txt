@@ -137,7 +137,7 @@ MADARA-BASED (50 - excluding disabled):
 40. Shadow Trad      https://shadowtrad.net remove dead site
 41. Dark Scan        https://darkscan.net remove dead site
 42. Creepy Scans     https://creepyscans.com remove dead site
-43. Hari Manga       https://harimanga.com remove dead site
+43. Hari Manga       https://harimanga.com  remove dead site
 44. Fire Scans       https://firescans.xyz works reader works
 45. UToon            https://utoon.net site works reader works but chapoter list is not working on right side drop down menu
 

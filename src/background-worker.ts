@@ -15,7 +15,7 @@ import { getIconHelper } from "./amr/icon-helper"
 import { host_permissions } from "./constants/required_permissions"
 import { getNotificationManager } from "./amr/notifications"
 import { Alarm, PeriodAlarms } from "./shared/AlarmService"
-import { getSyncManager } from "./amr/sync/sync-manager"
+import { getSyncManager } from "./amr/sync/SyncManager"
 import { getSyncOptions } from "./shared/Options"
 
 const optionsStorage = new OptionStorage()

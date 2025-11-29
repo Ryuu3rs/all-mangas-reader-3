@@ -3,7 +3,7 @@
  * Manages the singleton sync manager instance
  */
 
-import { getSyncManager as getOriginalSyncManager } from "../../../amr/sync/sync-manager"
+import { getSyncManager as getOriginalSyncManager } from "../../../amr/sync/SyncManager"
 
 /**
  * Singleton sync manager instance

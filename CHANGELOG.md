@@ -17,6 +17,20 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.5] - 2024-11-29
+
+### Changed Features
+
+-   **Sync System Refactor**: Complete TypeScript rewrite of the Gist/Browser sync system for better maintainability and reliability
+    -   `sync-manager.js` → `SyncManager.ts` - Full TypeScript with proper interfaces
+    -   `sync-remote-actions.js` → `sync-remote-actions.ts` - TypeScript remote action handlers
+    -   `local-storage.js` - Fixed method shadowing bug where `dispatch` method was overwriting constructor property
+    -   Fixed bug in `syncLocal` where `manga.delete` was checked instead of `manga.deleted`
+    -   Cleaner separation of concerns with dedicated methods for timestamp initialization
+    -   Improved error handling with proper retry logic
+
+---
+
 ## [4.0.4] - 2024-11-29
 
 ### New Mirrors
