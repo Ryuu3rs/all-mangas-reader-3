@@ -135,7 +135,8 @@ export const getMangaKakalotImplementations = (mirrorHelper: MirrorHelper): Mirr
             languages: "en",
             domains: ["mangakakalot.com"],
             home: "https://mangakakalot.com/",
-            chapter_url: /^\/chapter\/.*\/.+$/
+            chapter_url: /^\/chapter\/.*\/.+$/,
+            disabled: true // Site is down
         }),
         new MangakakalotAbs(
             mirrorHelper,
@@ -155,7 +156,8 @@ export const getMangaKakalotImplementations = (mirrorHelper: MirrorHelper): Mirr
                     "chapmanganato.to"
                 ],
                 home: "https://manganato.com/",
-                chapter_url: /^\/manga-.*\/chapter-\d+.*$/
+                chapter_url: /^\/manga-.*\/chapter-\d+.*$/,
+                disabled: true // Site is down (manganato.com)
             },
             {
                 series_list_selector: ".search-story-item a.item-title",

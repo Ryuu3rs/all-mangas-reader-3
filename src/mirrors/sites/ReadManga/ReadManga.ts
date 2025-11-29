@@ -109,15 +109,19 @@ class ReadManga extends BaseMirror implements MirrorImplementation {
     }
 
     public async getMangaList(search?: string): Promise<InfoResult[]> {
+        // Use POST instead of GET - GET requests cannot have a body
         const json = await this.mirrorHelper.loadJson(`${this.getCurrentOrigin()}/search/suggestion`, {
             nocache: true,
-            method: "GET",
-            // dataType: "text",
+            method: "POST",
             data: {
                 query: search
             }
         })
         const res = []
+        // Add null check for json.suggestions
+        if (!json?.suggestions) {
+            return res
+        }
         for (const sug of json.suggestions) {
             if (!sug.link.includes("/", 1)) {
                 res[res.length] = [sug.value, this.getCurrentOrigin() + sug.link]
@@ -149,7 +153,8 @@ export const getReadMangaMirrors = (mirrorHelper: MirrorHelper): MirrorImplement
                 domains: ["readmanga.live", "readmanga.io"],
                 home: "https://readmanga.live",
                 canListFullMangas: false,
-                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g
+                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g,
+                disabled: true // Site shows "Not Found" - appears down
             },
             {}
         ),
@@ -162,7 +167,8 @@ export const getReadMangaMirrors = (mirrorHelper: MirrorHelper): MirrorImplement
                 domains: ["mintmanga.live", "*.mintmanga.one"],
                 home: "https://24.mintmanga.one",
                 canListFullMangas: false,
-                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g
+                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g,
+                disabled: true // Site shows "Not Found" - appears down
             },
             {}
         ),
