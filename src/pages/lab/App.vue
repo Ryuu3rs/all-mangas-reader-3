@@ -1,9 +1,22 @@
 <template>
     <v-app>
         <v-app-bar height="64">
-            <img src="/icons/icon_32.png" alt="All Mangas Reader" />
+            <img src="/icons/icon_32.png" alt="All Mangas Reader" class="ml-3" />
             <v-toolbar-title>{{ title }}</v-toolbar-title>
             <v-spacer></v-spacer>
+
+            <!-- Tab Navigation -->
+            <v-btn-toggle v-model="activeView" mandatory density="compact" class="mr-4">
+                <v-btn value="single" size="small">
+                    <v-icon start>mdi-flask</v-icon>
+                    Single Test
+                </v-btn>
+                <v-btn value="batch" size="small">
+                    <v-icon start>mdi-flask-outline</v-icon>
+                    Batch Test
+                </v-btn>
+            </v-btn-toggle>
+
             <v-btn icon @click.stop="options = true">
                 <v-icon>mdi-cog</v-icon>
             </v-btn>
@@ -39,7 +52,17 @@
                     </div>
                 </div>
 
-                <v-form ref="form" @submit.prevent="loadCourse" id="mirrorTests">
+                <!-- Batch Testing View -->
+                <BatchTester
+                    v-if="activeView === 'batch'"
+                    @view-results="openReportDialog"
+                    @test-complete="onBatchTestComplete" />
+
+                <!-- Error Report Dialog -->
+                <ErrorReportDialog v-model="reportDialogOpen" :results="batchTestResults" />
+
+                <!-- Single Mirror Testing View -->
+                <v-form v-if="activeView === 'single'" ref="form" @submit.prevent="loadCourse" id="mirrorTests">
                     <div class="text-h5">Select the mirror to test :</div>
                     <v-row>
                         <v-col cols="6">
@@ -192,6 +215,8 @@
 
 <script>
 import Options from "../components/Options"
+import BatchTester from "./BatchTester.vue"
+import ErrorReportDialog from "./ErrorReportDialog.vue"
 import tests from "./tests"
 import browser from "webextension-polyfill"
 import { reactiveSet } from "../../shared/vue-compat"
@@ -200,6 +225,11 @@ import { getMirrorLoader } from "../../mirrors/MirrorLoader"
 import { MigrationService } from "../../shared/migration/MigrationService"
 
 export default {
+    components: {
+        Options,
+        BatchTester,
+        ErrorReportDialog
+    },
     data() {
         const mirrorHelper = getMirrorHelper(this.$store.state.options)
         const mirrorLoader = getMirrorLoader(mirrorHelper)
@@ -210,6 +240,9 @@ export default {
             showMigrations: false,
             loadingMirrors: false,
             loadingTests: false,
+            activeView: "single", // "single" or "batch"
+            reportDialogOpen: false,
+            batchTestResults: [],
             current: "", // current selected mirror
             search: "", // current search phrase
             tests: tests,
@@ -253,7 +286,6 @@ export default {
         }
     },
     name: "App",
-    components: { Options },
     created() {
         // initialize state for store in popup from background
         this.$store.dispatch("getStateFromReference", {
@@ -274,6 +306,19 @@ export default {
             this.loadingMirrors = true
             await this.$store.dispatch("updateMirrorsLists")
             this.loadingMirrors = false
+        },
+        /**
+         * Open the report dialog with batch test results
+         */
+        openReportDialog(results) {
+            this.batchTestResults = results
+            this.reportDialogOpen = true
+        },
+        /**
+         * Handle batch test completion
+         */
+        onBatchTestComplete(results) {
+            this.batchTestResults = results
         },
         loadCourse() {
             if (!this.$refs.form.validate()) {
