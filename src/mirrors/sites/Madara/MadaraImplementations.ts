@@ -100,7 +100,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 languages: "en",
                 domains: ["toonily.com"],
                 home: "https://toonily.com/",
-                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g
+                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
+                disabled: true // Site uses JavaScript-based lazy loading - image URLs not in static HTML
             },
             {
                 img_src: "data-src",

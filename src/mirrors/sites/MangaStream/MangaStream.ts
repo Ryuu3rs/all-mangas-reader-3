@@ -222,7 +222,8 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 domains: ["flamescans.org", "flamecomics.com", "flamecomics.me"],
                 home: "https://flamecomics.me",
                 chapter_url: /\/.*?chapter-[0-9]+.*\//g,
-                languages: "en"
+                languages: "en",
+                disabled: true // Site redesigned to Next.js SPA - old implementation incompatible
             },
             {
                 search_url: "https://flamecomics.me",
