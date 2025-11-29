@@ -87,6 +87,10 @@ class MangaStream extends BaseMirror implements MirrorImplementation {
             })
 
             const res = []
+            // Add null check - json.manga can be undefined if site returns error/HTML
+            if (!json?.manga?.[0]?.all) {
+                return res
+            }
             const mangas = json.manga[0].all
             for (const i in mangas) {
                 const item = mangas[i]
@@ -265,7 +269,8 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 domains: ["kiryuu.co", "kiryuu.id"],
                 home: "https://kiryuu.id/",
                 chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id"
+                languages: "id",
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://kiryuu.id/",
@@ -322,7 +327,8 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 domains: ["komikstation.com"],
                 home: "https://www.komikstation.com/",
                 chapter_url: /chapter-[0-9]+\/$/g,
-                languages: "id"
+                languages: "id",
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://www.komikstation.com/",
@@ -366,7 +372,8 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 domains: ["ngomik.in"],
                 home: "https://ngomik.in/",
                 chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id"
+                languages: "id",
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://ngomik.in/",
@@ -407,7 +414,8 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 domains: ["westmanga.info"],
                 home: "https://westmanga.info/",
                 chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id"
+                languages: "id",
+                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
             },
             {
                 search_url: "https://westmanga.info/",

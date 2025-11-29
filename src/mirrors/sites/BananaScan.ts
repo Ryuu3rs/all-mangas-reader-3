@@ -17,7 +17,7 @@ export class BananaScan extends BaseMirror implements MirrorImplementation {
     chapter_url = /\/.*?-[0-9]+.*\//g
 
     async getMangaList(search: string) {
-        let res = []
+        const res = []
         const jsonResult = await this.mirrorHelper.loadJson(`${this.home}/wp-admin/admin-ajax.php`, {
             nocache: true,
             post: true,
@@ -27,8 +27,11 @@ export class BananaScan extends BaseMirror implements MirrorImplementation {
                 ts_ac_query: search
             }
         })
-        res = jsonResult.series[0].all.map(e => [e.post_title, e.post_link])
-        return res
+        // Add null check - jsonResult.series can be undefined if site returns error/HTML
+        if (!jsonResult?.series?.[0]?.all) {
+            return res
+        }
+        return jsonResult.series[0].all.map(e => [e.post_title, e.post_link])
     }
 
     async getListChaps(urlManga) {

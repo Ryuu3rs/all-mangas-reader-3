@@ -88,6 +88,10 @@ class MyMangaReaderCMS extends BaseMirror implements MirrorImplementation {
             const json = await this.mirrorHelper.loadJson(this.options.base_url + "/search?query=" + search, {
                 nocache: true
             })
+            // Add null check - json.suggestions can be undefined if site returns error/HTML
+            if (!json?.suggestions) {
+                return res
+            }
             for (const obj of json.suggestions) {
                 res[res.length] = [obj.value, this.options.base_url + "/manga/" + obj.data]
             }

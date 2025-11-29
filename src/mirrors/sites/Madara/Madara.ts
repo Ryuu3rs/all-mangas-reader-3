@@ -71,6 +71,10 @@ export class Madara extends BaseMirror implements MirrorImplementation {
                 method: "POST",
                 data: urlSearchParams
             } as JsonOptions)
+            // Add null check - jsonData.data can be undefined if site returns error/HTML
+            if (!jsonData?.data) {
+                return res
+            }
             return jsonData.data.map(item => [item.title, item.url])
         }
 
