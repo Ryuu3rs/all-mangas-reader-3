@@ -58,18 +58,30 @@ export class MangaBuddy extends BaseMirror implements MirrorImplementation {
     }
 
     async getListImages(doc, curUrl, sender) {
-        const res = []
         const $ = this.parseHtml(doc)
 
-        const images = await this.getVariable({ variableName: "chapImages ", doc }).split(",")
+        // MangaBuddy stores images in a JavaScript variable called "chapImages"
+        // as a comma-separated string of URLs
+        const chapImagesVar = this.getVariable({ variableName: "chapImages", doc })
 
-        return images
+        if (chapImagesVar && typeof chapImagesVar === "string") {
+            // Split by comma and filter out empty strings
+            const images = chapImagesVar.split(",").filter(url => url && url.trim())
+            if (images.length > 0) {
+                return images
+            }
+        }
 
-        // $("div.reading-detail img").each(function (index) {
-        //     const src = $(this).attr("src")
-        //     if (src !== "https://image.mangabtt.com//Upload/Content/images/chapter/top.jpg") res.push(src)
-        // })
-        // return res
+        // Fallback: try to extract from img elements with data-src
+        const res = []
+        $("div.chapter-image img").each(function () {
+            const src = $(this).attr("data-src") || $(this).attr("src")
+            if (src && src.trim()) {
+                res.push(src.trim())
+            }
+        })
+
+        return res
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
