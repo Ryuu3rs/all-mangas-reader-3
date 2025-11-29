@@ -264,6 +264,65 @@
                     <span>{{ i18n("list_mg_act_find_mirror") }}</span>
                 </v-tooltip>
 
+                <!-- Quick Category Menu -->
+                <v-menu v-if="categories.length" location="bottom" :close-on-content-click="false" max-height="250">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            v-bind="props"
+                            icon
+                            size="x-small"
+                            variant="text"
+                            :color="manga.cats && manga.cats.length ? 'primary' : buttonColor">
+                            <v-icon size="small">{{
+                                manga.cats && manga.cats.length ? "mdi-folder" : "mdi-folder-outline"
+                            }}</v-icon>
+                            <v-tooltip activator="parent" location="top">
+                                {{ i18n("list_details_cats") || "Categories" }}
+                            </v-tooltip>
+                        </v-btn>
+                    </template>
+                    <v-list density="compact" class="py-0">
+                        <v-list-item
+                            v-for="(item, index) of categories"
+                            :key="index"
+                            @click="hasCategory(item.name) ? deleteCategory(item.name) : addCategory(item.name)">
+                            <template v-slot:prepend>
+                                <v-checkbox
+                                    density="compact"
+                                    :model-value="hasCategory(item.name)"
+                                    hide-details
+                                    class="mr-2"></v-checkbox>
+                            </template>
+                            <v-list-item-title>{{ item.name }}</v-list-item-title>
+                        </v-list-item>
+                        <v-divider v-if="categories.length"></v-divider>
+                        <v-list-item @click="openCategoryManager">
+                            <template v-slot:prepend>
+                                <v-icon size="small" class="mr-2">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title class="text-caption">{{
+                                i18n("list_cat_manage") || "Manage categories..."
+                            }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+
+                <!-- Quick Add Category (when no categories exist) -->
+                <v-tooltip v-else location="top" content-class="icon-ttip">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            v-bind="props"
+                            icon
+                            size="x-small"
+                            variant="text"
+                            :color="buttonColor"
+                            @click="openCategoryManager">
+                            <v-icon size="small">mdi-folder-plus-outline</v-icon>
+                        </v-btn>
+                    </template>
+                    <span>{{ i18n("list_cat_add") || "Create category" }}</span>
+                </v-tooltip>
+
                 <!-- Delete manga -->
                 <v-tooltip location="top" content-class="icon-ttip">
                     <template v-slot:activator="{ props }">
@@ -918,6 +977,15 @@ export default {
         },
         hasCategory: function (cat) {
             return this.manga.cats.includes(cat)
+        },
+        /**
+         * Open category manager in options page
+         */
+        openCategoryManager: function () {
+            browser.runtime.sendMessage({
+                action: "opentab",
+                url: browser.runtime.getURL("/pages/options/options.html#categories")
+            })
         },
         /**
          * Open bookmark in a new tab (the chapter corresponding to bookmark)

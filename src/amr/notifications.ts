@@ -15,12 +15,27 @@ export class NotificationManager {
     constructor(private readonly store: AppStore) {}
 
     notificationClickCallback = (id: string | undefined) => {
+        console.debug(`[Notification] Click callback triggered for ID: ${id}`)
+        console.debug(`[Notification] Known notifications:`, Object.keys(this.notifications))
+
         if (this.notifications[id] !== undefined) {
-            browser.tabs.create({ url: this.notifications[id] }).catch(console.error)
+            const url = this.notifications[id]
+            console.debug(`[Notification] Opening URL: ${url}`)
+
+            if (url) {
+                browser.tabs.create({ url }).catch(e => {
+                    console.error(`[Notification] Failed to open URL: ${url}`, e)
+                })
+            } else {
+                console.warn(`[Notification] No URL stored for notification ${id}`)
+            }
+
             // It deletes the used URL to avoid unbounded object growing.
             // Well, if the notification isn't clicked the said growing is not avoided.
             // If this proves to be a issue a close callback should be added too.
             delete this.notifications[id]
+        } else {
+            console.warn(`[Notification] Unknown notification ID: ${id}`)
         }
     }
 
@@ -53,6 +68,7 @@ export class NotificationManager {
     notifyNewChapter(mg: AppManga) {
         if (!browser.notifications) {
             console.error("Browser does not support notifications")
+            return
         }
 
         if (mg.read !== 0 || this.store.state.options.shownotifications !== 1) {
@@ -60,11 +76,21 @@ export class NotificationManager {
         }
 
         const chapter = findNextChapter(mg)
+
+        // Determine the best URL to open when notification is clicked:
+        // 1. Try the next chapter URL
+        // 2. Fall back to manga page URL
+        const clickUrl = chapter?.url || mg.url
+
         const mangaData = {
             name: mg.displayName ? mg.displayName : mg.name,
             mirror: mg.mirror,
-            url: chapter?.url
+            url: clickUrl
         }
+
+        // Debug logging
+        console.debug(`[Notification] Creating notification for: ${mangaData.name}`)
+        console.debug(`[Notification] Chapter found: ${!!chapter}, URL: ${clickUrl}`)
 
         // The URL must be saved under a global object, mapped by ID.
         // (no one would like to click a manga notification and ending up opening another manga)
@@ -79,11 +105,11 @@ export class NotificationManager {
                 message: i18n("notif_message", mangaData.mirror),
                 contextMessage: i18n("notif_message_chapter", chapter?.name ?? "— ⚠️"),
                 iconUrl: browser.runtime.getURL("/icons/icon_32.png"),
-                isClickable: !!chapter
+                isClickable: true // Always clickable - opens manga page if no chapter URL
             })
             .catch(e => {
                 console.error(
-                    new Error(`Failed to updated ${mangaData.name} notification for ${mangaData.mirror}`, { cause: e })
+                    new Error(`Failed to create ${mangaData.name} notification for ${mangaData.mirror}`, { cause: e })
                 )
             })
 

@@ -17,6 +17,18 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.1] - 2024-11-29
+
+### New Features
+
+-   **Quick Category Button**: Added a folder icon button directly in the manga action buttons row for one-click category assignment (no longer need to expand options first)
+
+### Bug Fixes
+
+-   **Notification Click**: Fixed clicking desktop notifications not opening the chapter - now falls back to manga page if chapter URL unavailable
+
+---
+
 ## [4.0.0] - 2024-11-29
 
 ### 🎉 ALL MANGAS READER 4.0 - The Revival
