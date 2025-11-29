@@ -12,7 +12,8 @@
             @import-stats="handleImportStats"
             @open-changelog="changelogOpen = true"
             @open-timers="timersOpen = true"
-            @open-health-check="healthCheckOpen = true" />
+            @open-health-check="healthCheckOpen = true"
+            @add-by-url="addByUrlOpen = true" />
 
         <!-- Sidebar -->
         <Sidebar
@@ -156,6 +157,9 @@
                 @close="healthCheckOpen = false"
                 @search-request="openSearchFromHealth" />
         </v-dialog>
+
+        <!-- Add by URL Dialog -->
+        <AddByUrlDialog v-model="addByUrlOpen" @manga-added="handleMangaAdded" />
     </v-app>
 </template>
 
@@ -173,6 +177,7 @@ import QuickActionsPanel from "./QuickActionsPanel.vue"
 import ChangeLog from "./ChangeLog.vue"
 import Timers from "./Timers.vue"
 import MangaHealth from "./MangaHealth.vue"
+import AddByUrlDialog from "./AddByUrlDialog.vue"
 
 export default {
     name: "Dashboard",
@@ -186,7 +191,8 @@ export default {
         QuickActionsPanel,
         ChangeLog,
         Timers,
-        MangaHealth
+        MangaHealth,
+        AddByUrlDialog
     },
     data() {
         return {
@@ -202,7 +208,8 @@ export default {
             compactMode: this.$store?.state?.options?.compactMode || false,
             changelogOpen: false,
             timersOpen: false,
-            healthCheckOpen: false
+            healthCheckOpen: false,
+            addByUrlOpen: false
         }
     },
     computed: {
@@ -311,6 +318,11 @@ export default {
         showSnackbar(message, color = "primary") {
             this.achievementMessage = message
             this.achievementSnackbar = true
+        },
+        handleMangaAdded(result) {
+            this.showSnackbar(`Added "${result.mangaName}" to your library!`, "success")
+            // Refresh manga list to show the new entry
+            this.$refs.mangaList?.refreshList?.()
         },
         handleKeydown(e) {
             // Don't handle shortcuts when typing in input fields

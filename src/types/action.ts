@@ -12,6 +12,13 @@ export type TriggerNotificationAction = {
     notification: Notifications.CreateNotificationOptions
 }
 
-export type AllActions = SearchListAction | LastSyncAction | TriggerNotificationAction | BaseAction
+export type AddMangaByUrlAction = { action: "addMangaByUrl"; url: string; mirrorName: string }
+
+export type AllActions =
+    | SearchListAction
+    | LastSyncAction
+    | TriggerNotificationAction
+    | AddMangaByUrlAction
+    | BaseAction
 
 export type DispatchMethod = (action: string, payload: unknown) => Promise<unknown>

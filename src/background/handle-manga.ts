@@ -7,7 +7,7 @@ import { AppLogger } from "../shared/AppLogger"
 import { MirrorLoader } from "../mirrors/MirrorLoader"
 import { OptionStorage } from "../shared/OptionStorage"
 import { NOT_HANDLED_MESSAGE } from "./background-util"
-import { AllActions, SearchListAction } from "../types/action"
+import { AddMangaByUrlAction, AllActions, SearchListAction } from "../types/action"
 
 export class HandleManga {
     constructor(
@@ -148,6 +148,8 @@ export class HandleManga {
                 return this.storeListChaps(message)
             case "importMangas":
                 return this.importMangas(message)
+            case "addMangaByUrl":
+                return this.addMangaByUrl(message as AddMangaByUrlAction)
             default:
                 return NOT_HANDLED_MESSAGE
         }
@@ -654,5 +656,123 @@ export class HandleManga {
                 catsToAdd.forEach(cat => this.store.dispatch("addCategory", cat))
             }
         }
+    }
+
+    /**
+     * Add a manga by URL - for Cloudflare-protected sites where search doesn't work
+     * User pastes a manga/chapter URL directly and we fetch info from the page
+     */
+    async addMangaByUrl(message: { url: string; mirrorName: string }): Promise<{
+        success: boolean
+        mangaName?: string
+        error?: string
+    }> {
+        console.log("[addMangaByUrl] Starting for URL:", message.url, "mirror:", message.mirrorName)
+
+        try {
+            // Get the mirror implementation
+            const impl = await this.mirrorLoader.getImpl(message.mirrorName)
+            if (!impl) {
+                return { success: false, error: `Mirror "${message.mirrorName}" not found` }
+            }
+
+            // Fetch the page
+            let doc: string
+            try {
+                const response = await fetch(message.url)
+                if (!response.ok) {
+                    return {
+                        success: false,
+                        error: `Failed to fetch page (${response.status}). Site may be Cloudflare-protected - try visiting the page in your browser first.`
+                    }
+                }
+                doc = await response.text()
+            } catch (e) {
+                console.error("[addMangaByUrl] Fetch error:", e)
+                return { success: false, error: "Failed to fetch page. Check the URL and try again." }
+            }
+
+            // Check if this is a chapter page
+            const isChapter = impl.isCurrentPageAChapterPage(doc, message.url)
+            console.log("[addMangaByUrl] isChapter:", isChapter)
+
+            let mangaInfo: { name: string; currentMangaURL: string; currentChapterURL?: string }
+
+            if (isChapter) {
+                // Get manga info from chapter page
+                mangaInfo = await impl.getCurrentPageInfo(doc, message.url)
+            } else {
+                // Try to get manga info from manga page
+                // For manga pages, we need to extract the name and use the URL as-is
+                const $ = cheerio.load(doc)
+                let name = $("h1").first().text().trim()
+                if (!name) {
+                    name = $("title").text().split("|")[0].trim()
+                }
+                if (!name) {
+                    return { success: false, error: "Could not extract manga name from page" }
+                }
+                mangaInfo = {
+                    name,
+                    currentMangaURL: message.url
+                }
+            }
+
+            console.log("[addMangaByUrl] mangaInfo:", mangaInfo)
+
+            if (!mangaInfo?.name || !mangaInfo?.currentMangaURL) {
+                return { success: false, error: "Could not extract manga information from page" }
+            }
+
+            // Get chapter list
+            let listChaps: InfoResult[] = []
+            try {
+                const chapResult = await impl.getListChaps(mangaInfo.currentMangaURL)
+                // Handle both array and Record<string, InfoResult[]> (multi-language) formats
+                if (Array.isArray(chapResult)) {
+                    listChaps = chapResult
+                } else if (chapResult && typeof chapResult === "object") {
+                    // For multi-language mirrors, get the first language's chapters
+                    const firstLang = Object.keys(chapResult)[0]
+                    if (firstLang) {
+                        listChaps = chapResult[firstLang]
+                    }
+                }
+                console.log("[addMangaByUrl] Got", listChaps?.length || 0, "chapters")
+            } catch (e) {
+                console.warn("[addMangaByUrl] Failed to get chapter list:", e)
+                // Continue without chapter list - it can be fetched later
+            }
+
+            // Create the manga entry
+            const readMangaMessage = {
+                action: "readManga",
+                url: mangaInfo.currentMangaURL,
+                mirror: message.mirrorName,
+                name: mangaInfo.name,
+                listChaps: listChaps,
+                lastChapterReadURL: isChapter ? mangaInfo.currentChapterURL : listChaps?.[0]?.[1],
+                lastChapterReadName: isChapter
+                    ? this.extractChapterName(mangaInfo.currentChapterURL, listChaps)
+                    : listChaps?.[0]?.[0]
+            }
+
+            console.log("[addMangaByUrl] Creating manga entry:", readMangaMessage.name)
+            await this.store.dispatch("readManga", readMangaMessage)
+
+            return { success: true, mangaName: mangaInfo.name }
+        } catch (e) {
+            console.error("[addMangaByUrl] Error:", e)
+            return { success: false, error: e.message || "An unexpected error occurred" }
+        }
+    }
+
+    /**
+     * Extract chapter name from URL by matching against chapter list
+     */
+    private extractChapterName(chapterUrl: string | undefined, listChaps: string[][]): string | undefined {
+        if (!chapterUrl || !listChaps?.length) return undefined
+        const chapter = listChaps.find(ch => ch[1] === chapterUrl)
+        return chapter?.[0]
     }
 }

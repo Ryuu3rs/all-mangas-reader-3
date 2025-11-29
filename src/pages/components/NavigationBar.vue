@@ -68,6 +68,10 @@
                 </v-card-title>
                 <v-card-text class="pt-2">
                     <v-list density="compact" class="pa-0">
+                        <v-list-item @click="$emit('add-by-url')" prepend-icon="mdi-link-plus">
+                            <v-list-item-title>Add by URL</v-list-item-title>
+                            <v-list-item-subtitle>Paste manga/chapter URL directly</v-list-item-subtitle>
+                        </v-list-item>
                         <v-list-item @click="triggerImportMangaList" prepend-icon="mdi-book-multiple">
                             <v-list-item-title>Manga List</v-list-item-title>
                             <v-list-item-subtitle>Import from older AMR versions</v-list-item-subtitle>
@@ -213,7 +217,8 @@ export default {
         "import-stats",
         "open-changelog",
         "open-timers",
-        "open-health-check"
+        "open-health-check",
+        "add-by-url"
     ],
     data() {
         return {

@@ -17,6 +17,14 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.3] - 2024-11-29
+
+### New Features
+
+-   **Add by URL**: New feature to add manga from Cloudflare-protected sites by pasting the manga or chapter URL directly. Access via Import menu > "Add by URL". The extension auto-detects the mirror from the URL and fetches manga info.
+
+---
+
 ## [4.0.2] - 2024-11-29
 
 ### Removed Features
