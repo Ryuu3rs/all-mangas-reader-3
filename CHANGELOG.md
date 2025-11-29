@@ -17,6 +17,54 @@ The following sections are the standard sections to use, please stick with them 
 -   Disabled Mirrors
 -   Notes - This is the catchall for anything that does not fit in the other sections.
 
+## [4.0.0] - 2024-11-29
+
+### 🎉 ALL MANGAS READER 4.0 - The Revival
+
+A complete overhaul of All Mangas Reader. This release represents a major cleanup and modernization effort, removing dead sites and fixing broken readers to deliver a lean, working extension.
+
+### Bug Fixes
+
+-   **Database Persistence**: Fixed Vue 3 Proxy objects causing DataCloneError in IndexedDB - mangas now persist correctly
+-   **BroadcastChannel**: Fixed "Proxy object could not be cloned" error when syncing Vuex mutations
+-   **Promise Handling**: Fixed typo `(resolve, result)` → `(resolve, reject)` in 9 Promise constructors in storedb.js
+-   **Protocol-relative URLs**: Fixed image URLs starting with `//` not loading in extension context (MangaHere, FanFox)
+
+### Mirror Fixes
+
+-   **MangaHere/FanFox**: Fixed dm5_key extraction from packed JavaScript, added request queue to prevent rate limiting
+-   **Batoto**: Added battwo.com domain, updated chapter selectors, improved batoPass deobfuscation with Infinity trick handling
+-   **MangaPark**: Fixed chapter_url regex to match new URL format (`/title/.../ID-chapter-...` instead of `/title/.../ID-ch-...`)
+-   **MangaReaderTo**: Improved reading ID extraction with multiple fallback methods
+-   **Dm5**: Implemented chapterfun.ashx API with p,a,c,k,e,d JavaScript unpacking for image loading
+-   **FMTeam**: Fixed http→https protocol and null check for chapter page detection
+-   **MangaHub**: Marked as Cloudflare-protected (reader works when visiting site directly)
+
+### Disabled Mirrors
+
+The following mirrors have been marked as search-disabled due to Cloudflare protection (reader still works):
+
+-   Dragon Tea, Webtoon.xyz, ManhwaHentai, Kun Manga, ManhuaFast, Manytoon, Setsu Scans, Manhuaus
+-   Kiryuu, Scantrad Union, Manhwa18.com, MangaKawaii, Like Manga, Sad Scans
+
+### Removed Features
+
+Removed ~70 dead mirror implementations that are no longer online:
+
+-   **Madara-based (35)**: MangaKomi, 247Manga, AstralLibrary, ChibiManga, ComicKiba, ImmortaUpdates, IsekaiScans, LeviatanScans, LilyManga, Manga347, MangaCultivator, MangaGreat, MangaSy, MangazukiMe, Manhuas, MixedManga, MMScans, RandomTrans, ResetScans, Sawamics, SKScans, TopManhua, TritiniaScans, TwilightScans, UltManga, UnemployedScans, ComicDom, Manga1stOnline, GourmetScans, ShadowTrad, DarkScan, CreepyScans, HariManga, NightComic, Mangalek, PlatinumCrown, MangaBob
+-   **MangaStream-based (6)**: Komikstation, Ngomik, Westmanga, Komikav, Komicast, ReaperScans
+-   **FoolSlide-based (1)**: EvilFlowers
+-   **MyMangaReaderCMS (2)**: Komikid, ScanFR
+-   **Standalone (20)**: FunManga, ReadMNG, Manga4Life, MangaSee, ScyllaScans, DisasterScans, ZaHardTop, UnionLeitor, SeriManga, ReadM, ManhwaFreak, MangaDemon, MangaHasu, MangaFreak, MangaAlArab, LugnicaScan, EpsilonScan, BananaScan, FanComics, MangaBTT
+
+### Notes
+
+-   Total active mirrors reduced from ~120 to ~50
+-   Confirmed working mirrors: MangaDex, MangaBuddy, ManhuaPlus, Asura Scans, MangaHere, FanFox, Dynasty Scans, and more
+-   Users can still add manga from Cloudflare-blocked sites by visiting the site directly in browser
+
+---
+
 ## [3.1.0] - 2024-11-26
 
 ### 🚀 MAJOR VERSION: Complete Modernization

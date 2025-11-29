@@ -13,7 +13,7 @@ export class FMTeam extends BaseMirror implements MirrorImplementation {
     mirrorIcon = FMTeamIcon
     languages = "fr"
     domains = ["fmteam.fr"]
-    home = "http://fmteam.fr"
+    home = "https://fmteam.fr"
     chapter_url = /\/read\/.*\/ch\/\w+#?\d*/g
 
     async getMangaList(search: string) {
@@ -59,7 +59,7 @@ export class FMTeam extends BaseMirror implements MirrorImplementation {
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
-        return curUrl.match(/ch\/(\w+)#?\d*$/) !== undefined
+        return curUrl.match(/ch\/(\w+)#?\d*$/) !== null
     }
 
     async getImageUrlFromPage(urlImage: string): Promise<string> {

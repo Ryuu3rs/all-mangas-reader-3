@@ -4,14 +4,8 @@ import { MirrorHelper } from "../../MirrorHelper"
 import AsuraScansIcon from "../../icons/asurascans-optimized.png"
 import FlameScanIcon from "../../icons/flamescans-optimized.png"
 import KiryuuIcon from "../../icons/kiryuu-optimized.png"
-import KomikavIcon from "../../icons/komikav-optimized.png"
-import KomicastIcon from "../../icons/komicast-optimized.png"
-import KomikstationIcon from "../../icons/komikstation-optimized.png"
 import KomikuIcon from "../../icons/komiku-optimized.png"
-import NgomikIcon from "../../icons/ngomik-optimized.png"
 import VoidScanIcon from "../../icons/voidscans-optimized.png"
-import WestMangaIcon from "../../icons/westmanga-optimized.png"
-import ReaperScansFake from "../../icons/reaperscans-optimized.png"
 
 const defaultOptions = {
     search_a_sel: "div.bsx > a",
@@ -285,64 +279,6 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
         new MangaStream(
             mirrorHelper,
             {
-                mirrorName: "Komikav",
-                canListFullMangas: false,
-                mirrorIcon: KomikavIcon,
-                domains: ["komikav.com"],
-                home: "https://komikav.com/",
-                chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id"
-            },
-            {
-                search_url: "https://komikav.com/",
-                chapters_a_sel: "div.bixbox.bxcl > ul > li > span.lchx a"
-            }
-        ),
-        new MangaStream(
-            mirrorHelper,
-            {
-                mirrorName: "Komicast",
-                canListFullMangas: false,
-                mirrorIcon: KomicastIcon,
-                domains: ["komikcast.com", "komikcast.me", "komikcast.site"],
-                home: "https://komikcast.site/",
-                chapter_url: /^\/chapter\/.+$/g,
-                languages: "id"
-            },
-            {
-                search_url: "https://komikcast.site/",
-                search_json: false,
-                search_a_sel: "div.list-update_item > a",
-                chapters_a_sel: "div.komik_info-chapters a.chapter-link-item",
-                page_container_sel: ".main-reading-area",
-                img_sel: ".main-reading-area img"
-            }
-        ),
-
-        new MangaStream(
-            mirrorHelper,
-            {
-                mirrorName: "Komikstation",
-                canListFullMangas: false,
-                mirrorIcon: KomikstationIcon,
-                domains: ["komikstation.com"],
-                home: "https://www.komikstation.com/",
-                chapter_url: /chapter-[0-9]+\/$/g,
-                languages: "id",
-                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
-            },
-            {
-                search_url: "https://www.komikstation.com/",
-                chapters_a_sel: "div.bixbox.bxcl > ul > li > span.lchx a",
-                search_a_sel: " div.allgreen.genrelst > ul > li> div > div.left > a",
-                search_option: "&post_type=manga",
-                manga_title_attr: true,
-                manga_url_sel: "div.chapterbody > div > article > div.headpost a"
-            }
-        ),
-        new MangaStream(
-            mirrorHelper,
-            {
                 mirrorName: "Komiku",
                 canListFullMangas: false,
                 mirrorIcon: KomikuIcon,
@@ -367,24 +303,6 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
         new MangaStream(
             mirrorHelper,
             {
-                mirrorName: "Ngomik",
-                canListFullMangas: false,
-                mirrorIcon: NgomikIcon,
-                domains: ["ngomik.in"],
-                home: "https://ngomik.in/",
-                chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id",
-                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
-            },
-            {
-                search_url: "https://ngomik.in/",
-                search_a_sel: "div.luf > a",
-                chapters_a_sel: "div.lch> a"
-            }
-        ),
-        new MangaStream(
-            mirrorHelper,
-            {
                 mirrorName: "Void Scans",
                 mirrorIcon: VoidScanIcon,
                 languages: "en",
@@ -397,52 +315,12 @@ export const getMangaStreamImplementations = (mirrorHelper: MirrorHelper): Mirro
                 search_url: "https://hivescans.com/",
                 chapters_a_sel: "div.bixbox.bxcl ul li a",
                 chapters_text_sel: "span.chapternum",
-                // img_src: "data-lazy-src",
                 img_src: "src",
                 fixChapterUrl: url => {
                     const parts = url.split("/")
                     if (parts[3] == "1") parts.splice(3, 1)
                     return parts.join("/")
                 }
-            }
-        ),
-        new MangaStream(
-            mirrorHelper,
-            {
-                mirrorName: "Westmanga",
-                canListFullMangas: false,
-                mirrorIcon: WestMangaIcon,
-                domains: ["westmanga.info"],
-                home: "https://westmanga.info/",
-                chapter_url: /^\/m[0-9]+\/$/g,
-                languages: "id",
-                disabledForSearch: true // 403 Forbidden - Cloudflare blocking
-            },
-            {
-                search_url: "https://westmanga.info/",
-                search_a_sel: "div.kanan_search > header > span > a",
-                search_option: "&post_type=manga",
-                manga_title_attr: false,
-                chapters_a_sel: "div.cl > ul > li > span.leftoff > a",
-                search_json: false
-            }
-        ),
-        new MangaStream(
-            mirrorHelper,
-            {
-                mirrorName: "Reaper Scans (Fake)",
-                canListFullMangas: false,
-                mirrorIcon: ReaperScansFake,
-                domains: ["reaper-scans.com"],
-                home: "https://reaper-scans.com",
-                chapter_url: /\/.*?chapter-[0-9]+.*\//g,
-                languages: "en"
-            },
-            {
-                search_url: "reaper-scans.com",
-                chapters_a_sel: "div.bixbox.bxcl ul li a",
-                chapters_text_sel: "span.chapternum",
-                search_json: false
             }
         )
     ]

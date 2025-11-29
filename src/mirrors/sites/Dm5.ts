@@ -86,20 +86,190 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
         }
     }
 
-    async getListImages(doc) {
+    async getListImages(doc, curUrl) {
         const $ = this.parseHtml(doc)
         const res = []
-        $("img.load-src").each(function () {
-            res.push($(this).attr("data-src"))
-        })
-        /*const lastpage = this.mirrorHelper.getVariableFromScript("DM5_IMAGE_COUNT", doc),
-            curl = this.mirrorHelper.getVariableFromScript("DM5_CURL", doc),
-            res = []
 
-        for (let i = 1; i <= lastpage; i++) {
-            res.push(this.home + curl.slice(0, -1) + "-p" + i + "/")
-        }*/
+        // First try to get images from the DOM (if they're already loaded)
+        $("img.load-src").each(function () {
+            const src = $(this).attr("data-src")
+            if (src) res.push(src)
+        })
+
+        // If we found images in DOM, return them
+        if (res.length > 0) {
+            console.log("[Dm5] Found " + res.length + " images in DOM")
+            return res
+        }
+
+        // Otherwise, use the chapterfun.ashx API to get images
+        console.log("[Dm5] No images in DOM, using chapterfun.ashx API")
+
+        const lastpage = parseInt(this.mirrorHelper.getVariableFromScript("DM5_IMAGE_COUNT", doc)) || 0
+        const curl = this.mirrorHelper.getVariableFromScript("DM5_CURL", doc)
+        const cid = this.mirrorHelper.getVariableFromScript("DM5_CID", doc)
+        const mid = this.mirrorHelper.getVariableFromScript("DM5_MID", doc)
+        const dt = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN_DT", doc)
+        const sign = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN", doc)
+
+        console.log("[Dm5] Chapter info: cid=" + cid + ", mid=" + mid + ", pages=" + lastpage)
+
+        if (!cid || !lastpage) {
+            console.error("[Dm5] Missing required variables")
+            return res
+        }
+
+        // Get the dm5_key from the page (may be empty)
+        let mkey = ""
+        if ($("#dm5_key").length > 0) {
+            mkey = $("#dm5_key").val()?.toString() || ""
+        }
+        // Also try to extract from packed script
+        if (!mkey) {
+            const keyMatch = doc.match(/\$\("#dm5_key"\)\.val\(([^)]+)\)/)
+            if (keyMatch) {
+                // Try to extract from eval script
+                const evalMatch = doc.match(/eval\(function\(p,a,c,k,e,d\)[^}]+\}[^']*'([^']+)'/)
+                if (evalMatch) {
+                    const packed = evalMatch[0]
+                    mkey = this.extractKeyFromPacked(packed)
+                }
+            }
+        }
+
+        // Fetch all pages using the API
+        for (let page = 1; page <= lastpage; page++) {
+            const chapfunurl = this.home + curl + "chapterfun.ashx"
+            const params = {
+                cid: cid,
+                page: page,
+                key: mkey,
+                language: 1,
+                gtk: 6,
+                _cid: cid,
+                _mid: mid,
+                _dt: dt,
+                _sign: sign
+            }
+
+            try {
+                const data = await this.mirrorHelper.loadJson(chapfunurl, {
+                    data: params,
+                    nocontenttype: true,
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    referrer: curUrl || this.home + curl
+                })
+
+                if (data) {
+                    const imageUrl = this.unpackChapterFun(data.toString())
+                    if (imageUrl) {
+                        res.push(imageUrl)
+                    }
+                }
+            } catch (e) {
+                console.error("[Dm5] Error fetching page " + page + ": " + e)
+            }
+
+            // Small delay to avoid rate limiting
+            if (page < lastpage) {
+                await new Promise(resolve => setTimeout(resolve, 50))
+            }
+        }
+
+        console.log("[Dm5] Fetched " + res.length + " images via API")
         return res
+    }
+
+    /**
+     * Extract dm5_key from packed JavaScript
+     */
+    private extractKeyFromPacked(packed: string): string {
+        try {
+            const unpacked = this.unpackScript(packed)
+            if (unpacked) {
+                // Look for guidkey or wocgfd2r3gsg pattern
+                const keyMatch =
+                    unpacked.match(/guidkey\s*=\s*['"]([^'"]+)['"]/) ||
+                    unpacked.match(/var\s+\w+\s*=\s*['"]([a-f0-9]{16,})['"]/)
+                if (keyMatch) {
+                    return keyMatch[1]
+                }
+            }
+        } catch (e) {
+            console.error("[Dm5] Error extracting key: " + e)
+        }
+        return ""
+    }
+
+    /**
+     * Unpack the chapterfun.ashx response and extract image URL
+     */
+    private unpackChapterFun(data: string): string | null {
+        try {
+            const unpacked = this.unpackScript(data)
+            if (!unpacked) return null
+
+            // Extract variables from unpacked script
+            const cidMatch = unpacked.match(/cid\s*=\s*(\d+)/)
+            const keyMatch = unpacked.match(/key\s*=\s*['"]([^'"]+)['"]/)
+            const pixMatch = unpacked.match(/pix\s*=\s*["']([^"']+)["']/)
+            const pvalueMatch = unpacked.match(/pvalue\s*=\s*\[([^\]]+)\]/)
+
+            if (pixMatch && pvalueMatch) {
+                const pix = pixMatch[1]
+                // Parse the pvalue array
+                const pvalueStr = pvalueMatch[1]
+                const imgMatch = pvalueStr.match(/["']([^"']+)["']/)
+                if (imgMatch) {
+                    const imgPath = imgMatch[1]
+                    const cid = cidMatch ? cidMatch[1] : ""
+                    const key = keyMatch ? keyMatch[1] : ""
+                    return pix + imgPath + "?cid=" + cid + "&key=" + key
+                }
+            }
+        } catch (e) {
+            console.error("[Dm5] Error unpacking chapterfun: " + e)
+        }
+        return null
+    }
+
+    /**
+     * Unpack p,a,c,k,e,d packed JavaScript
+     */
+    private unpackScript(packed: string): string | null {
+        try {
+            // Parse the packed script arguments
+            const regexpargs = /'(([^\\']|\\')*)',\s*(\d+),\s*(\d+),\s*'(([^\\']|\\')*)'/
+            const match = packed.match(regexpargs)
+            if (!match) return null
+
+            const p = match[1]
+            const a = parseInt(match[3])
+            const c = parseInt(match[4])
+            const k = match[5].split("|")
+
+            // Unpack function
+            const unpack = (p: string, a: number, c: number, k: string[]): string => {
+                const e = (c: number): string => {
+                    return (
+                        (c < a ? "" : e(Math.floor(c / a))) +
+                        ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
+                    )
+                }
+
+                const d: { [key: string]: string } = {}
+                while (c--) {
+                    d[e(c)] = k[c] || e(c)
+                }
+
+                return p.replace(/\b\w+\b/g, match => d[match] || match)
+            }
+
+            return unpack(p, a, c, k).replace(/\\'/g, "'")
+        } catch (e) {
+            console.error("[Dm5] Error in unpackScript: " + e)
+            return null
+        }
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
@@ -110,88 +280,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
     }
 
     async getImageUrlFromPage(urlImage: string): Promise<string> {
+        // Images are now returned as full URLs from getListImages
         return urlImage
-        /* // loads the page containing the current scan
-        const doc = await this.mirrorHelper.loadPage(urlImage)
-        const $ = this.parseHtml(doc)
-        var mkey = ""
-        if ($("#dm5_key").length > 0) {
-            mkey = $("#dm5_key", doc).val().toString()
-        }
-        let curl = this.mirrorHelper.getVariableFromScript("DM5_CURL", doc),
-            cid = this.mirrorHelper.getVariableFromScript("DM5_CID", doc),
-            mid = this.mirrorHelper.getVariableFromScript("DM5_MID", doc),
-            dt = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN_DT", doc), // valid date for the sign key
-            sign = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN", doc), // sign key
-            chapfunurl = "https://www.dm5.com" + curl + "chapterfun.ashx", // url to retrieve scan url
-            curpage = 1,
-            re = /m\d+-p(\d+)\/?/,
-            mat = urlImage.match(re)
-        if (mat != null && mat.length > 1) {
-            curpage = parseInt(mat[1]) // set the current page depending on the scan to retrieve
-        }
-        let params = {
-            // Build parameters for the request
-            cid: cid,
-            page: curpage,
-            key: mkey,
-            language: 1,
-            gtk: 6,
-            _cid: cid,
-            _mid: mid,
-            _dt: dt,
-            _sign: sign
-        }
-        // get scan url (this function seems to work only within DM5, perhaps a control on Referer)
-        let data = await this.mirrorHelper.loadJson(chapfunurl, {
-            data: params,
-            nocontenttype: true,
-            headers: { "X-Requested-With": "XMLHttpRequest" },
-            referrer: urlImage
-        })
-        // the retrieved data is packed through an obfuscator
-        // dm5 is unpacking the images url through an eval, we can't do that in AMR due to CSP
-        // we do it manually (below is the unpack function shipped with the data to decode)
-        let unpack = function (p, a, c, k, e, d) {
-            e = function (c) {
-                return (
-                    (c < a ? "" : e(parseInt((c / a).toString()))) +
-                    ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
-                )
-            }
-            if (!"".replace(/^/, String)) {
-                while (c--) d[e(c)] = k[c] || e(c)
-                k = [
-                    function (e) {
-                        return d[e]
-                    }
-                ]
-                e = function () {
-                    return "\\w+"
-                }
-                c = 1
-            }
-            while (c--) if (k[c]) p = p.replace(new RegExp("\\b" + e(c) + "\\b", "g"), k[c])
-            return p
-        }
-
-        // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
-        let regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g
-        let match = regexpargs.exec(data)
-        if (match) {
-            let args = []
-            let sc = unpack(match[1], match[3], match[4], match[5].split("|"), 0, {}) // call the unpack function
-            sc = sc.replace(/\\'/g, "'") // unquote the result
-            // the result is another js function containing the data, we mimic here what it does
-            // retrieve the variables
-            let cid = this.mirrorHelper.getVariableFromScript("cid", sc),
-                key = this.mirrorHelper.getVariableFromScript("key", sc),
-                pix = this.mirrorHelper.getVariableFromScript("pix", sc),
-                pvalue = this.mirrorHelper.getVariableFromScript("pvalue", sc) // array of scan urls (contains current one and next one)
-            pvalue = pvalue.map(img => pix + img + "?cid=" + cid + "&key=" + key) // mimic the returned function which rebuilds the url depending on its parts
-            return pvalue[0] // set the image src
-        } else {
-            return "error"
-        }*/
     }
 }

@@ -61,19 +61,56 @@ export class MangaReaderTo extends BaseMirror implements MirrorImplementation {
         const res = []
         let $ = this.parseHtml(doc)
 
-        const id = $("div#wrapper").attr("data-reading-id")
+        // Try multiple ways to get the reading ID
+        // 1. From the wrapper element (most reliable when page is fully rendered)
+        let id = $("div#wrapper").attr("data-reading-id")
+
+        // 2. From any element with data-reading-id attribute
+        if (!id) {
+            id = $("[data-reading-id]").first().attr("data-reading-id")
+        }
+
+        // 3. From the raw HTML using regex
+        if (!id) {
+            const readingIdMatch = doc.match(/data-reading-id=["'](\d+)["']/)
+            if (readingIdMatch) {
+                id = readingIdMatch[1]
+            }
+        }
+
+        // 4. Try to find it in script content
+        if (!id) {
+            const scriptMatch = doc.match(/reading[_-]?id['":\s]+(\d+)/i)
+            if (scriptMatch) {
+                id = scriptMatch[1]
+            }
+        }
+
+        if (!id) {
+            console.error("Could not find reading ID for MangaReaderTo. URL:", curUrl)
+            console.error("Page content length:", doc.length)
+            // Log first 500 chars of doc for debugging
+            console.error("Page start:", doc.substring(0, 500))
+            return res
+        }
+
+        console.log("MangaReaderTo: Found reading ID:", id)
 
         // https://mangareader.to/ajax/image/list/chap/844382?mode=vertical&quality=high&hozPageSize=1
+        try {
+            const imageData = await this.mirrorHelper.loadJson(
+                `${this.baseUrl}/ajax/image/list/chap/${id}?mode=vertical&quality=high&hozPageSize=1`,
+                { nocache: true }
+            )
+            $ = this.parseHtml(imageData.html)
 
-        doc = await this.mirrorHelper.loadJson(
-            `${this.baseUrl}/ajax/image/list/chap/${id}?mode=vertical&quality=high&hozPageSize=1`,
-            { nocache: true }
-        )
-        $ = this.parseHtml(doc.html)
+            $("div.iv-card").each(function (index) {
+                res.push($(this).attr("data-url"))
+            })
+        } catch (e) {
+            console.error("Failed to fetch images from MangaReaderTo:", e)
+        }
 
-        $("div.iv-card").each(function (index) {
-            res.push($(this).attr("data-url"))
-        })
         return res
     }
 

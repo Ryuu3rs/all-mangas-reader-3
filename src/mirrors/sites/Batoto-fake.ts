@@ -11,7 +11,22 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
     mirrorName = "Batoto (fake)"
     mirrorIcon = Icon
     languages = "en"
-    domains = ["bato.to", "batotoo.com", "comiko.net", "mto.to", "mangatoto.com", "dto.to"]
+    domains = [
+        "bato.to",
+        "batotoo.com",
+        "comiko.net",
+        "mto.to",
+        "mangatoto.com",
+        "dto.to",
+        "battwo.com",
+        "batocomic.com",
+        "batocomic.net",
+        "batocomic.org",
+        "xbato.com",
+        "zbato.com",
+        "readbato.com",
+        "wto.to"
+    ]
     home = "https://bato.to"
     chapter_url = /^\/chapter\/.+$/
 
@@ -46,12 +61,14 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
     public async getListChaps(urlManga: string) {
         const doc = await this.mirrorHelper.loadPage(urlManga, { nocache: true, preventimages: true })
         const res = []
-        const self = this
         const $ = this.parseHtml(doc)
+
+        // Get the base URL from the manga URL to handle different domains
+        const baseUrl = new URL(urlManga).origin
 
         // Try multiple selectors - bato.to has changed their HTML structure
         // New structure: chapter links are in divs with data-hk attributes, containing <a> with href="/chapter/..."
-        let chapterLinks = $("a[href*='/chapter/']")
+        const chapterLinks = $("a[href*='/chapter/']")
 
         // Filter to only get chapter links (not other links that might contain /chapter/)
         chapterLinks.each(function () {
@@ -61,7 +78,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
                 const text = $(this).text().trim()
                 // Skip empty text or navigation links
                 if (text && text.length > 0) {
-                    res.push([text, self.home + href])
+                    res.push([text, baseUrl + href])
                 }
             }
         })
@@ -69,7 +86,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
         // Fallback to old selector if new one doesn't work
         if (res.length === 0) {
             $(".main a.chapt").each(function () {
-                res.push([$(this).text(), self.home + $(this).attr("href")])
+                res.push([$(this).text(), baseUrl + $(this).attr("href")])
             })
         }
 
@@ -78,36 +95,86 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
 
     public async getCurrentPageInfo(doc: string, curUrl: string) {
         const $ = this.parseHtml(doc)
-        const title = $("h3.nav-title a", doc).first()
+        // Try multiple selectors for the manga title link
+        let title = $("a[href*='/series/']").first()
+        if (!title.length) {
+            title = $("h3.nav-title a", doc).first()
+        }
+
+        // Get the current host from the URL to build proper URLs
+        const urlObj = new URL(curUrl)
+        const baseUrl = urlObj.origin
+
         return {
-            name: title.text(),
-            currentMangaURL: this.home + title.attr("href"),
+            name: title.text().trim(),
+            currentMangaURL: baseUrl + title.attr("href"),
             currentChapterURL: curUrl.split("/").slice(0, 5).join("/")
         }
     }
 
     public async getListImages(doc: string, _currentUrl: string, _sender: unknown) {
-        let regex = /const batoPass = (.*?);/g
-        let matches = regex.exec(doc)
-        // Deobfuscation logic that converts the mess that looks like [+!+[]]+[!+[]+!+[]]] into a string of a decimal number
-        const batoPass = matches[1]
-            .replace(/\(.+\)\[.+?\]\+/, ".+")
-            .replace(/!\+\[\]/g, "1")
-            .replace(/\[\+\[\]\]/g, "[0]")
-            .replace(/1(?:\+1)*/g, match => String((match.length + 1) / 2))
-            .replace(/(?<=[[(])\+1/g, "1")
-            .replace(/\[(\d)\]/g, "$1")
-            .replace(/\+/g, "")
-
-        regex = /const batoWord = "(.*?)";/g
-        matches = regex.exec(doc)
-        const batoWord = matches[1]
-
-        const crypto = this.mirrorHelper.crypto
-        const decrypted = JSON.parse(crypto.AES.decrypt(batoWord, batoPass).toString(this.mirrorHelper.crypto.enc.Utf8))
-
+        // First, get the imgHttps array directly - these are the base image URLs
         const images = this.getVariable({ doc, variableName: "imgHttps" })
-        return images.map((image, index) => image + "?" + decrypted[index])
+
+        // Check if batoWord exists - if not, images might work without tokens
+        const batoWordMatch = /const batoWord = "(.*?)";/g.exec(doc)
+        if (!batoWordMatch || !batoWordMatch[1]) {
+            // No encryption, return images as-is
+            return images
+        }
+        const batoWord = batoWordMatch[1]
+
+        // Get batoPass and deobfuscate it
+        const batoPassMatch = /const batoPass = (.*?);/g.exec(doc)
+        if (!batoPassMatch || !batoPassMatch[1]) {
+            // No pass, return images as-is
+            return images
+        }
+
+        // Deobfuscation logic that converts JSFuck-style obfuscation to a string
+        // The obfuscation uses patterns like [!+[]+!+[]+!+[]] which equals [3] = "3"
+        // And complex expressions like (+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]] = "n" (from "Infinity")
+        let batoPass = batoPassMatch[1]
+
+        // Handle the Infinity trick: (+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]] = "n"
+        // This creates "Infinity" and takes the second character "n"
+        batoPass = batoPass.replace(
+            /\(\+\(\+!\+\[\]\+\[\+!\+\[\]\]\+\(!\[\]\+\[\]\)\[!\+\[\]\+!\+\[\]\+!\+\[\]\]\+\[!\+\[\]\+!\+\[\]\]\+\[\+\[\]\]\)\+\[\]\)\[\+!\+\[\]\]/g,
+            "n"
+        )
+
+        // Replace !+[] with 1 (this is true coerced to number)
+        batoPass = batoPass.replace(/!\+\[\]/g, "1")
+
+        // Replace [+[]] with [0]
+        batoPass = batoPass.replace(/\[\+\[\]\]/g, "[0]")
+
+        // Replace sequences of 1+1+1... with their sum
+        batoPass = batoPass.replace(/1(?:\+1)*/g, match => String((match.length + 1) / 2))
+
+        // Replace [+1] at start of bracket with [1]
+        batoPass = batoPass.replace(/\[\+(\d)\]/g, "[$1]")
+
+        // Extract just the digits from [digit] patterns and concatenate
+        batoPass = batoPass.replace(/\[(\d)\]/g, "$1")
+
+        // Remove remaining + signs between digits
+        batoPass = batoPass.replace(/\+/g, "")
+
+        // Remove any remaining brackets
+        batoPass = batoPass.replace(/[\[\]]/g, "")
+
+        try {
+            const crypto = this.mirrorHelper.crypto
+            const decrypted = JSON.parse(
+                crypto.AES.decrypt(batoWord, batoPass).toString(this.mirrorHelper.crypto.enc.Utf8)
+            )
+            return images.map((image, index) => image + "?" + decrypted[index])
+        } catch (e) {
+            console.error("Batoto decryption failed:", e, "batoPass:", batoPass)
+            // Return images without tokens as fallback
+            return images
+        }
     }
 
     public async getImageUrlFromPage(urlImg: string) {
@@ -115,6 +182,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
     }
 
     public isCurrentPageAChapterPage(doc: string) {
-        return this.queryHtml(doc, "div#viewer").length > 0
+        // Check for presence of imgHttps or batoWord variables which are only on chapter pages
+        return doc.includes("const imgHttps =") || doc.includes("const batoWord =")
     }
 }

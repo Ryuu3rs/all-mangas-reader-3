@@ -164,33 +164,6 @@ export const getFunMangaImplementations = (mirrorHelper: MirrorHelper): MirrorIm
         new FunManga(
             mirrorHelper,
             {
-                mirrorName: "FunManga",
-                canListFullMangas: true,
-                mirrorIcon: require("../../icons/funmanga-optimized.png"),
-                languages: "en",
-                domains: ["funmanga.com"],
-                home: "http://www.funmanga.com",
-                chapter_url: /^\/.*\/[0-9]+\.?[0-9]*\/.+$/g,
-                disabledForSearch: true // Network error - site unreachable
-            },
-            {
-                search_url: "http://www.funmanga.com/service/advanced_search",
-                search_data_field: "manga-name",
-                search_a_sel: ".manga-title a",
-                search_default_data: {
-                    type: "all",
-                    status: "both",
-                    "author-name": "",
-                    "artist-name": ""
-                },
-                sendDataAsText: true,
-                chapters_a_sel: "ul.chapter-list li > a",
-                page_container_sel: "body > .amr-container"
-            }
-        ),
-        new FunManga(
-            mirrorHelper,
-            {
                 mirrorName: "MangaInn",
                 canListFullMangas: true,
                 mirrorIcon: require("../../icons/mangainn-optimized.png"),
@@ -212,27 +185,6 @@ export const getFunMangaImplementations = (mirrorHelper: MirrorHelper): MirrorIm
                 sendDataAsText: true,
                 chapters_a_sel: "ul.chapter-list li > a",
                 page_container_sel: "body > .amr-container"
-            }
-        ),
-
-        new FunManga(
-            mirrorHelper,
-            {
-                mirrorName: "ReadMangaToday",
-                canListFullMangas: true,
-                mirrorIcon: require("../../icons/readmangatoday-optimized.png"),
-                languages: "en",
-                domains: ["readmng.com"],
-                home: "https://www.readmng.com/",
-                chapter_url: /^\/.*\/[0-9]+\.?.+$/g,
-                disabledForSearch: true // 521 Server Down
-            },
-            {
-                search_url: "https://www.readmng.com/search",
-                search_data_field: "query",
-                search_a_sel: ".content-list .title a",
-                chapters_a_sel: "#chapters-tabContent a.chnumber",
-                img_sel: ".readercontent"
             }
         )
     ]

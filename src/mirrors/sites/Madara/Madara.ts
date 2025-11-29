@@ -36,6 +36,7 @@ export class Madara extends BaseMirror implements MirrorImplementation {
     mirrorIcon: string
     mirrorName: string
     disabled: boolean | undefined
+    disabledForSearch: boolean | undefined
 
     protected readonly options: typeof defaultOptions
 
@@ -49,6 +50,7 @@ export class Madara extends BaseMirror implements MirrorImplementation {
         this.chapter_url = mirror.chapter_url
         this.languages = mirror.languages
         this.disabled = mirror.disabled
+        this.disabledForSearch = mirror.disabledForSearch
 
         this.options = {
             ...defaultOptions,
@@ -66,11 +68,13 @@ export class Madara extends BaseMirror implements MirrorImplementation {
                 action: "wp-manga-search-manga",
                 title: search
             })
+
             const jsonData = await this.mirrorHelper.loadJson(searchApiUrl, {
                 nocache: true,
                 method: "POST",
                 data: urlSearchParams
             } as JsonOptions)
+
             // Add null check - jsonData.data can be undefined if site returns error/HTML
             if (!jsonData?.data) {
                 return res

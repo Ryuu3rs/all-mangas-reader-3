@@ -1,7 +1,7 @@
 {
-    "name": "all-mangas-reader-3",
-    "version": "3.1.0",
-    "description": "All Mangas Reader V3 - Modernized browser extension for reading manga (Vue 3 + Vuetify 3)",
+    "name": "all-mangas-reader",
+    "version": "4.0.0",
+    "description": "All Mangas Reader - Browser extension for reading and tracking manga (Vue 3 + Vuetify 3)",
     "author": "Ryuu3rs",
     "contributors": [
         "Pierre-Louis Duhoux <pl.duhoux@gmail.com>",

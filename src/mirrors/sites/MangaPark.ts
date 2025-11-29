@@ -15,7 +15,7 @@ export class MangaPark extends BaseMirror implements MirrorImplementation {
     domains = ["mangapark.com", "mangapark.net"]
     home = "https://mangapark.net"
     apiUrl = "https://mangapark.net/apo/"
-    chapter_url = /^\/title\/.*\/\d+-ch-\d.+/g
+    chapter_url = /^\/title\/.*\/\d+-(ch|chapter|vol).+/g
 
     async getMangaList(search: string) {
         const res = []

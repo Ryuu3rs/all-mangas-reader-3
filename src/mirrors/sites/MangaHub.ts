@@ -15,6 +15,8 @@ export class MangaHub extends BaseMirror implements MirrorImplementation {
     domains = ["mangahub.io"]
     home = "https://mangahub.io/"
     chapter_url = /\/chapter\/.*\/chapter-.*/g
+    // Site is behind Cloudflare protection - search disabled but reader works when visiting directly
+    disabledForSearch = true
 
     apiDomain = "https://api.mghcdn.com"
     cdnDomain = "https://imgx.mghcdn.com/"

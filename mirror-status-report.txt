@@ -1,0 +1,262 @@
+================================================================================
+                    ALL MANGAS READER - MIRROR STATUS REPORT
+                            Updated: 2024-11-29 (Post-Cleanup)
+================================================================================
+
+================================================================================
+                      ✅ CONFIRMED WORKING MIRRORS (17)
+          User tested and verified - Search AND Reader both functional
+================================================================================
+
+FULLY WORKING:
+1.  MangaDex          https://mangadex.org          (Slow to load, but works)
+2.  MangaBuddy        https://mangabuddy.com        ✓ Search + Reader OK
+3.  ManhuaPlus        https://manhuaplus.com        ✓ Search + Reader OK (Madara)
+4.  Asura Scans       https://asurascans.com        ✓ Search + Reader OK (MangaStream)
+5.  MangaHere         https://www.mangahere.cc      ✓ Search + Reader OK
+6.  FanFox            https://fanfox.net            ✓ Search + Reader OK
+7.  Hiperdex          https://hiperdex.com          ✓ Reader works (Madara)
+8.  LHTranslations    https://lhtranslation.net     ✓ Reader works (Madara)
+9.  Manga Sushi       https://mangasushi.net        ✓ Reader works (Madara)
+10. S2 Manga          https://s2manga.com           ✓ Reader works (Madara)
+11. Fire Scans        https://firescans.xyz         ✓ Reader works (Madara)
+12. Death Toll Scans  https://reader.deathtollscans.net ✓ Reader works (FoolSlide)
+13. MangaFox          https://fanfox.net            ✓ Reader works
+14. WebToon           https://www.webtoons.com      ✓ Reader works
+15. Zero Scans        https://zeroscans.com         ✓ Reader works
+16. Niceoppai         https://niceoppai.net         ✓ Reader works
+17. MangaPill         https://mangapill.com         ✓ Reader works
+18. MangaKatana       https://mangakatana.com       ✓ Reader works
+19. DynastyScans      https://dynasty-scans.com     ✓ Reader works
+
+
+================================================================================
+                    ❌ COMPLETELY DISABLED MIRRORS (10)
+                  disabled: true - Site is dead or incompatible
+================================================================================
+
+DEAD SITES:
+1.  ReadManga        https://readmanga.live        "Not Found" - Site down
+2.  MintManga        https://24.mintmanga.one      "Not Found" - Site down
+3.  Aqua Manga       https://aquascans.com         Site is down
+4.  Manga TX         https://mangatx.com           Redirects to scam site
+5.  Zin Manga        https://zinmanga.com          Site is down
+6.  Mangakakalot     https://mangakakalot.com      Site is down
+7.  Manganato        https://manganato.com         Site is down
+
+JS-BASED (Cannot extract images via XHR):
+8.  Toonily          https://toonily.com           Images loaded via JavaScript
+9.  Flame Scans      https://flamecomics.me        Redesigned to Next.js SPA
+
+
+================================================================================
+               ⚠️ SEARCH DISABLED MIRRORS (27)
+      disabledForSearch: true - Site online but blocking/broken API
+               (May still work for reading existing manga)
+================================================================================
+
+MADARA-BASED (12):
+1.  Webtoon.xyz      https://www.webtoon.xyz       site is alive and read view work fine a fix for cloud flair is needed
+2.  ManhwaHentai     https://manhwahentai.me       site is alive and read view work fine a fix for cloud flair is needed
+3.  Dragon Tea       https://dragontea.ink         site is alive and read view work fine a fix for cloud flair is needed
+4.  Kun Manga        https://kunmanga.com          site is alive and read view work fine a fix for cloud flair is needed
+5.  ManhuaFast       https://manhuafast.com        site is alive and read view work fine a fix for cloud flair is needed
+6.  Manytoon         https://manytoon.com          site is alive and read view work fine a fix for cloud flair is needed
+7.  Night Comic      https://www.nightcomic.com    remove site is gone
+8.  Setsu Scans      https://setsuscans.com        site is alive and read view work fine a fix for cloud flair is needed
+9.  Mangalek         https://mangalek.com          REmove site is gone
+10. Manhuaus         https://manhuaus.com          site is alive and read view work fine a fix for cloud flair is needed
+11. Platinum Crown   https://platinumscans.com     remove site is down
+12. Manga Bob        https://mangabob.com          remove site is down
+
+MANGASTREAM-BASED (4):
+13. Kiryuu           https://kiryuu.id             site is alive and reader view not working fix a fix for cloud flair is needed
+14. Komikstation     https://www.komikstation.com  site dead remove
+15. Ngomik           https://ngomik.in             site dead remove
+16. Westmanga        https://westmanga.info        site dead remove
+
+STANDALONE (11):
+17. FunManga         http://www.funmanga.com       parked domain remove
+18. ReadMNG          https://www.readmng.com       site dead remove
+19. Manga4Life       https://manga4life.com        site dead remove new site is weebcentral.com replce it
+20. MangaSee         https://mangasee123.com      remove its been replaced by weebcentral
+21. Scylla Scans     https://scyllacomics.xyz      remove site dead
+22. Scantrad Union   https://scantrad-union.com     site is alive and read view work fine a fix for cloud flair is needed
+23. Manhwa18.com     http://www.manhwa18.com       site is alive and read view work fine a fix for cloud flair is needed if not some way for user to manually add current chapter to there list at least away to track the sites releases
+24. MangaKawaii      https://www.mangakawaii.io     site is alive and read view work fine a fix for cloud flair is needed
+25. Disaster Scans   https://disasterscans.com     dead remove
+26. Sad Scans        https://sadscans.com          site alive needs a fix no reader view
+27. Like Manga       https://likemanga.io          site is alive and no reader view fine a fix for cloud flair is needed 403 Forbidden - Cloudflare
+
+
+================================================================================
+                    🔄 UNTESTED MIRRORS - NEED VERIFICATION
+              These have no disabled flags but haven't been tested
+================================================================================
+
+MADARA-BASED (50 - excluding disabled):
+1.  Manga Komi       https://mangakomi.io dead site remove
+2.  247 Manga        https://247manga.com dead site remove
+3.  Astral Library   https://www.astrallibrary.net dead site remove
+4.  ChibiManga       https://www.chibimanga.com dead site remove
+5.  Comic Kiba       https://comickiba.com dead site remove
+6.  GD Scans         https://gdscans.com alive site works in reader view but no chapters  shown on dropdown
+7.  Hiperdex         https://hiperdex.com site alive works in reader view
+8.  Immortal Updates https://immortalupdates.com dead site remove
+9.  IsekaiScans      https://isekaiscan.com dead site remove
+10. Leviatan Scans   https://leviatanscans.com remove dead site
+11. LHTranslations   https://lhtranslation.net works in reader view and alive test
+12. Lily Manga       https://lilymanga.com remove dead site
+13. Manga 347        https://manga347.com Dead site remove
+14. Manga Clash      https://mangaclash.com site works redirect to toon clash
+15. Manga Cultivator https://mangacultivator.com dead site remove
+16. Manga Great      https://mangagreat.com dead site remove
+17. Manga Read       https://mangaread.co site works no reader view
+18. Manga Sushi      https://mangasushi.net site works reader works
+19. Manga Sy         https://www.mangasy.com no site remove
+20. MangazukiMe      https://mangazuki.me no site remove
+21. Manhuas          https://manhuas.net no site remove
+22. ManhwaClub       https://manhwaclub.net site wroks no reader view
+23. Manhwa Top       https://manhwatop.com site works reader view is there but no chapter list on right side drop down menu
+24. Mixed Manga      https://mixedmanga.com dead site remove
+25. MM Scans         https://mm-scans.org dead site remove
+26. Random Trans     https://randomtranslations.com dead site remove
+27. Reset Scans      https://resetscans.com dead site remove
+28. Ruya Manga       https://ruyamanga.com site works no reader view
+29. S2 Manga         https://s2manga.com site works and reader view works
+30. Sawamics         https://sawamics.com remove dead site
+31. SK Scans         https://skscans.com remove dead site
+32. Top Manhua       https://topmanhua.com remove dead site
+33. Tritinia Scans   https://tritiniascans.com remvoe dead site
+34. Twilight Scans   https://twilightscans.com remove dead site
+35. Ult Manga        https://ultmanga.com remove dead site
+36. Unemployed Scans https://unemployed-scans.com remove dead site
+37. Comic Dom        https://comicdom.org remove dead site
+38. Manga 1st Online https://manga1stonline.com remove dead site
+39. Gourmet Scans    https://gourmetscans.net remove dead site
+40. Shadow Trad      https://shadowtrad.net remove dead site
+41. Dark Scan        https://darkscan.net remove dead site
+42. Creepy Scans     https://creepyscans.com remove dead site
+43. Hari Manga       https://harimanga.com remove dead site
+44. Fire Scans       https://firescans.xyz works reader works
+45. UToon            https://utoon.net site works reader works but chapoter list is not working on right side drop down menu
+
+MANGASTREAM-BASED (7 - excluding disabled):
+1.  Komikav          https://komikav.com remove dead site
+2.  Komicast         https://komicast.com remove dead site
+3.  Komiku           https://komiku.id site works no reader view
+4.  Void Scans       https://void-scans.com site works no reader view
+5.  Reaper Scans     https://reaperscans.com  remove dead site
+
+FOOLSLIDE-BASED (3):
+1.  Death Toll Scans https://reader.deathtollscans.net site works reader works chapter list works
+2.  Evil Flowers     https://reader.evilflowers.com dead site remove
+3.  Kangaryu Team    https://kangaryu-team.fr site works no reader site has no images ? even on there own reader
+
+MYMANGAREADERCMS-BASED (2 - excluding MangaHere/FanFox):
+1.  Komikid          https://www.komikid.com remove dead site
+2.  ScanFR           https://www.scan-fr.org remove dead site
+
+STANDALONE MIRRORS:
+1.  MangaFox         https://fanfox.net           site wroks reader works
+2.  MangaHub         https://mangahub.io site works reader not working
+3.  WebToon          https://www.webtoons.com site wroks reader works chapter list works
+4.  Zero Scans       https://zeroscans.com site works reader works chapter list works
+5.  ZaHardTop        https://zahardtop.co  remove dead site
+6.  Union Leitor     https://unionleitor.top remove dead site
+7.  Tachidesk        (self-hosted)
+8.  Seri Manga       https://serimanga.com remove dead site
+9.  ReadM            https://readm.org remove dead site
+10. ReadComicOnline  https://readcomiconline.li site wroks reader view not working need coding for custome site
+11. Niceoppai        https://niceoppai.net site works reade works chapter list works
+12. NHentai          https://nhentai.net dont know site works but 18 restricted in uk
+13. ManhwaFreak      https://manhwafreak.com remvoe site dead
+14. MangaPill        https://mangapill.com site wroks chatpers works reader working
+15. MangaDemon       https://demonmanga.com remvoe site dead
+16. MangaKatana      https://mangakatana.com site wroks reader works chapter list works
+17. MangaHasu        https://mangahasu.se remove dead site
+18. MangaFreak       https://mangafreak.net remove dead site
+19. MangaAlArab      https://mangaalarab.com remove dead site
+20. Lugnica Scan     https://lugnicascans.com remove dead site
+21. Komga            (self-hosted)
+22. FMTeam           https://fmteam.fr site works reader not working
+23. EpsilonScan      https://epsilonscan.fr site dead remove
+24. BananaScan       https://bananascan.com site dead remove
+25. Batoto (Fake)    https://battwo.com site works reader not working
+26. DynastyScans     https://dynasty-scans.com site wroks reder works chatper list works
+27. Dm5              https://dm5.com site works reader not working
+28. Reaper Scans     https://reaperscans.com site dead remove
+29. MangaPark        https://mangapark.net site wroks reader view not working
+30. MangaReaderTo    https://mangareader.to site works reader not working for images shown chapter list is working
+31. FanComics        https://fancomics.io remove site dead
+32. MangaBTT         https://mangabtt.com remove site dead
+
+
+================================================================================
+                           📊 SUMMARY STATISTICS (Post-Cleanup)
+================================================================================
+
+TOTAL ACTIVE MIRRORS:          ~50 (down from ~120)
+CONFIRMED WORKING:             19 (38%)
+CLOUDFLARE-BLOCKED:            13 (26%) - Reader works, search blocked
+NEEDS CODE FIXES:              18 (36%) - Reader broken
+SELF-HOSTED:                   2  - No testing needed
+
+REMOVED IN CLEANUP:            ~70 dead site implementations
+
+
+================================================================================
+                              🔧 FIX PLAN
+================================================================================
+
+PRIORITY 1 - CLOUDFLARE BYPASS (13 mirrors)
+------------------------------------------------------
+Problem: Search API blocked by Cloudflare 403/503 errors
+Affected: Webtoon.xyz, ManhwaHentai, Dragon Tea, Kun Manga, ManhuaFast,
+          Manytoon, Setsu Scans, Manhuaus, Kiryuu, Scantrad Union,
+          Manhwa18.com, MangaKawaii, Like Manga
+Options:
+  A) Use content script for search (runs in page context, bypasses CF)
+  B) Add manual URL entry for manga
+  C) Research CF bypass techniques (cookies, headers)
+  D) Use browser.webRequest to intercept and modify requests
+
+PRIORITY 2 - READER VIEW FIXES (18 mirrors)
+------------------------------------------------------
+Problem: Images not loading in reader view
+
+Chapter dropdown broken (3 mirrors):
+  - GD Scans, UToon, Manhwa Top - Fix chapter list selector
+
+No reader view (9 mirrors):
+  - Manga Read, ManhwaClub, Ruya Manga (Madara)
+  - Komiku, Void Scans (MangaStream)
+  - MangaHub, FMTeam, Batoto, Dm5 (Standalone)
+
+Images not shown (6 mirrors):
+  - MangaPark, MangaReaderTo, ReadComicOnline, Sad Scans
+
+PRIORITY 3 - JS-BASED SITES (2 mirrors - in disabled folder)
+------------------------------------------------------
+Problem: Images loaded via JavaScript, XHR can't extract
+  - Toonily - Images loaded via JavaScript
+  - Flame Scans - Next.js SPA
+Options:
+  A) Use content script to extract images from rendered page
+  B) Reverse engineer API endpoints
+  C) Keep disabled (complex to fix)
+
+
+================================================================================
+                              🎯 NEXT STEPS
+================================================================================
+
+1. ✅ DONE - Remove all dead site implementations (~70 removed)
+2. ✅ DONE - Update MirrorLoader.ts to remove deleted imports
+3. TODO - Fix chapter dropdown for GD Scans, UToon, Manhwa Top
+4. TODO - Fix reader view for high-priority sites (MangaHub, Batoto, MangaPark)
+5. TODO - Research Cloudflare bypass for search functionality
+6. TODO - Consider adding WeebCentral as replacement for Manga4Life/MangaSee
+
+================================================================================
+
