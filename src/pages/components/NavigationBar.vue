@@ -148,6 +148,12 @@
                     <v-list-item @click="openTimers" prepend-icon="mdi-timer">
                         <v-list-item-title>{{ i18n("nav_timers") || "Refresh Timers" }}</v-list-item-title>
                     </v-list-item>
+                    <v-list-item @click="openHealthCheck" prepend-icon="mdi-alert-circle">
+                        <v-list-item-title>{{ i18n("nav_health_check") || "Manga Health Check" }}</v-list-item-title>
+                        <template v-slot:append v-if="problemMangaCount > 0">
+                            <v-chip size="x-small" color="warning">{{ problemMangaCount }}</v-chip>
+                        </template>
+                    </v-list-item>
 
                     <v-divider class="my-1"></v-divider>
 
@@ -206,7 +212,8 @@ export default {
         "import-manga-list",
         "import-stats",
         "open-changelog",
-        "open-timers"
+        "open-timers",
+        "open-health-check"
     ],
     data() {
         return {
@@ -220,6 +227,10 @@ export default {
                 return this.i18n("nav_normal_view") || "Normal View"
             }
             return this.i18n("nav_compact_view") || "Compact View"
+        },
+        problemMangaCount() {
+            const mangas = this.$store?.state?.mangas?.all || []
+            return mangas.filter(m => m.orphaned || m.updateError === 1).length
         }
     },
     watch: {
@@ -291,6 +302,9 @@ export default {
         },
         openTimers() {
             this.$emit("open-timers")
+        },
+        openHealthCheck() {
+            this.$emit("open-health-check")
         },
         async exportMangaList() {
             // Get manga list from store and export as JSON

@@ -506,6 +506,10 @@
         "message": "Read last published chapter",
         "description": "Tooltip on manga to read last published chapter"
     },
+    "list_mg_act_find_mirror": {
+        "message": "Find on other mirrors",
+        "description": "Tooltip on manga to search for this manga on other mirror sites"
+    },
     "list_mg_act_delete": {
         "message": "Delete manga",
         "description": "Tooltip on manga to delete manga entry"
@@ -521,6 +525,18 @@
     "list_mirror_disabled_tooltip": {
         "message": "Mirror $1 is no longer available. Please consider using different mirror to read this manga",
         "description": "Tooltip on mirror icon, that no longer supported by AMR."
+    },
+    "list_manga_orphaned_title": {
+        "message": "Manga Needs Attention",
+        "description": "Title for orphaned manga tooltip"
+    },
+    "list_manga_orphaned_default_reason": {
+        "message": "Mirror is unavailable or manga was removed from source",
+        "description": "Default reason for orphaned manga"
+    },
+    "list_manga_orphaned_action": {
+        "message": "Click the menu to find this manga on another mirror",
+        "description": "Action hint for orphaned manga"
     },
     "list_cat_filter": {
         "message": "Select displayed categories",
@@ -2067,5 +2083,201 @@
     "manga_update_error_code_2": {
         "message": "Error - Series page could not be loaded from Mirror $1",
         "description": "Error code for failed to fetch list"
+    },
+    "nav_health_check": {
+        "message": "Manga Health Check",
+        "description": "Menu item to open manga health check dialog"
+    },
+    "manga_health_title": {
+        "message": "Manga Health Check",
+        "description": "Title of the manga health check dialog"
+    },
+    "manga_health_all_good": {
+        "message": "All manga are healthy! No issues detected.",
+        "description": "Message when no manga have issues"
+    },
+    "manga_health_issues_found": {
+        "message": "Found $1 manga with issues",
+        "description": "Message showing count of manga with issues"
+    },
+    "manga_health_orphaned": {
+        "message": "Mirror unavailable",
+        "description": "Status text for orphaned manga"
+    },
+    "manga_health_update_error": {
+        "message": "Update failed",
+        "description": "Status text for manga with update errors"
+    },
+    "manga_health_unknown": {
+        "message": "Unknown issue",
+        "description": "Status text for manga with unknown issues"
+    },
+    "manga_health_find_mirror": {
+        "message": "Find",
+        "description": "Button to find manga on other mirrors"
+    },
+    "manga_health_delete": {
+        "message": "Delete",
+        "description": "Button to delete problem manga"
+    },
+    "manga_health_delete_all": {
+        "message": "Delete All Problem Manga",
+        "description": "Button to delete all problem manga"
+    },
+    "manga_health_confirm_delete": {
+        "message": "Confirm Delete",
+        "description": "Title of delete confirmation dialog"
+    },
+    "manga_health_delete_confirm": {
+        "message": "Are you sure you want to delete \"$1\"?",
+        "description": "Confirmation message for deleting a single manga"
+    },
+    "manga_health_delete_all_confirm": {
+        "message": "Are you sure you want to delete all $1 problem manga?",
+        "description": "Confirmation message for deleting all problem manga"
+    },
+    "lab_batch_testing": {
+        "message": "Batch Mirror Testing",
+        "description": "Title for batch testing section"
+    },
+    "lab_single_test": {
+        "message": "Single Test",
+        "description": "Tab label for single mirror testing"
+    },
+    "lab_batch_test": {
+        "message": "Batch Test",
+        "description": "Tab label for batch mirror testing"
+    },
+    "lab_filter_mirrors": {
+        "message": "Filter mirrors",
+        "description": "Label for mirror filter input"
+    },
+    "lab_filter_by_category": {
+        "message": "Filter by category",
+        "description": "Label for category filter dropdown"
+    },
+    "lab_select_all": {
+        "message": "Select All",
+        "description": "Button to select all mirrors"
+    },
+    "lab_select_none": {
+        "message": "Select None",
+        "description": "Button to deselect all mirrors"
+    },
+    "lab_failed_only": {
+        "message": "Failed Only",
+        "description": "Button to select only failed mirrors"
+    },
+    "lab_test_search_query": {
+        "message": "Test search query",
+        "description": "Label for test search query input"
+    },
+    "lab_concurrent_tests": {
+        "message": "Concurrent tests",
+        "description": "Label for concurrent tests slider"
+    },
+    "lab_start_testing": {
+        "message": "Start Testing",
+        "description": "Button to start batch testing"
+    },
+    "lab_stop": {
+        "message": "Stop",
+        "description": "Button to stop testing"
+    },
+    "lab_view_report": {
+        "message": "View Report",
+        "description": "Button to view test report"
+    },
+    "lab_diagnostic_report": {
+        "message": "Mirror Diagnostic Report",
+        "description": "Title for diagnostic report dialog"
+    },
+    "lab_summary": {
+        "message": "Summary",
+        "description": "Tab label for summary view"
+    },
+    "lab_details": {
+        "message": "Details",
+        "description": "Tab label for details view"
+    },
+    "lab_export": {
+        "message": "Export",
+        "description": "Tab label for export view"
+    },
+    "lab_working": {
+        "message": "Working",
+        "description": "Status label for working mirrors"
+    },
+    "lab_permanent_failures": {
+        "message": "Permanent Failures",
+        "description": "Status label for permanent failures"
+    },
+    "lab_temporary_failures": {
+        "message": "Temporary Failures",
+        "description": "Status label for temporary failures"
+    },
+    "lab_needs_investigation": {
+        "message": "Needs Investigation",
+        "description": "Status label for mirrors needing investigation"
+    },
+    "lab_overall_health": {
+        "message": "Overall Health",
+        "description": "Label for overall health percentage"
+    },
+    "lab_generated_at": {
+        "message": "Generated At",
+        "description": "Label for report generation timestamp"
+    },
+    "lab_total_tested": {
+        "message": "Total Mirrors Tested",
+        "description": "Label for total mirrors tested count"
+    },
+    "lab_browser_version": {
+        "message": "Browser Version",
+        "description": "Label for browser version"
+    },
+    "lab_extension_version": {
+        "message": "Extension Version",
+        "description": "Label for extension version"
+    },
+    "lab_export_report": {
+        "message": "Export Report",
+        "description": "Title for export section"
+    },
+    "lab_download_json": {
+        "message": "Download as JSON",
+        "description": "Button to download report as JSON"
+    },
+    "lab_copy_clipboard": {
+        "message": "Copy to Clipboard",
+        "description": "Button to copy report to clipboard"
+    },
+    "lab_download_text": {
+        "message": "Download as Text",
+        "description": "Button to download report as text"
+    },
+    "lab_send_report": {
+        "message": "Send Report to Developers",
+        "description": "Title for send report section"
+    },
+    "lab_github_issue_info": {
+        "message": "This will open a GitHub issue with the report data. You can review and edit before submitting.",
+        "description": "Info text about creating GitHub issue"
+    },
+    "lab_consent_sharing": {
+        "message": "I consent to sharing this diagnostic data",
+        "description": "Consent checkbox label"
+    },
+    "lab_create_github_issue": {
+        "message": "Create GitHub Issue",
+        "description": "Button to create GitHub issue"
+    },
+    "lab_report_preview": {
+        "message": "Report Preview",
+        "description": "Title for report preview section"
+    },
+    "lab_copied_clipboard": {
+        "message": "Report copied to clipboard!",
+        "description": "Success message when report is copied"
     }
 }

@@ -81,6 +81,20 @@ export const crudActions = {
      * Create an unlisted manga
      */
     async createUnlistedManga({ dispatch, commit, rootState, state }, message) {
+        // Validate required fields before creating
+        if (!message.url || !message.mirror) {
+            console.error("[DEBUG] createUnlistedManga FAILED - missing required fields:", {
+                url: message.url,
+                mirror: message.mirror,
+                name: message.name
+            })
+            return {
+                success: false,
+                error: "MISSING_FIELDS",
+                message: `Cannot create manga "${message.name || "Unknown"}" - missing URL or mirror`
+            }
+        }
+
         const key = mangaKey({
             url: message.url,
             mirror: message.mirror,
@@ -88,6 +102,17 @@ export const crudActions = {
             rootState: { state: rootState }
         })
         console.log("[DEBUG] createUnlistedManga called for key:", key)
+
+        // Prevent _no_key_ entries
+        if (key === "_no_key_") {
+            console.error("[DEBUG] createUnlistedManga FAILED - would create _no_key_ entry:", message)
+            return {
+                success: false,
+                error: "INVALID_KEY",
+                message: `Cannot create manga "${message.name || "Unknown"}" - invalid key`
+            }
+        }
+
         commit("createManga", {
             key,
             webtoon: rootState.options.webtoonDefault === 1,
@@ -203,5 +228,41 @@ export const crudActions = {
      */
     clearMangasSelect({ commit }) {
         commit("clearSelection")
+    },
+
+    /**
+     * Mark a manga as orphaned (mirror dead or manga removed from source)
+     */
+    async markMangaAsOrphaned({ commit, dispatch, state }, { key, reason }) {
+        commit("markAsOrphaned", { key, reason })
+        const mg = state.all.find(manga => manga.key === key)
+        if (mg) {
+            await dispatch("findAndUpdateManga", mg)
+        }
+    },
+
+    /**
+     * Clear orphaned status after successful re-linking
+     */
+    async clearMangaOrphanedStatus({ commit, dispatch, state }, { key }) {
+        commit("clearOrphanedStatus", { key })
+        const mg = state.all.find(manga => manga.key === key)
+        if (mg) {
+            await dispatch("findAndUpdateManga", mg)
+        }
+    },
+
+    /**
+     * Get all orphaned manga
+     */
+    getOrphanedMangas({ state }) {
+        return state.all.filter(manga => manga.orphaned === true)
+    },
+
+    /**
+     * Get all manga with update errors
+     */
+    getMangasWithErrors({ state }) {
+        return state.all.filter(manga => manga.updateError === 1)
     }
 }

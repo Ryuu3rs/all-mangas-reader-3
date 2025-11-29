@@ -79,5 +79,15 @@ export default class Manga {
         /** Currently reading chapter and page to restart from there if needed */
         this.currentChapter = obj.currentChapter
         this.currentScanUrl = obj.currentScanUrl
+
+        // Orphaned manga - mirror is dead or manga was removed from source
+        // Needs to be re-linked to another mirror
+        this.orphaned = obj.orphaned || false
+
+        // Reason why the manga is orphaned (for display purposes)
+        this.orphanedReason = obj.orphanedReason || ""
+
+        // Last known working URL (for migration purposes)
+        this.lastKnownUrl = obj.lastKnownUrl || obj.url
     }
 }

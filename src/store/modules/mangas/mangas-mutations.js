@@ -123,6 +123,29 @@ export const mutations = {
     },
 
     /**
+     * Mark a manga as orphaned (mirror dead or manga removed from source)
+     */
+    markAsOrphaned(state, { key, reason }) {
+        const mg = state.all.find(manga => manga.key === key)
+        if (mg !== undefined) {
+            mg.orphaned = true
+            mg.orphanedReason = reason || "Mirror unavailable"
+            mg.lastKnownUrl = mg.url
+        }
+    },
+
+    /**
+     * Clear orphaned status (after successful re-linking)
+     */
+    clearOrphanedStatus(state, { key }) {
+        const mg = state.all.find(manga => manga.key === key)
+        if (mg !== undefined) {
+            mg.orphaned = false
+            mg.orphanedReason = ""
+        }
+    },
+
+    /**
      * Change manga read top
      */
     setMangaReadTop(state, { key, url, read, mirror, language }, fromSync) {

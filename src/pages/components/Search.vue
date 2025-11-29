@@ -106,11 +106,16 @@ export default {
     ],
     watch: {
         /**
-         * When property fromStr is changed, launch search (used when click on search mangas elsewhere)
+         * When property toSearch is changed, launch search (used when click on search mangas elsewhere)
          */
-        toSearch: function (n) {
-            this.searchwrite = n
-            this.launchSearch()
+        toSearch: {
+            handler(n) {
+                if (n) {
+                    this.searchwrite = n
+                    this.launchSearch()
+                }
+            },
+            immediate: true
         }
     },
     computed: {

@@ -11,7 +11,8 @@
             @import-manga-list="handleImportMangaList"
             @import-stats="handleImportStats"
             @open-changelog="changelogOpen = true"
-            @open-timers="timersOpen = true" />
+            @open-timers="timersOpen = true"
+            @open-health-check="healthCheckOpen = true" />
 
         <!-- Sidebar -->
         <Sidebar
@@ -147,6 +148,14 @@
                 </v-card-text>
             </v-card>
         </v-dialog>
+
+        <!-- Manga Health Check Dialog -->
+        <v-dialog v-model="healthCheckOpen" max-width="700" scrollable>
+            <MangaHealth
+                v-if="healthCheckOpen"
+                @close="healthCheckOpen = false"
+                @search-request="openSearchFromHealth" />
+        </v-dialog>
     </v-app>
 </template>
 
@@ -163,6 +172,7 @@ import AchievementCard from "./AchievementCard.vue"
 import QuickActionsPanel from "./QuickActionsPanel.vue"
 import ChangeLog from "./ChangeLog.vue"
 import Timers from "./Timers.vue"
+import MangaHealth from "./MangaHealth.vue"
 
 export default {
     name: "Dashboard",
@@ -175,7 +185,8 @@ export default {
         AchievementCard,
         QuickActionsPanel,
         ChangeLog,
-        Timers
+        Timers,
+        MangaHealth
     },
     data() {
         return {
@@ -190,7 +201,8 @@ export default {
             showKeyboardHelp: false,
             compactMode: this.$store?.state?.options?.compactMode || false,
             changelogOpen: false,
-            timersOpen: false
+            timersOpen: false,
+            healthCheckOpen: false
         }
     },
     computed: {
@@ -233,6 +245,13 @@ export default {
         openSearch(query = "") {
             this.searchQuery = query
             this.searchOpen = true
+        },
+        openSearchFromHealth(query) {
+            this.healthCheckOpen = false
+            this.openSearch(query)
+        },
+        openHealthCheck() {
+            this.healthCheckOpen = true
         },
         refreshMangas() {
             browser.runtime.sendMessage({ action: "refreshMangas" })

@@ -18,6 +18,35 @@ export const readingActions = {
      */
     async readManga({ dispatch, commit, getters, rootState, state }, message) {
         console.log("[DEBUG] readManga action called:", message.name, message.mirror)
+
+        // Validate required fields to prevent _no_key_ entries
+        if (!message.url) {
+            console.error("[DEBUG] readManga FAILED - missing URL. Manga data:", {
+                name: message.name,
+                mirror: message.mirror,
+                url: message.url
+            })
+            // Return error info instead of silently failing
+            return {
+                success: false,
+                error: "MISSING_URL",
+                message: `Cannot import manga "${message.name || "Unknown"}" - missing URL`
+            }
+        }
+
+        if (!message.mirror) {
+            console.error("[DEBUG] readManga FAILED - missing mirror. Manga data:", {
+                name: message.name,
+                mirror: message.mirror,
+                url: message.url
+            })
+            return {
+                success: false,
+                error: "MISSING_MIRROR",
+                message: `Cannot import manga "${message.name || "Unknown"}" - missing mirror`
+            }
+        }
+
         const key = mangaKey({
             url: message.url,
             mirror: message.mirror,
@@ -25,10 +54,25 @@ export const readingActions = {
             rootState: { state: rootState }
         })
         console.log("[DEBUG] readManga key:", key)
+
+        // Prevent _no_key_ entries from being created
+        if (key === "_no_key_") {
+            console.error("[DEBUG] readManga FAILED - would create _no_key_ entry:", message)
+            return {
+                success: false,
+                error: "INVALID_KEY",
+                message: `Cannot import manga "${message.name || "Unknown"}" - invalid key generated`
+            }
+        }
+
         if (key.indexOf("unknown") === 0) {
             console.error("[DEBUG] readManga FAILED - unknown mirror:", message.mirror)
             console.error(message)
-            return
+            return {
+                success: false,
+                error: "UNKNOWN_MIRROR",
+                message: `Cannot import manga "${message.name || "Unknown"}" - mirror "${message.mirror}" not found`
+            }
         }
         const iconHelper = getIconHelper({ state: rootState, getters })
         const mg = state.all.find(manga => manga.key === key)

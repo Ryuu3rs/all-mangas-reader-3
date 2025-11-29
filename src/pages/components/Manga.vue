@@ -26,8 +26,13 @@
                 <!-- Mirror icon -->
                 <v-tooltip location="top" content-class="icon-ttip">
                     <template v-slot:activator="{ props }">
+                        <!-- Orphaned manga - show warning icon -->
+                        <v-icon v-if="manga.orphaned" size="small" v-bind="props" class="mr-1" color="warning">
+                            mdi-alert
+                        </v-icon>
+                        <!-- Normal mirror icon -->
                         <img
-                            v-if="isMirrorEnabled && !manga.updateError"
+                            v-else-if="isMirrorEnabled && !manga.updateError"
                             class="m-icon mr-1"
                             width="16"
                             height="16"
@@ -36,7 +41,13 @@
                         <v-icon v-else size="small" v-bind="props" class="mr-1">mdi-cancel</v-icon>
                     </template>
                     <span>
-                        <span v-if="isMirrorEnabled && !manga.updateError">{{ mirror.mirrorName }}</span>
+                        <!-- Orphaned manga tooltip -->
+                        <span v-if="manga.orphaned" class="d-flex flex-column">
+                            <strong>{{ i18n("list_manga_orphaned_title") }}</strong>
+                            <span>{{ manga.orphanedReason || i18n("list_manga_orphaned_default_reason") }}</span>
+                            <span class="text-caption mt-1">{{ i18n("list_manga_orphaned_action") }}</span>
+                        </span>
+                        <span v-else-if="isMirrorEnabled && !manga.updateError">{{ mirror.mirrorName }}</span>
                         <span v-else-if="isMirrorEnabled && manga.updateError">{{
                             i18n(
                                 `manga_update_error_code_${
@@ -236,6 +247,22 @@
                         <span>{{ i18n("list_mg_act_latest") }}</span>
                     </v-tooltip>
                 </div>
+
+                <!-- Find on Other Mirrors - prominent button for orphaned/error manga -->
+                <v-tooltip v-if="manga.orphaned || manga.updateError" location="top" content-class="icon-ttip">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            v-bind="props"
+                            icon
+                            size="x-small"
+                            variant="text"
+                            color="warning"
+                            @click="searchElsewhere()">
+                            <v-icon size="small">mdi-magnify-plus</v-icon>
+                        </v-btn>
+                    </template>
+                    <span>{{ i18n("list_mg_act_find_mirror") }}</span>
+                </v-tooltip>
 
                 <!-- Delete manga -->
                 <v-tooltip location="top" content-class="icon-ttip">
