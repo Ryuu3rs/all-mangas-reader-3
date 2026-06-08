@@ -2279,5 +2279,127 @@
     "lab_copied_clipboard": {
         "message": "Report copied to clipboard!",
         "description": "Success message when report is copied"
+    },
+
+    "nav_library": {
+        "message": "Library",
+        "description": "Navigation tab for manga library"
+    },
+    "nav_statistics": {
+        "message": "Statistics",
+        "description": "Navigation tab for reading statistics"
+    },
+    "nav_achievements": {
+        "message": "Achievements",
+        "description": "Navigation tab for achievements"
+    },
+    "nav_bookmarks": {
+        "message": "Bookmarks",
+        "description": "Navigation menu item for bookmarks page"
+    },
+    "nav_lab": {
+        "message": "Lab",
+        "description": "Navigation menu item for lab/debug page"
+    },
+    "nav_help": {
+        "message": "Help / Wiki",
+        "description": "Navigation menu item for help wiki"
+    },
+    "nav_refresh": {
+        "message": "Refresh",
+        "description": "Tooltip for refresh button"
+    },
+    "nav_search": {
+        "message": "Search",
+        "description": "Tooltip for search button"
+    },
+    "nav_more": {
+        "message": "More",
+        "description": "Tooltip for more options menu"
+    },
+    "nav_timers": {
+        "message": "Refresh Timers",
+        "description": "Menu item for refresh timers dialog"
+    },
+    "nav_export_manga": {
+        "message": "Export Manga List",
+        "description": "Menu item to export manga list"
+    },
+    "nav_export_stats": {
+        "message": "Export Stats & Achievements",
+        "description": "Menu item to export statistics and achievements"
+    },
+    "nav_settings": {
+        "message": "Settings",
+        "description": "Tooltip for settings button"
+    },
+    "nav_import": {
+        "message": "Import",
+        "description": "Tooltip for import button"
+    },
+    "nav_compact_view": {
+        "message": "Compact View",
+        "description": "Tooltip for compact view toggle"
+    },
+    "nav_normal_view": {
+        "message": "Normal View",
+        "description": "Tooltip for normal view toggle"
+    },
+    "nav_dark_mode": {
+        "message": "Dark Mode",
+        "description": "Tooltip for dark mode toggle"
+    },
+    "list_manga_count": {
+        "message": "$1 manga",
+        "description": "Label showing total manga count, $1 is the number"
+    },
+    "list_with_updates": {
+        "message": "$1 with updates",
+        "description": "Label showing manga with updates, $1 is the number"
+    },
+    "list_scroll_hint": {
+        "message": "Scroll for more",
+        "description": "Hint to scroll for more manga"
+    },
+    "list_manga_orphaned_title": {
+        "message": "Orphaned Manga",
+        "description": "Title for orphaned manga section"
+    },
+    "list_manga_orphaned_action": {
+        "message": "Remove",
+        "description": "Action button to remove orphaned manga"
+    },
+    "list_manga_orphaned_default_reason": {
+        "message": "Mirror no longer available",
+        "description": "Default reason for orphaned manga"
+    },
+
+    "sidebar_quick_stats": {
+        "message": "Quick Stats",
+        "description": "Sidebar section header for quick statistics"
+    },
+    "sidebar_total_manga": {
+        "message": "Total Manga",
+        "description": "Label for total manga count in sidebar"
+    },
+    "sidebar_unread": {
+        "message": "Unread",
+        "description": "Label for unread manga count in sidebar"
+    },
+    "sidebar_reading": {
+        "message": "Reading",
+        "description": "Label for currently reading manga count in sidebar"
+    },
+    "sidebar_categories": {
+        "message": "Categories",
+        "description": "Sidebar section header for categories filter"
+    },
+    "sidebar_no_categories": {
+        "message": "No categories",
+        "description": "Message when no categories exist"
+    },
+    "sidebar_mirrors": {
+        "message": "Mirrors",
+        "description": "Sidebar section header for mirror filter"
     }
 }

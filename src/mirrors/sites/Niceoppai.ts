@@ -10,6 +10,7 @@ export class Niceoppai extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Niceoppai"
     canListFullMangas = false
+    disabledForSearch = true // Endpoint no longer returns usable search data
     mirrorIcon = NiceoppaiIcon
     languages = "th"
     domains = ["niceoppai.net"]

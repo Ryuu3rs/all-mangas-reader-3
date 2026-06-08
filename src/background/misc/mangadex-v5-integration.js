@@ -27,8 +27,8 @@ export class Mangadex extends EventEmitter {
         super()
         this.requests = 0
         this.customList = undefined
-        this.mangadexIntegrationEnable === mangadexIntegrationEnable
-        this.mangadexValidCredentials === mangadexValidCredentials
+        this.mangadexIntegrationEnable = mangadexIntegrationEnable
+        this.mangadexValidCredentials = mangadexValidCredentials
         this.token = {
             session: [mangadexToken, mangadexTokenExpire],
             refresh: [mangadexRefresh, mangadexRefreshExpire]

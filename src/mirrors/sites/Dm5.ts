@@ -2,6 +2,7 @@ import { BaseMirror } from "./abstract/BaseMirror"
 import { MirrorImplementation } from "../../types/common"
 import { MirrorHelper } from "../MirrorHelper"
 import Dm5Icon from "../icons/dm5-optimized.png"
+import { debug } from "../../core/debug"
 
 export class Dm5 extends BaseMirror implements MirrorImplementation {
     constructor(amrLoader: MirrorHelper) {
@@ -98,12 +99,12 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
 
         // If we found images in DOM, return them
         if (res.length > 0) {
-            console.log("[Dm5] Found " + res.length + " images in DOM")
+            debug.mirrors.debug("Dm5 Found " + res.length + " images in DOM")
             return res
         }
 
         // Otherwise, use the chapterfun.ashx API to get images
-        console.log("[Dm5] No images in DOM, using chapterfun.ashx API")
+        debug.mirrors.debug("Dm5 No images in DOM, using chapterfun.ashx API")
 
         const lastpage = parseInt(this.mirrorHelper.getVariableFromScript("DM5_IMAGE_COUNT", doc)) || 0
         const curl = this.mirrorHelper.getVariableFromScript("DM5_CURL", doc)
@@ -112,10 +113,10 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
         const dt = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN_DT", doc)
         const sign = this.mirrorHelper.getVariableFromScript("DM5_VIEWSIGN", doc)
 
-        console.log("[Dm5] Chapter info: cid=" + cid + ", mid=" + mid + ", pages=" + lastpage)
+        debug.mirrors.debug("Dm5 Chapter info:", { cid, mid, pages: lastpage })
 
         if (!cid || !lastpage) {
-            console.error("[Dm5] Missing required variables")
+            debug.mirrors.error("Dm5 Missing required variables")
             return res
         }
 
@@ -167,7 +168,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
                     }
                 }
             } catch (e) {
-                console.error("[Dm5] Error fetching page " + page + ": " + e)
+                debug.mirrors.error("Dm5 Error fetching page " + page + ":", e)
             }
 
             // Small delay to avoid rate limiting
@@ -176,7 +177,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
             }
         }
 
-        console.log("[Dm5] Fetched " + res.length + " images via API")
+        debug.mirrors.debug("Dm5 Fetched " + res.length + " images via API")
         return res
     }
 
@@ -196,7 +197,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
                 }
             }
         } catch (e) {
-            console.error("[Dm5] Error extracting key: " + e)
+            debug.mirrors.error("Dm5 Error extracting key:", e)
         }
         return ""
     }
@@ -228,7 +229,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
                 }
             }
         } catch (e) {
-            console.error("[Dm5] Error unpacking chapterfun: " + e)
+            debug.mirrors.error("Dm5 Error unpacking chapterfun:", e)
         }
         return null
     }
@@ -267,7 +268,7 @@ export class Dm5 extends BaseMirror implements MirrorImplementation {
 
             return unpack(p, a, c, k).replace(/\\'/g, "'")
         } catch (e) {
-            console.error("[Dm5] Error in unpackScript: " + e)
+            debug.mirrors.error("Dm5 Error in unpackScript:", e)
             return null
         }
     }

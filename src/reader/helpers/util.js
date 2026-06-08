@@ -1,6 +1,7 @@
 import browser from "webextension-polyfill"
 import options from "../state/options"
 import pageData from "../state/pagedata"
+import { debug } from "../../core/debug"
 
 export class Util {
     constructor(mirror) {
@@ -8,7 +9,7 @@ export class Util {
     }
 
     debug(message) {
-        if (options.debug === 1) console.log(message)
+        if (options.debug === 1) debug.reader.debug(message)
     }
     /**
      * Return the path from a url (used for chapters url)

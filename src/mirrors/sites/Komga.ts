@@ -10,6 +10,7 @@ export class Komga extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Komga"
     canListFullMangas = false
+    disabledForSearch = true // Local self-hosted service; keep out of global mirror search
     mirrorIcon = KomgaIcon
     languages = "en"
     domains = ["komga"]

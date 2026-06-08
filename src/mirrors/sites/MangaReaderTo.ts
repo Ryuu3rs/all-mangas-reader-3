@@ -2,6 +2,7 @@ import { BaseMirror } from "./abstract/BaseMirror"
 import { MirrorImplementation } from "../../types/common"
 import { MirrorHelper } from "../MirrorHelper"
 import MangaReaderToIcon from "../icons/manga-reader-to-optimized.png"
+import { debug } from "../../core/debug"
 
 export class MangaReaderTo extends BaseMirror implements MirrorImplementation {
     constructor(amrLoader: MirrorHelper) {
@@ -10,6 +11,7 @@ export class MangaReaderTo extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Manga Reader.to"
     canListFullMangas = false
+    disabledForSearch = true // Search endpoint currently returns HTTP errors
     mirrorIcon = MangaReaderToIcon
     languages = "en"
     domains = ["mangareader.to"]
@@ -87,14 +89,14 @@ export class MangaReaderTo extends BaseMirror implements MirrorImplementation {
         }
 
         if (!id) {
-            console.error("Could not find reading ID for MangaReaderTo. URL:", curUrl)
-            console.error("Page content length:", doc.length)
+            debug.mirrors.error("Could not find reading ID for MangaReaderTo. URL:", curUrl)
+            debug.mirrors.trace("Page content length:", doc.length)
             // Log first 500 chars of doc for debugging
-            console.error("Page start:", doc.substring(0, 500))
+            debug.mirrors.trace("Page start:", doc.substring(0, 500))
             return res
         }
 
-        console.log("MangaReaderTo: Found reading ID:", id)
+        debug.mirrors.debug("MangaReaderTo: Found reading ID:", id)
 
         // https://mangareader.to/ajax/image/list/chap/844382?mode=vertical&quality=high&hozPageSize=1
         try {
@@ -108,7 +110,7 @@ export class MangaReaderTo extends BaseMirror implements MirrorImplementation {
                 res.push($(this).attr("data-url"))
             })
         } catch (e) {
-            console.error("Failed to fetch images from MangaReaderTo:", e)
+            debug.mirrors.error("Failed to fetch images from MangaReaderTo:", e)
         }
 
         return res

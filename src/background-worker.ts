@@ -17,6 +17,7 @@ import { getNotificationManager } from "./amr/notifications"
 import { Alarm, PeriodAlarms } from "./shared/AlarmService"
 import { getSyncManager } from "./amr/sync/SyncManager"
 import { getSyncOptions } from "./shared/Options"
+import { debug } from "./core/debug"
 
 const optionsStorage = new OptionStorage()
 const iconHelper = getIconHelper(store)
@@ -166,7 +167,7 @@ browser.alarms.onAlarm.addListener(async alarm => {
             store.dispatch("setOption", { key: "isUpdatingChapterLists", value: 0 }).catch(logger.error)
             break
         default:
-            console.error(`Received unknown alarm "${alarm.name}"`)
+            debug.background.error("Received unknown alarm: " + alarm.name)
     }
 })
 
@@ -237,8 +238,140 @@ browser.action.onClicked.addListener(async () => {
 })
 
 logger.info("Initialize message handler")
-browser.runtime.onMessage.addListener(async (msg, sender) => {
-    // Make sure init is complete
-    await initPromise
-    return handler.handle(msg, sender)
+
+// Handle Port connections for getImageUrlFromPageUrl - works around Firefox MV3 message passing bugs
+browser.runtime.onConnect.addListener(port => {
+    // Only handle ports for image requests
+    if (!port.name?.startsWith("imageRequest_")) {
+        return
+    }
+
+    const tabId = port.sender?.tab?.id
+    console.log("[AMR BG Worker] Port connected:", port.name, "tabId:", tabId)
+
+    // FIX #15: Store message listener reference for proper cleanup on disconnect
+    const messageListener = async (msg: {
+        type?: string
+        requestId?: string
+        url?: string
+        mirror?: string
+        language?: string
+    }) => {
+        if (msg.type !== "getImageUrlFromPageUrl" || !msg.requestId) {
+            return
+        }
+
+        const requestId = msg.requestId
+        console.log("[AMR BG Worker] Port processing requestId:", requestId, "tabId:", tabId)
+
+        try {
+            await initPromise
+            // Create a fake sender object for the handler
+            const fakeSender = { tab: { id: tabId || -1 } }
+            const result = await handler.handle(
+                {
+                    action: "getImageUrlFromPageUrl",
+                    url: msg.url,
+                    mirror: msg.mirror,
+                    language: msg.language
+                },
+                fakeSender
+            )
+
+            const resultStr = typeof result === "string" ? result.substring(0, 80) : result
+            console.log("[AMR BG Worker] Got result for requestId:", requestId, "result:", resultStr)
+
+            // Try sending via port first
+            let portSent = false
+            try {
+                port.postMessage({
+                    type: "imageResponse",
+                    requestId: requestId,
+                    result: result
+                })
+                portSent = true
+                console.log("[AMR BG Worker] Port.postMessage sent for requestId:", requestId)
+            } catch (e) {
+                console.log("[AMR BG Worker] Port.postMessage failed:", (e as Error)?.message || e)
+            }
+
+            // Also try tabs.sendMessage as backup
+            if (tabId && tabId > 0) {
+                try {
+                    await browser.tabs.sendMessage(tabId, {
+                        type: "imageResponse",
+                        requestId: requestId,
+                        result: result
+                    })
+                    console.log("[AMR BG Worker] tabs.sendMessage sent for requestId:", requestId)
+                } catch (e) {
+                    console.log("[AMR BG Worker] tabs.sendMessage failed:", (e as Error)?.message || e)
+                }
+            }
+        } catch (error) {
+            console.error("[AMR BG Worker] Port handler error:", error)
+            const errorMsg = {
+                type: "imageResponse",
+                requestId: requestId,
+                error: (error as Error)?.message || String(error)
+            }
+            try {
+                port.postMessage(errorMsg)
+            } catch (e) {
+                // Ignore
+            }
+            if (tabId && tabId > 0) {
+                try {
+                    await browser.tabs.sendMessage(tabId, errorMsg)
+                } catch (e) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    port.onMessage.addListener(messageListener)
+
+    // FIX #15: Properly clean up message listener when port disconnects
+    port.onDisconnect.addListener(() => {
+        const error = browser.runtime.lastError
+        console.log("[AMR BG Worker] Port disconnected:", port.name, error ? `Error: ${error.message}` : "(normal)")
+
+        // Remove the message listener to prevent memory accumulation
+        try {
+            port.onMessage.removeListener(messageListener)
+        } catch (e) {
+            // Port may already be invalid, ignore
+        }
+    })
+})
+
+// Handle regular messages
+browser.runtime.onMessage.addListener((msg, sender) => {
+    // Skip getImageUrlFromPageUrl - handled via Port connections now
+    if (msg.action === "getImageUrlFromPageUrl") {
+        // Return undefined - these are handled via Ports now
+        return undefined
+    }
+
+    // For all other messages with an action, use standard Promise return
+    // Only return a Promise for messages this handler will actually respond to
+    // MDN warns: returning a Promise for EVERY message prevents other listeners from responding
+    if (msg && msg.action) {
+        return new Promise((resolve, reject) => {
+            initPromise
+                .then(() => handler.handle(msg, sender))
+                .then(result => {
+                    resolve(result)
+                })
+                .catch(error => {
+                    console.error("[AMR BG Worker] onMessage error:", error)
+                    reject(error)
+                })
+        })
+    }
+
+    // Return undefined for messages we don't handle (no action property)
+    // This allows other listeners to respond and prevents Promise accumulation
+    return undefined
 })

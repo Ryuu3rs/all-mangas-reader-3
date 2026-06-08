@@ -131,6 +131,7 @@
 <script>
 import i18n from "../../amr/i18n"
 import { convertIcons } from "../../shared/utils"
+import { debug } from "../../core/debug"
 
 export default {
     name: "MultiMangaAction",
@@ -233,7 +234,7 @@ export default {
             this.$emit("unselect")
         },
         dragMouseDown: function (event) {
-            console.log(this.$refs)
+            debug.ui.trace("dragMouseDown refs:", this.$refs)
             event.preventDefault()
             // get the mouse cursor position at startup:
             this.positions.clientX = event.clientX

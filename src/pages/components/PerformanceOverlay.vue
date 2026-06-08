@@ -17,6 +17,7 @@
 
 <script>
 import debug from "../../shared/debug"
+import { debug as coreDebug } from "../../core/debug"
 
 // Performance overlay enabled state - can be toggled like debug mode
 const PERF_OVERLAY_ENABLED = false
@@ -50,14 +51,14 @@ if (typeof window !== "undefined") {
         if (perfOverlayInstance) {
             perfOverlayInstance.enableOverlay()
         }
-        console.log("[PERF] Performance overlay enabled")
+        coreDebug.ui.info("PERF Performance overlay enabled")
     }
     window.disableAMRPerfOverlay = () => {
         window.AMR_PERF_OVERLAY = false
         if (perfOverlayInstance) {
             perfOverlayInstance.disableOverlay()
         }
-        console.log("[PERF] Performance overlay disabled")
+        coreDebug.ui.info("PERF Performance overlay disabled")
     }
 }
 

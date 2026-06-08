@@ -2,6 +2,7 @@ import { BaseMirror } from "./abstract/BaseMirror"
 import { CurrentPageInfo, InfoResult, MirrorImplementation } from "../../types/common"
 import { MirrorHelper } from "../MirrorHelper"
 import BaseIcon from "../icons/_base-icon-optimized.png"
+import { debug } from "../../core/debug"
 
 /**
  * WeebCentral mirror implementation
@@ -67,7 +68,7 @@ export class WeebCentral extends BaseMirror implements MirrorImplementation {
         // Extract series ID from URL: /series/{ID}/{slug} or /series/{ID}
         const match = urlManga.match(/\/series\/([A-Z0-9]+)/)
         if (!match) {
-            console.error("[WeebCentral] Could not extract series ID from URL:", urlManga)
+            debug.mirrors.error("WeebCentral Could not extract series ID from URL:", urlManga)
             return []
         }
 
@@ -106,10 +107,14 @@ export class WeebCentral extends BaseMirror implements MirrorImplementation {
         let mangaUrl = ""
 
         // Find the series link - it contains the manga name
+        // Must match /series/{ID} where ID is alphanumeric (not "random" or other nav links)
+        // Series IDs look like: 01J76XYG8FNWRR3PHEFKN2NB87
         $('a[href*="/series/"]').each(function () {
             const href = $(this).attr("href")
             const text = $(this).text().trim()
-            if (href && text && !mangaUrl) {
+            // Skip navigation links like /series/random - only match actual series IDs
+            // Series IDs are alphanumeric and typically 26 characters
+            if (href && text && !mangaUrl && href.match(/\/series\/[A-Z0-9]{20,}/i)) {
                 mangaUrl = href.startsWith("http") ? href : `https://weebcentral.com${href}`
                 name = text
             }
@@ -131,7 +136,7 @@ export class WeebCentral extends BaseMirror implements MirrorImplementation {
         // Extract chapter ID from URL: /chapters/{ID}
         const match = curUrl.match(/\/chapters\/([A-Z0-9]+)/)
         if (!match) {
-            console.error("[WeebCentral] Could not extract chapter ID from URL:", curUrl)
+            debug.mirrors.error("WeebCentral Could not extract chapter ID from URL:", curUrl)
             return []
         }
 

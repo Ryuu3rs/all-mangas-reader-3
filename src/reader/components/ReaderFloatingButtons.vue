@@ -1,92 +1,91 @@
 <template>
-    <v-hover v-slot="{ isHovering }">
-        <div class="d-flex flex-column fab-container">
-            <!-- Button to open side drawer -->
-            <v-btn
-                :class="`elevation-${isHovering ? 12 : 2} opacity-${isHovering || drawer ? 'full' : 'transparent'}`"
-                color="red-darken-2"
-                size="small"
+    <div class="fab-container" @mouseenter="isHovering = true" @mouseleave="isHovering = false">
+        <!-- Button to open side drawer -->
+        <AmrButton
+            :class="['amr-fab-menu', isHovering || drawer ? 'opacity-full' : 'opacity-transparent']"
+            icon
+            size="small"
+            variant="error"
+            @click="$emit('toggle-drawer')">
+            <AmrIcon :icon="icons.mdiMenu" />
+        </AmrButton>
+        <!-- Quick button to go to next chapter (loading) -->
+        <AmrTooltip
+            :text="
+                i18n('list_mg_act_next') +
+                ' ' +
+                (nextchapLoading ? i18n('reader_loading', Math.floor(nextchapProgress)) : '')
+            "
+            location="left">
+            <div v-show="!lastChapter && nextchapLoading && !drawer && isHovering" class="amr-progress-circular mt-2">
+                <svg class="amr-progress-svg" viewBox="0 0 42 42">
+                    <circle class="amr-progress-track" cx="21" cy="21" r="18" fill="none" stroke-width="3" />
+                    <circle
+                        class="amr-progress-bar amr-progress-green"
+                        cx="21"
+                        cy="21"
+                        r="18"
+                        fill="none"
+                        stroke-width="3"
+                        :stroke-dasharray="113"
+                        :stroke-dashoffset="113 - (nextchapProgress / 100) * 113" />
+                </svg>
+                <AmrButton icon size="small" class="amr-progress-btn text-green" @click.stop="$emit('go-next-chapter')">
+                    <AmrIcon :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight" />
+                </AmrButton>
+            </div>
+        </AmrTooltip>
+        <!-- Quick button to go to next chapter (not loading) -->
+        <AmrTooltip :text="i18n('list_mg_act_next')" location="left">
+            <div
+                v-show="!lastChapter && !nextchapLoading && !drawer && isHovering"
+                class="amr-progress-circular amr-indeterminate mt-2">
+                <svg class="amr-progress-svg" viewBox="0 0 42 42">
+                    <circle
+                        class="amr-progress-bar amr-progress-red"
+                        cx="21"
+                        cy="21"
+                        r="18"
+                        fill="none"
+                        stroke-width="3" />
+                </svg>
+                <AmrButton icon size="small" class="amr-progress-btn text-red" @click.stop="$emit('go-next-chapter')">
+                    <AmrIcon :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight" />
+                </AmrButton>
+            </div>
+        </AmrTooltip>
+        <!-- Last chapter warning -->
+        <AmrTooltip :text="i18n('content_nav_last_chap')" location="left">
+            <AmrButton v-show="isHovering && !drawer && lastChapter" icon size="small" class="mt-2 amr-btn-orange">
+                <AmrIcon :icon="icons.mdiAlert" />
+            </AmrButton>
+        </AmrTooltip>
+        <!-- Quick button to add a manga to reading list -->
+        <AmrTooltip :text="i18n('content_nav_add_list')" location="left">
+            <AmrButton
+                v-show="!mangaExists && addauto === 0 && isHovering && !drawer"
                 icon
-                @click="$emit('toggle-drawer')">
-                <v-icon>{{ icons.mdiMenu }}</v-icon>
-            </v-btn>
-            <!-- Quick button to go to next chapter -->
-            <v-tooltip location="start">
-                <template v-slot:activator="{ props }">
-                    <v-progress-circular
-                        v-bind="props"
-                        class="mt-2 amr-floting-progress"
-                        :rotate="90"
-                        :size="42"
-                        :width="3"
-                        :model-value="nextchapProgress"
-                        color="green-lighten-2"
-                        v-show="!lastChapter && nextchapLoading && !drawer && isHovering">
-                        <v-btn size="small" icon @click.stop="$emit('go-next-chapter')" class="text-green">
-                            <v-icon>{{ shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight }}</v-icon>
-                        </v-btn>
-                    </v-progress-circular>
-                    <v-progress-circular
-                        v-bind="props"
-                        class="mt-2 amr-floting-progress"
-                        :rotate="90"
-                        :size="42"
-                        :width="3"
-                        :model-value="nextchapProgress"
-                        indeterminate
-                        color="red-darken-2"
-                        v-show="!lastChapter && !nextchapLoading && !drawer && isHovering">
-                        <v-btn size="small" icon @click.stop="$emit('go-next-chapter')" class="text-red">
-                            <v-icon>{{ shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight }}</v-icon>
-                        </v-btn>
-                    </v-progress-circular>
-                </template>
-                <span
-                    >{{ i18n("list_mg_act_next") }}
-                    {{ nextchapLoading ? i18n("reader_loading", Math.floor(nextchapProgress)) : "" }}</span
-                >
-            </v-tooltip>
-            <v-tooltip location="start">
-                <template v-slot:activator="{ props }">
-                    <v-btn
-                        v-bind="props"
-                        size="small"
-                        class="mt-2"
-                        icon
-                        v-show="isHovering && !drawer && lastChapter"
-                        color="orange">
-                        <v-icon>{{ icons.mdiAlert }}</v-icon>
-                    </v-btn>
-                </template>
-                <span>{{ i18n("content_nav_last_chap") }}</span>
-            </v-tooltip>
-            <!-- Quick button to add a manga to reading list -->
-            <v-tooltip location="start">
-                <template v-slot:activator="{ props }">
-                    <v-btn
-                        v-bind="props"
-                        size="small"
-                        class="mt-2"
-                        icon
-                        v-show="!mangaExists && addauto === 0 && isHovering && !drawer"
-                        color="green"
-                        @click.stop="$emit('add-manga')">
-                        <v-icon>{{ icons.mdiPlus }}</v-icon>
-                    </v-btn>
-                </template>
-                <span>{{ i18n("content_nav_add_list") }}</span>
-            </v-tooltip>
-        </div>
-    </v-hover>
+                size="small"
+                class="mt-2"
+                variant="success"
+                @click.stop="$emit('add-manga')">
+                <AmrIcon :icon="icons.mdiPlus" />
+            </AmrButton>
+        </AmrTooltip>
+    </div>
 </template>
 
 <script>
 import i18nmixin from "../../mixins/i18n-mixin"
 import { mdiMenu, mdiChevronRight, mdiChevronLeft, mdiAlert, mdiPlus } from "@mdi/js"
+import AmrButton from "./AmrButton"
+import AmrIcon from "./AmrIcon"
+import AmrTooltip from "./AmrTooltip"
 
 export default {
     name: "ReaderFloatingButtons",
     mixins: [i18nmixin],
+    components: { AmrButton, AmrIcon, AmrTooltip },
     props: {
         drawer: { type: Boolean, required: true },
         lastChapter: { type: Boolean, required: true },
@@ -97,6 +96,7 @@ export default {
         addauto: { type: Number, default: 0 }
     },
     data: () => ({
+        isHovering: false,
         icons: {
             mdiMenu,
             mdiChevronRight,
@@ -108,12 +108,15 @@ export default {
 }
 </script>
 
-<style scoped>
+<style data-amr="true">
 .fab-container {
     position: fixed;
     top: 15px;
     right: 15px;
     z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .opacity-full {
@@ -124,8 +127,69 @@ export default {
     opacity: 0.7;
 }
 
-.amr-floting-progress .v-btn {
-    width: 36px;
-    height: 36px;
+.mt-2 {
+    margin-top: 8px;
+}
+
+.amr-progress-circular {
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+
+.amr-progress-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.amr-progress-track {
+    stroke: rgba(255, 255, 255, 0.2);
+}
+
+.amr-progress-bar {
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.amr-progress-green {
+    stroke: #81c784;
+}
+
+.amr-progress-red {
+    stroke: #c62828;
+}
+
+.amr-indeterminate .amr-progress-svg {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.amr-progress-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.text-green {
+    color: #4caf50;
+}
+
+.text-red {
+    color: #f44336;
+}
+
+.amr-btn-orange {
+    background-color: #ff9800 !important;
+    color: white !important;
 }
 </style>

@@ -10,8 +10,9 @@ import { getIconHelper } from "../../../amr/icon-helper"
 import { getNotificationManager } from "../../../amr/notifications"
 import { getSyncManager, getSyncManagerInstance, setSyncManagerInstance } from "./mangas-sync-manager"
 import { ABSTRACT_MANGA_MSG, ERROR_CODE_EMPTY_LIST, MANGA_UPDATE_STOP, MANGA_READ_STOP } from "./mangas-constants"
+import { debug as coreDebug } from "../../../core/debug"
 
-const logger = { debug: console.debug, info: console.info, error: console.error }
+const logger = { debug: coreDebug.storage.debug, info: coreDebug.storage.info, error: coreDebug.storage.error }
 
 /**
  * Chapter-related actions

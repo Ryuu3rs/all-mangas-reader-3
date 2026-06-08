@@ -1,4 +1,5 @@
 import storedb from "../../amr/storedb"
+import { debug } from "../../core/debug"
 
 /**
  * Statistics module for tracking reading habits and patterns
@@ -112,7 +113,7 @@ const actions = {
             }
             commit("setInitialized", true)
         } catch (e) {
-            console.error("[Statistics] Failed to load from DB:", e)
+            debug.storage.error("Statistics Failed to load from DB:", e)
             commit("setInitialized", true)
         }
     },

@@ -1503,6 +1503,17 @@ export const getDisabledImplementations = () => {
                 chapters_a_sel: "div.bixbox.bxcl ul li a",
                 chapters_text_sel: "span.chapternum"
             }
+        }),
+        new DisabledMirror({
+            // Readm.org - site appears to be down or requires special access
+            mirrorName: "Readm.org",
+            mirrorIcon: require("../../icons/readmorg-optimized.png"),
+            languages: "en",
+            domains: ["readm.org"],
+            home: "https://readm.org/",
+            chapter_url: /^\/manga\/.*\/.*/g,
+            canListFullMangas: false,
+            disabled: true
         })
     ]
 }

@@ -1,32 +1,25 @@
 <template>
     <div class="amr-thumbs-scrollable">
-        <!-- Performance Fix H: Use computed property instead of method -->
-        <v-tooltip v-for="(scans, i) in thumbnails" :key="i" location="top">
-            <template v-slot:activator="{ props }">
-                <table
-                    v-bind="props"
-                    :class="{ current: scans.index === currentPage }"
-                    class="amr-pages-page-cont"
-                    @click.stop="goScan(scans.index)">
-                    <Page
-                        ref="thumbnail"
-                        :bookmark="false"
-                        :direction="direction"
-                        :index="scans.index"
-                        :scans="scans.page"
-                        resize="container" />
-                </table>
-            </template>
-            <span>{{ displayPageScansIndexes(scans.index) }}</span>
-        </v-tooltip>
+        <!-- Lightweight thumbnails: no Page/Scan components, just clickable page-number pills -->
+        <AmrTooltip
+            v-for="(scans, i) in thumbnails"
+            :key="i"
+            :text="displayPageScansIndexes(scans.index)"
+            location="top">
+            <div
+                :class="['amr-pages-page-cont', { current: scans.index === currentPage }]"
+                @click.stop="goScan(scans.index)">
+                <span class="amr-thumb-label">{{ scans.index + 1 }}</span>
+            </div>
+        </AmrTooltip>
     </div>
 </template>
 <script>
-import Page from "./Page"
+import AmrTooltip from "./AmrTooltip"
 
 export default {
     name: "ThumbnailNavigator",
-    components: { Page },
+    components: { AmrTooltip },
     props: {
         currentPage: {},
         direction: String,
@@ -65,34 +58,30 @@ export default {
 }
 
 .amr-pages-page-cont {
-    margin: 0px 5px;
+    margin: 0 5px;
     display: inline-block;
+    padding: 4px 10px;
     background-color: #424242;
-    border-radius: 2px;
+    border-radius: 12px;
     opacity: 0.9;
     cursor: pointer;
     vertical-align: middle;
-    width: auto !important;
-}
-
-.amr-pages-page-cont td {
-    vertical-align: middle;
-}
-
-.amr-pages-page-cont td img {
-    max-height: 80px !important;
-    max-width: 110px !important;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
 }
 
 .amr-pages-page-cont:hover {
     background-color: #ef5350;
 }
 
-.amr-pages-page-cont:hover td img {
-    max-height: 90px !important;
+.amr-pages-page-cont.current {
+    background-color: #ff7043;
 }
 
-.amr-pages-page-cont.current td img {
-    max-height: 100px !important;
+.amr-thumb-label {
+    display: inline-block;
+    min-width: 18px;
+    text-align: center;
 }
 </style>

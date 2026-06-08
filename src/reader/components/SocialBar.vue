@@ -1,52 +1,47 @@
 <template>
-    <v-row class="amr-bottombar">
-        <v-col class="text-center pa-2" cols="12">
+    <div class="amr-bottombar">
+        <div class="amr-social-content">
             <!-- Always displayed links -->
-            <v-tooltip location="top" class="ml-1" v-for="(soc, i) in social_direct" :key="i">
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon :color="soc.color" @click.stop="opentab(soc.url)">
-                        <v-icon>{{ soc.icon }}</v-icon>
-                    </v-btn>
+            <AmrTooltip v-for="(soc, i) in social_direct" :key="i" :text="i18n(soc.tooltip)" location="top">
+                <AmrButton icon @click.stop="opentab(soc.url)">
+                    <AmrIcon :icon="soc.icon" />
+                </AmrButton>
+            </AmrTooltip>
+            <!-- Social menu (only show if there are shared items) -->
+            <AmrMenu v-if="social_shared.length > 0" location="top">
+                <template #activator="{ open }">
+                    <AmrTooltip :text="i18n('reader_social_all')" location="top">
+                        <AmrButton icon @click="open">
+                            <AmrIcon :icon="mdiShareVariant" />
+                        </AmrButton>
+                    </AmrTooltip>
                 </template>
-                <span>{{ i18n(soc.tooltip) }}</span>
-            </v-tooltip>
-            <v-menu location="top">
-                <template v-slot:activator="{ props: menuProps }">
-                    <!-- Social buttons -->
-                    <v-tooltip location="top" class="ml-1">
-                        <template v-slot:activator="{ props: tooltipProps }">
-                            <v-btn v-bind="{ ...tooltipProps, ...menuProps }" icon>
-                                <v-icon>{{ mdiShareVariant }}</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>{{ i18n("reader_social_all") }}</span>
-                    </v-tooltip>
-                </template>
-                <!-- List of social -->
-                <v-list class="amr-social-list">
-                    <v-list-item v-for="(soc, i) in social_shared" :key="i">
-                        <v-tooltip location="left" class="ml-1">
-                            <template v-slot:activator="{ props }">
-                                <v-btn v-bind="props" icon :color="soc.color" @click="opentab(soc.url)">
-                                    <v-icon>{{ soc.icon }}</v-icon>
-                                </v-btn>
-                            </template>
-                            <span>{{ i18n(soc.tooltip) }}</span>
-                        </v-tooltip>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
-        </v-col>
-    </v-row>
+                <div class="amr-social-list">
+                    <div v-for="(soc, i) in social_shared" :key="i" class="amr-social-list-item">
+                        <AmrTooltip :text="i18n(soc.tooltip)" location="left">
+                            <AmrButton icon @click="opentab(soc.url)">
+                                <AmrIcon :icon="soc.icon" />
+                            </AmrButton>
+                        </AmrTooltip>
+                    </div>
+                </div>
+            </AmrMenu>
+        </div>
+    </div>
 </template>
 
 <script>
 import { i18nmixin } from "../../mixins/i18n-mixin"
 import browser from "webextension-polyfill"
 import { mdiShareVariant, mdiPatreon, mdiDiscord, mdiFacebook, mdiTwitter } from "@mdi/js"
+import AmrTooltip from "./AmrTooltip"
+import AmrButton from "./AmrButton"
+import AmrIcon from "./AmrIcon"
+import AmrMenu from "./AmrMenu"
 
 export default {
     mixins: [i18nmixin],
+    components: { AmrTooltip, AmrButton, AmrIcon, AmrMenu },
     data() {
         return {
             social_direct: [
@@ -95,14 +90,27 @@ export default {
     bottom: 0;
     right: 0;
     z-index: 7;
-    background-color: #212121;
+    background-color: var(--amr-surface);
 }
 
-.theme--light .amr-bottombar {
-    background-color: #f5f5f5;
+.amr-social-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
 }
 
-.amr-social-list .v-list__tile {
-    padding: 0px 3px;
+.amr-social-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background-color: var(--amr-surface);
+    border-radius: 4px;
+}
+
+.amr-social-list-item {
+    padding: 0 3px;
 }
 </style>

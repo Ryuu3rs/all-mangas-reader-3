@@ -15,5 +15,16 @@ export default {
     },
     add(key, value) {
         this.state[key] = value /* Properties added to pageData are reactive in Vue components */
+    },
+    /**
+     * Clear all state properties to prevent memory leaks when switching chapters
+     * This should be called before loading a new chapter
+     */
+    clear() {
+        for (const key in this.state) {
+            if (Object.prototype.hasOwnProperty.call(this.state, key)) {
+                delete this.state[key]
+            }
+        }
     }
 }

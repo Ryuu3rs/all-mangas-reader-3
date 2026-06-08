@@ -9,8 +9,8 @@ import i18n from "../amr/i18n"
  * - used to display icons in browser (Firefix supports animated svg, chrome does not)
  */
 export function isFirefox() {
-    // Firefox 1.0+ (tested on Firefox 45 - 53)
-    return typeof globalThis.InstallTrigger !== "undefined"
+    // Detect Firefox using user agent (InstallTrigger is deprecated)
+    return navigator.userAgent.toLowerCase().includes("firefox")
 }
 
 /**

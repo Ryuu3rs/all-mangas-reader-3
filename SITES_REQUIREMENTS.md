@@ -1,5 +1,7 @@
 # Working on a multilingual site implementation
 
+> NOTE (2026-03-03): This guide refers to legacy mirror implementation paths. Active extension rewrite work is in `svelte-rewrite/` with `stable-v3.1.0/` as reference.
+
 Some sites return languages such as `es-la`, `pt-br`. some even returns wrong country codes like `us` instead of `en` etc...  
 All Mangas Reader expect country codes [from this list](#list-of-supported-country-codes)
 

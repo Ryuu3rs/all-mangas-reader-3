@@ -181,7 +181,8 @@ export const getReadMangaMirrors = (mirrorHelper: MirrorHelper): MirrorImplement
                 domains: ["seimanga.me"],
                 home: "https://seimanga.me",
                 canListFullMangas: false,
-                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g
+                chapter_url: /^\/.*\/vol.*\/[0-9]+.*$/g,
+                disabledForSearch: true // Search endpoint currently returns HTTP errors
             },
             {}
         )

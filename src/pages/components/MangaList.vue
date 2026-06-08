@@ -390,6 +390,7 @@ import MultiMangaAction from "./MultiMangaAction"
 import browser from "webextension-polyfill"
 import { convertIcons, displayFilterCats, formatMangaName, hasNew } from "../../shared/utils"
 import { debugLog } from "../../shared/debug"
+import { debug } from "../../core/debug"
 
 const default_sort = (a, b) => {
     const af = formatMangaName(a.displayName && a.displayName !== "" ? a.displayName : a.name),
@@ -889,7 +890,7 @@ export default {
                     const data = JSON.parse(e.target.result)
                     this.processImportData(data)
                 } catch (err) {
-                    console.error("Failed to parse import file:", err)
+                    debug.ui.error("Failed to parse import file:", err)
                     alert("Invalid JSON file. Please select a valid AMR export file.")
                 }
             }
@@ -915,6 +916,9 @@ export default {
     },
     beforeUnmount() {
         clearInterval(this.searchTextTimeout)
+        // Clean up EventBus listeners to prevent memory leaks
+        this.$eventBus.$off("multi-manga:select-manga")
+        this.$eventBus.$off("multi-manga:deselect-manga")
     },
     async created() {
         debugLog("MangaList created - starting initialization")

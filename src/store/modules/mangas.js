@@ -23,6 +23,7 @@ import { Alarm, clearAlarm, createAlarm } from "../../shared/AlarmService"
 import { shouldDelayUpdate } from "../../shared/chapterUpdaterUtil"
 import { getSyncOptions } from "../../shared/Options"
 import { reactiveSet, reactiveDelete } from "../../shared/vue-compat"
+import { debug } from "../../core/debug"
 
 let syncManager
 // @TODO replace with actual error
@@ -194,8 +195,7 @@ const actions = {
             dispatch("setOption", { key: "updated", value: Date.now() })
             dispatch("setOption", { key: "changesSinceSync", value: 1 })
         } catch (e) {
-            console.error("Error while updating sync timestamp")
-            console.error(e)
+            debug.storage.error("Error while updating sync timestamp:", e)
         }
     },
     /**
@@ -209,8 +209,7 @@ const actions = {
             dispatch("setOption", { key: "updated", value: Date.now() })
             dispatch("setOption", { key: "changesSinceSync", value: 1 })
         } catch (e) {
-            console.error("Error while running findAndUpdateManga", manga)
-            console.error(e)
+            debug.storage.error("Error while running findAndUpdateManga:", { manga, error: e })
         }
     },
     async setMangaTsOpts({ commit, dispatch }, manga, date) {
@@ -385,7 +384,7 @@ const actions = {
                 return
             }
             // ignore error if manga list can not be loaded --> save the manga
-            console.error(e)
+            debug.storage.error("createUnlistedManga error:", e)
         }
 
         dispatch("addManga", { manga: mg, fromSync: message.isSync })
@@ -406,14 +405,13 @@ const actions = {
             rootState: { state: rootState }
         })
         if (key.indexOf("unknown") === 0) {
-            console.error("Impossible to import manga because mirror can't be found. Perhaps has it been deleted...")
-            console.error(message)
+            debug.storage.error("Impossible to import manga - mirror not found:", message)
             return
         }
         const iconHelper = getIconHelper({ state: rootState, getters })
         const mg = state.all.find(manga => manga.key === key)
         if (mg === undefined) {
-            console.warn("readManga of an unlisted manga --> create it")
+            debug.storage.warn("readManga of an unlisted manga --> create it")
             await dispatch("createUnlistedManga", message)
             iconHelper.refreshBadgeAndIcon()
             return
@@ -422,7 +420,7 @@ const actions = {
         try {
             await dispatch("consultManga", message)
         } catch (e) {
-            console.error(e) // ignore error if manga list can't be updated
+            debug.storage.error("consultManga error:", e) // ignore error if manga list can't be updated
         }
 
         dispatch("findAndUpdateManga", mg)
@@ -922,7 +920,7 @@ const actions = {
             await dispatch("refreshLastChapters", manga)
             await storedb.storeManga(manga)
         } catch (e) {
-            console.error(e)
+            debug.storage.error("updateMangas error:", e)
         }
         iconHelper.stopSpinning()
     },
@@ -1193,7 +1191,7 @@ const mutations = {
             mg.lastChapterReadURL = obj.lastChapterReadURL
             mg.lastChapterReadName = obj.lastChapterReadName
             if (!obj.fromSite) {
-                console.log("updated ts")
+                debug.storage.debug("updated ts")
                 mg.ts = Math.round(Date.now() / 1000)
             }
         }

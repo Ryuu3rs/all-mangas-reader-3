@@ -8,7 +8,12 @@ const state = {
     /**
      * List of bookmarks
      */
-    all: []
+    all: [],
+    /**
+     * Index map for O(1) bookmark lookups by key
+     * Maintained automatically by mutations
+     */
+    _keyIndex: new Map()
 }
 
 // getters
@@ -83,6 +88,13 @@ const mutations = {
     setBookmarks(state, bookmarks) {
         state.all = []
         state.all.push(...bookmarks)
+        // Rebuild index
+        state._keyIndex.clear()
+        for (const bm of bookmarks) {
+            if (bm.key) {
+                state._keyIndex.set(bm.key, bm)
+            }
+        }
     },
     /**
      * Create a new bookmark
@@ -94,6 +106,10 @@ const mutations = {
             bm.key = bookmarkKey({ bookmark: bm, rootState: this.$store })
         }
         state.all.push(bm)
+        // Update index
+        if (bm.key) {
+            state._keyIndex.set(bm.key, bm)
+        }
     },
     /**
      * Updates the note on a bookmark
@@ -101,9 +117,14 @@ const mutations = {
      * @param {*} bm bookmark with new note
      */
     async updateBookmarkNote(state, bm) {
-        const bmn = state.all.find(bookmark => bookmark.key === bm.key)
+        // Use index for O(1) lookup
+        const bmn = state._keyIndex.get(bm.key) || state.all.find(bookmark => bookmark.key === bm.key)
         if (bmn !== undefined) {
             bmn.note = bm.note
+            // Ensure index is up to date
+            if (bm.key && !state._keyIndex.has(bm.key)) {
+                state._keyIndex.set(bm.key, bmn)
+            }
         }
     },
     /**
@@ -116,6 +137,8 @@ const mutations = {
         if (bmindex >= 0) {
             state.all.splice(bmindex, 1)
         }
+        // Remove from index
+        state._keyIndex.delete(key)
     }
 }
 

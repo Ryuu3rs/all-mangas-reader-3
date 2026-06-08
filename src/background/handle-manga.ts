@@ -8,6 +8,7 @@ import { MirrorLoader } from "../mirrors/MirrorLoader"
 import { OptionStorage } from "../shared/OptionStorage"
 import { NOT_HANDLED_MESSAGE } from "./background-util"
 import { AddMangaByUrlAction, AllActions, SearchListAction } from "../types/action"
+import { debug } from "../core/debug"
 
 export class HandleManga {
     constructor(
@@ -45,7 +46,10 @@ export class HandleManga {
             case "saveCurrentState":
                 return this.store.dispatch("saveCurrentState", message)
             case "readManga": {
-                console.log("[DEBUG] handle-manga received readManga:", (message as any).name, (message as any).mirror)
+                debug.background.debug("handle-manga received readManga:", {
+                    name: (message as any).name,
+                    mirror: (message as any).mirror
+                })
                 //count number of chapters read
                 const nb = (await this.optionStorage.getKey("nb_read")) ?? 1
                 const value = (typeof nb === "string" ? parseInt(nb) : nb) + 1
@@ -62,7 +66,7 @@ export class HandleManga {
                 })
                 // Check for new achievements
                 await this.store.dispatch("checkAchievements")
-                console.log("[DEBUG] handle-manga readManga dispatch completed")
+                debug.background.debug("handle-manga readManga dispatch completed")
                 return result
             }
             case "initMangasFromDB":
@@ -116,29 +120,18 @@ export class HandleManga {
                 return this.searchList(message as SearchListAction)
             case "getListChaps": {
                 const key = this.getMangaKey(message)
-                console.log("[DEBUG] getListChaps - looking for key:", key)
                 const mgch = this.store.state.mangas.all.find(mg => mg.key === key)
                 if (mgch !== undefined) {
                     const listChaps = mgch.listChaps
-                    console.log(
-                        "[DEBUG] getListChaps - found manga:",
-                        mgch.name,
-                        "listChaps length:",
-                        listChaps?.length || 0
-                    )
                     if (listChaps && listChaps.length > 0) {
-                        console.log("[DEBUG] getListChaps - first chapter:", JSON.stringify(listChaps[0]))
                         // Serialize to plain array to avoid any Proxy issues
                         const plainListChaps = JSON.parse(JSON.stringify(listChaps))
-                        console.log(
-                            "[DEBUG] getListChaps - returning serialized listChaps, length:",
-                            plainListChaps.length
-                        )
                         return Promise.resolve(plainListChaps)
                     }
                     return Promise.resolve(listChaps)
                 } else {
-                    console.log("[DEBUG] getListChaps - manga not found in store")
+                    // Not an error - manga may not be in library yet (reading unlisted manga)
+                    // Reader will fall back to loadListChaps to fetch from mirror
                     return Promise.resolve(false)
                 }
             }
@@ -150,6 +143,8 @@ export class HandleManga {
                 return this.importMangas(message)
             case "addMangaByUrl":
                 return this.addMangaByUrl(message as AddMangaByUrlAction)
+            case "debugDumpLogs":
+                return this.debugDumpLogs(message)
             default:
                 return NOT_HANDLED_MESSAGE
         }
@@ -206,40 +201,126 @@ export class HandleManga {
      * - BroadcastChannel not syncing state between background and popup
      */
     async storeListChaps(message) {
-        console.log("[DEBUG] storeListChaps called for:", message.url, "chapters:", message.listChaps?.length)
+        debug.background.debug("storeListChaps called for:", { url: message.url, chapters: message.listChaps?.length })
         const key = this.getMangaKey(message)
         if (!key) {
-            console.log("[DEBUG] storeListChaps - could not generate manga key")
+            debug.background.debug("storeListChaps - could not generate manga key")
             return false
         }
         const manga = this.store.state.mangas.all.find(mg => mg.key === key)
         if (manga) {
-            console.log(
-                "[DEBUG] storeListChaps - found manga:",
-                manga.name,
-                "updateError:",
-                manga.updateError,
-                "updating listChaps"
-            )
+            debug.background.debug("storeListChaps - found manga:", {
+                name: manga.name,
+                updateError: manga.updateError,
+                action: "updating listChaps"
+            })
             this.store.commit("updateMangaListChaps", { key: key, listChaps: message.listChaps })
 
             // Clear the update error flag since chapters were successfully loaded
             // Always clear it when we successfully get chapters from content script
             // NOTE: This should fix the icon issue but currently doesn't work - see TODO above
-            console.log("[DEBUG] storeListChaps - clearing updateError flag (was:", manga.updateError, ")")
+            debug.background.debug("storeListChaps - clearing updateError flag (was:", manga.updateError)
             // markNoUpdateError action already calls findAndUpdateManga internally, so we just need to await it
             try {
                 await this.store.dispatch("markNoUpdateError", manga)
-                console.log(
-                    "[DEBUG] storeListChaps - cleared updateError and persisted to database, new updateError:",
+                debug.background.debug(
+                    "storeListChaps - cleared updateError and persisted to database, new updateError:",
                     manga.updateError
                 )
             } catch (e) {
-                console.error("[DEBUG] storeListChaps - failed to clear updateError:", e)
+                debug.background.error("storeListChaps - failed to clear updateError:", e)
             }
             return true
         } else {
-            console.log("[DEBUG] storeListChaps - manga not found in store for key:", key)
+            debug.background.debug("storeListChaps - manga not found in store for key:", key)
+            return false
+        }
+    }
+
+    /**
+     * Receive a debug log buffer from the reader/content script and dump it
+     * into a text file using the downloads API. This is used by the temporary
+     * memory watcher to capture detailed logs automatically when a leak is
+     * suspected.
+     */
+    async debugDumpLogs(message: any): Promise<boolean> {
+        try {
+            const now = new Date()
+            const iso = now.toISOString()
+            const payload = (message && (message as any).payload) || {}
+            const source = (message && (message as any).source) || "unknown"
+            const reason = (payload as any).reason || (message as any).reason || "unknown"
+            const ua = (payload as any).ua || ""
+            const href = (payload as any).href || ""
+            const logs = Array.isArray((payload as any).logs) ? (payload as any).logs : []
+
+            let content = "All Mangas Reader - Memory Debug Log Dump\n"
+            content += `Timestamp: ${iso}\n`
+            content += `Source: ${String(source)}\n`
+            content += `Reason: ${String(reason)}\n`
+            if (href) {
+                content += `Page: ${String(href)}\n`
+            }
+            if (ua) {
+                content += `UserAgent: ${String(ua)}\n`
+            }
+            content += `Total log entries: ${logs.length}\n\n`
+
+            for (let i = 0; i < logs.length; i++) {
+                const entry: any = logs[i]
+                const tsEntry = entry && entry.ts ? new Date(entry.ts).toISOString() : ""
+                const level = (entry && entry.level ? String(entry.level) : "log").toUpperCase()
+                let argsText = ""
+                try {
+                    if (entry && Array.isArray(entry.args)) {
+                        argsText = entry.args.join(" ")
+                    } else if (entry && entry.message) {
+                        argsText = String(entry.message)
+                    } else {
+                        argsText = JSON.stringify(entry)
+                    }
+                } catch (e) {
+                    argsText = String(entry)
+                }
+                content += `[${i}] ${tsEntry} [${level}] ${argsText}\n`
+            }
+
+            const blob = new Blob([content], { type: "text/plain" })
+            const url = URL.createObjectURL(blob)
+            const safeIso = iso.replace(/[:.]/g, "-")
+            // IMPORTANT: filename must be relative to the browser's Downloads
+            // directory. If you set your Downloads folder to
+            // G:\\Downloads\\ChromeDownloads\\ in the browser settings, this
+            // will produce files directly in that folder.
+            const filename = `memory-dump-${safeIso}.txt`
+
+            debug.background.debug("debugDumpLogs - creating download", {
+                filename,
+                source,
+                reason,
+                logsCount: logs.length
+            })
+
+            const downloadId = await browser.downloads.download({
+                url,
+                filename,
+                saveAs: false
+            })
+
+            debug.background.debug("debugDumpLogs - download created", { downloadId, filename })
+
+            // Revoke the object URL after a short delay to avoid leaking it.
+            setTimeout(() => {
+                try {
+                    URL.revokeObjectURL(url)
+                } catch (e) {
+                    debug.background.error("debugDumpLogs - failed to revoke object URL", e)
+                }
+            }, 60000)
+
+            return true
+        } catch (e) {
+            debug.background.error("debugDumpLogs - failed to create/download log dump", e)
             return false
         }
     }
@@ -509,14 +590,12 @@ export class HandleManga {
             if (isChapter) {
                 // Retrieve information relative to current chapter / manga read
                 infos = await impl.getCurrentPageInfo(htmlDocument, message.url).catch(e => {
-                    console.error("Error while loading getCurrentPageInfo from url " + message.url)
-                    console.error(e)
+                    debug.mirrors.error("Error while loading getCurrentPageInfo from url " + message.url, e)
                 })
 
                 // retrieve images to load
                 imagesUrl = await impl.getListImages(htmlDocument, message.url, sender).catch(e => {
-                    console.error("Error while loading getListImages from url " + message.url)
-                    console.error(e)
+                    debug.mirrors.error("Error while loading getListImages from url " + message.url, e)
                     return []
                 })
             }
@@ -527,7 +606,7 @@ export class HandleManga {
                     title = await impl.getChapterTitle(htmlDocument, message.url)
                 }
             } catch (e) {
-                console.error(e)
+                debug.mirrors.error("Error getting chapter title", e)
             }
             if (!title) {
                 title = (infos?.name ? infos.name + " - " : "") + "Undefined Chapter"
@@ -540,37 +619,96 @@ export class HandleManga {
                 title: title
             }
         } catch (e) {
-            console.error("error while loading images from chapter " + message.url)
-            console.error(e)
+            debug.mirrors.error("error while loading images from chapter " + message.url, e)
             return { images: null }
         }
     }
 
     private async getImageUrlFromPageUrl(message: { mirror?: string; url: string }) {
-        console.log("[DEBUG] getImageUrlFromPageUrl handler called for:", message.url, message.mirror)
+        console.log("[AMR BG] getImageUrlFromPageUrl CALLED", message.mirror, message.url?.substring?.(0, 60))
+        debug.scans.debug("getImageUrlFromPageUrl called", {
+            mirror: message.mirror,
+            url: message.url?.substring?.(0, 60)
+        })
+
         if (!message.mirror) {
-            console.error("[DEBUG] getImageUrlFromPageUrl: mirror is required")
+            console.log("[AMR BG] getImageUrlFromPageUrl - NO MIRROR, returning null")
+            debug.scans.debug("getImageUrlFromPageUrl - no mirror provided")
             return null
         }
 
-        try {
-            const impl = await this.mirrorLoader.getImpl(message.mirror)
-            if (!impl) {
-                console.error("[DEBUG] getImageUrlFromPageUrl: mirror impl not found:", message.mirror)
-                return null
-            }
-            console.log("[DEBUG] Got mirror impl, calling getImageUrlFromPage")
-            const result = await impl.getImageUrlFromPage(message.url)
-            console.log("[DEBUG] getImageUrlFromPage result:", result)
+        // CRITICAL FIX: Add overall timeout to prevent indefinite hanging
+        // This is a safety net in case the mirror implementation doesn't have its own timeout
+        const HANDLER_TIMEOUT_MS = 25000 // 25 seconds
+        let timeoutId: ReturnType<typeof setTimeout> | null = null
+        let completed = false
 
-            // If mirror returns "error" string, treat it as null
-            if (result === "error" || !result) {
-                console.error("[DEBUG] getImageUrlFromPageUrl: mirror returned error or null")
+        const doGetImageUrl = async (): Promise<string | null> => {
+            try {
+                console.log("[AMR BG] doGetImageUrl - getting impl for:", message.mirror)
+                const impl = await this.mirrorLoader.getImpl(message.mirror!)
+                if (!impl) {
+                    console.log("[AMR BG] doGetImageUrl - impl NOT FOUND for:", message.mirror)
+                    debug.scans.debug("getImageUrlFromPageUrl - impl not found for mirror:", message.mirror)
+                    return null
+                }
+                console.log(
+                    "[AMR BG] doGetImageUrl - calling impl.getImageUrlFromPage for:",
+                    message.url?.substring?.(0, 60)
+                )
+                debug.scans.trace("getImageUrlFromPageUrl - calling impl.getImageUrlFromPage")
+                const result = await impl.getImageUrlFromPage(message.url)
+                console.log("[AMR BG] doGetImageUrl - GOT RESULT:", result?.substring?.(0, 80) || result)
+                debug.scans.trace("getImageUrlFromPageUrl - result:", result?.substring?.(0, 80) || result)
+
+                // If mirror returns "error" string, treat it as null
+                if (result === "error" || !result) {
+                    console.log("[AMR BG] doGetImageUrl - result is error or empty")
+                    debug.scans.debug("getImageUrlFromPageUrl - result is error or empty")
+                    return null
+                }
+                return result
+            } catch (e: any) {
+                console.log("[AMR BG] doGetImageUrl - EXCEPTION:", e?.message || e)
+                debug.scans.error("getImageUrlFromPageUrl - impl.getImageUrlFromPage threw:", {
+                    error: e?.message || e,
+                    url: message.url?.substring?.(0, 60)
+                })
                 return null
             }
+        }
+
+        try {
+            const timeoutPromise = new Promise<null>(resolve => {
+                timeoutId = setTimeout(() => {
+                    if (!completed) {
+                        console.log(
+                            "[AMR BG] getImageUrlFromPageUrl TIMEOUT after " + HANDLER_TIMEOUT_MS + "ms for:",
+                            message.url?.substring?.(0, 60)
+                        )
+                        debug.scans.error(
+                            "getImageUrlFromPageUrl TIMEOUT after " + HANDLER_TIMEOUT_MS + "ms for:",
+                            message.url?.substring?.(0, 60)
+                        )
+                        resolve(null)
+                    }
+                }, HANDLER_TIMEOUT_MS)
+            })
+
+            console.log("[AMR BG] Starting Promise.race for:", message.url?.substring?.(0, 60))
+            const result = await Promise.race([doGetImageUrl(), timeoutPromise])
+            completed = true
+            if (timeoutId) clearTimeout(timeoutId)
+            console.log("[AMR BG] Promise.race COMPLETE, returning:", result?.substring?.(0, 80) || result)
             return result
-        } catch (e) {
-            console.error("[DEBUG] getImageUrlFromPageUrl ERROR:", e)
+        } catch (e: any) {
+            completed = true
+            if (timeoutId) clearTimeout(timeoutId)
+            console.log("[AMR BG] getImageUrlFromPageUrl OUTER EXCEPTION:", e?.message || e)
+            debug.scans.error("getImageUrlFromPageUrl Error:", {
+                error: e?.message || e,
+                url: message.url?.substring?.(0, 60)
+            })
             return null
         }
     }
@@ -655,19 +793,26 @@ export class HandleManga {
             if (catsToAdd.length > 0) {
                 catsToAdd.forEach(cat => this.store.dispatch("addCategory", cat))
             }
+
+            // Recalculate achievements after import - users may have earned exploration achievements
+            // based on the number of manga imported (manga_5, manga_20, manga_50, etc.)
+            debug.background.debug("importMangas - Checking achievements after importing", imps.mangas.length)
+            await this.store.dispatch("checkAchievements")
         }
     }
 
     /**
      * Add a manga by URL - for Cloudflare-protected sites where search doesn't work
      * User pastes a manga/chapter URL directly and we fetch info from the page
+     * Also updates existing manga if already in library (refreshes chapter list and tracking)
      */
     async addMangaByUrl(message: { url: string; mirrorName: string }): Promise<{
         success: boolean
         mangaName?: string
+        isUpdate?: boolean
         error?: string
     }> {
-        console.log("[addMangaByUrl] Starting for URL:", message.url, "mirror:", message.mirrorName)
+        debug.background.debug("addMangaByUrl - Starting", { url: message.url, mirror: message.mirrorName })
 
         try {
             // Get the mirror implementation
@@ -688,13 +833,13 @@ export class HandleManga {
                 }
                 doc = await response.text()
             } catch (e) {
-                console.error("[addMangaByUrl] Fetch error:", e)
+                debug.background.error("addMangaByUrl - Fetch error:", e)
                 return { success: false, error: "Failed to fetch page. Check the URL and try again." }
             }
 
             // Check if this is a chapter page
             const isChapter = impl.isCurrentPageAChapterPage(doc, message.url)
-            console.log("[addMangaByUrl] isChapter:", isChapter)
+            debug.background.debug("addMangaByUrl - isChapter:", isChapter)
 
             let mangaInfo: { name: string; currentMangaURL: string; currentChapterURL?: string }
 
@@ -718,13 +863,24 @@ export class HandleManga {
                 }
             }
 
-            console.log("[addMangaByUrl] mangaInfo:", mangaInfo)
+            debug.background.debug("addMangaByUrl - mangaInfo:", mangaInfo)
 
             if (!mangaInfo?.name || !mangaInfo?.currentMangaURL) {
                 return { success: false, error: "Could not extract manga information from page" }
             }
 
-            // Get chapter list
+            // Check if manga already exists in library
+            const existingKey = mangaKey({
+                url: mangaInfo.currentMangaURL,
+                mirror: message.mirrorName,
+                language: undefined,
+                rootState: this.store
+            })
+            const existingManga = this.store.state.mangas?.all?.find(m => m.key === existingKey)
+            const isUpdate = !!existingManga
+            debug.background.debug("addMangaByUrl - existingManga:", { name: existingManga?.name, isUpdate })
+
+            // Get chapter list (always refresh for updates)
             let listChaps: InfoResult[] = []
             try {
                 const chapResult = await impl.getListChaps(mangaInfo.currentMangaURL)
@@ -738,31 +894,37 @@ export class HandleManga {
                         listChaps = chapResult[firstLang]
                     }
                 }
-                console.log("[addMangaByUrl] Got", listChaps?.length || 0, "chapters")
+                debug.background.debug("addMangaByUrl - Got chapters:", listChaps?.length || 0)
             } catch (e) {
-                console.warn("[addMangaByUrl] Failed to get chapter list:", e)
+                debug.background.warn("addMangaByUrl - Failed to get chapter list:", e)
                 // Continue without chapter list - it can be fetched later
             }
 
-            // Create the manga entry
+            // Create the manga entry - readManga will update if exists, create if new
             const readMangaMessage = {
                 action: "readManga",
                 url: mangaInfo.currentMangaURL,
                 mirror: message.mirrorName,
                 name: mangaInfo.name,
                 listChaps: listChaps,
-                lastChapterReadURL: isChapter ? mangaInfo.currentChapterURL : listChaps?.[0]?.[1],
+                lastChapterReadURL: isChapter
+                    ? mangaInfo.currentChapterURL
+                    : existingManga?.lastChapterReadURL || listChaps?.[0]?.[1],
                 lastChapterReadName: isChapter
                     ? this.extractChapterName(mangaInfo.currentChapterURL, listChaps)
-                    : listChaps?.[0]?.[0]
+                    : existingManga?.lastChapterReadName || listChaps?.[0]?.[0],
+                fromSite: isChapter // Mark as from site if chapter URL was provided, so it updates tracking
             }
 
-            console.log("[addMangaByUrl] Creating manga entry:", readMangaMessage.name)
+            debug.background.debug(
+                "addMangaByUrl - " + (isUpdate ? "Updating" : "Creating") + " manga entry:",
+                readMangaMessage.name
+            )
             await this.store.dispatch("readManga", readMangaMessage)
 
-            return { success: true, mangaName: mangaInfo.name }
+            return { success: true, mangaName: mangaInfo.name, isUpdate }
         } catch (e) {
-            console.error("[addMangaByUrl] Error:", e)
+            debug.background.error("addMangaByUrl - Error:", e)
             return { success: false, error: e.message || "An unexpected error occurred" }
         }
     }

@@ -11,6 +11,7 @@
 import Manga from "../../../amr/manga"
 import { formatMangaName } from "../../../shared/utils"
 import { reactiveSet, reactiveDelete } from "../../../shared/vue-compat"
+import { debug } from "../../../core/debug"
 
 export const mutations = {
     /**
@@ -19,15 +20,16 @@ export const mutations = {
      * This prevents race conditions from VuexMutationSharer clearing the list
      */
     setMangas(state, mangas) {
-        console.log("[DEBUG] setMangas called with", mangas?.length || 0, "mangas, current:", state.all?.length || 0)
+        debug.storage.debug(
+            "setMangas called with " + (mangas?.length || 0) + " mangas, current:",
+            state.all?.length || 0
+        )
 
         // Protect against clearing existing mangas with empty array
         // This happens when another page initializes and shares an empty setMangas mutation
         if ((!mangas || mangas.length === 0) && state.all?.length > 0) {
-            console.warn(
-                "[DEBUG] Blocked setMangas from clearing",
-                state.all.length,
-                "existing mangas with empty array"
+            debug.storage.warn(
+                "Blocked setMangas from clearing " + state.all.length + " existing mangas with empty array"
             )
             return // Don't clear existing mangas
         }
@@ -204,7 +206,7 @@ export const mutations = {
             mg.lastChapterReadURL = obj.lastChapterReadURL
             mg.lastChapterReadName = obj.lastChapterReadName
             if (!obj.fromSite) {
-                console.log("updated ts")
+                debug.storage.debug("updated ts")
                 mg.ts = Math.round(Date.now() / 1000)
             }
         }

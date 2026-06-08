@@ -2,6 +2,7 @@ import { BaseMirror } from "./abstract/BaseMirror"
 import { MirrorImplementation } from "../../types/common"
 import { MirrorHelper } from "../MirrorHelper"
 import TachideskIcon from "../icons/tachidesk-optimized.png"
+import { debug } from "../../core/debug"
 
 export class Tachidesk extends BaseMirror implements MirrorImplementation {
     constructor(amrLoader: MirrorHelper) {
@@ -10,6 +11,7 @@ export class Tachidesk extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Tachidesk"
     canListFullMangas = true
+    disabledForSearch = true // Local self-hosted service; keep out of global mirror search
     mirrorIcon = TachideskIcon
     languages = "en"
     domains = ["tachidesk"]
@@ -48,7 +50,7 @@ export class Tachidesk extends BaseMirror implements MirrorImplementation {
         try {
             data = await this.mirrorHelper.loadJson(this.apiUrl() + "manga/" + id + "/chapters?onlineFetch=true")
         } catch (e) {
-            console.warn("tachidesk onlineFetch failed for id:" + id + " manga, trying onlineFetch=false")
+            debug.mirrors.warn("tachidesk onlineFetch failed for id:" + id + " manga, trying onlineFetch=false")
             data = await this.mirrorHelper.loadJson(this.apiUrl() + "manga/" + id + "/chapters?onlineFetch=false")
         }
         return data.map(ele => {

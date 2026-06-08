@@ -1,5 +1,6 @@
 import { i18n } from "../../mixins/i18n-mixin"
 import browser from "webextension-polyfill"
+import { isFirefox } from "../../shared/utils"
 
 /**
  * Display tips
@@ -76,13 +77,7 @@ export const handleTips = async function ($ref, force = false, util) {
     }
 }
 
-/**
- * Test if current browser is Firefox
- */
-function isFirefox() {
-    // Firefox 1.0+ (tested on Firefox 45 - 53)
-    return typeof InstallTrigger !== "undefined"
-}
+// isFirefox is now imported from shared/utils
 
 /**
  * Display messages once in a while to give support to AMR

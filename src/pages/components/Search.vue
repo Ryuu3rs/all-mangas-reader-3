@@ -81,6 +81,7 @@ import browser from "webextension-polyfill"
 import SearchMirror from "./SearchMirror"
 import { formatMangaName, getUnifiedLang, mangaKey } from "../../shared/utils"
 import Flag from "./Flag"
+import { debug } from "../../core/debug"
 
 export default {
     data() {
@@ -213,12 +214,12 @@ export default {
             if (this.isInList(mg)) return
             mg.adding = true
             // call background because readManga uses jQuery (through refreshListChaps in website implementation) and its not present in popup
-            console.log("[DEBUG] Sending readManga to background:", mg.name, mg.mirror)
+            debug.ui.debug("Sending readManga to background:", mg.name + " on " + mg.mirror)
             try {
                 const result = await browser.runtime.sendMessage(Object.assign({ action: "readManga" }, mg))
-                console.log("[DEBUG] readManga response from background:", result)
+                debug.ui.debug("readManga response from background:", result)
             } catch (e) {
-                console.error("[DEBUG] readManga FAILED:", e)
+                debug.ui.error("readManga FAILED:", e)
             }
             mg.adding = false
         },
@@ -237,8 +238,7 @@ export default {
         },
 
         handleIconClick(mg) {
-            console.log("Icon Clicked")
-            console.log(this.$store.state)
+            debug.ui.trace("Icon Clicked", this.$store.state)
             this.$store.state.options.searchOpenSeries ? this.openSeries(mg) : this.addToList(mg)
         },
 

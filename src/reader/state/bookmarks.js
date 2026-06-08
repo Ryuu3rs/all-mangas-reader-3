@@ -6,51 +6,71 @@ import { reactive } from "vue"
 import browser from "webextension-polyfill"
 
 import pageData from "./pagedata"
+import { debug } from "../../core/debug"
 
 export default {
     state: reactive({
         booked: false, // true if chapter is booked
         note: undefined, // note of current chapter
-        scans: [] // list of scans [{url, name, note, booked}]
+        scans: [], // list of scans [{url, name, note, booked}]
+        scansMap: new Map() // URL -> scan object for O(1) lookups (Performance Fix)
     }),
 
     mirror: {
         mirrorName: ""
     },
 
-    /** Initialize state with a whole list of scans urls */
-    init(scansUrl, mirror) {
-        this.mirror = mirror
-        // initialize chapter
-        this.loadBookmark()
-        // Clear existing scans and push new ones to maintain reactivity
-        this.state.scans.length = 0
-        this.state.scans.push(
-            ...scansUrl.map((url, i) => {
-                return {
-                    index: i,
-                    url: url,
-                    name: "" + (i + 1),
-                    booked: false,
-                    note: undefined
-                }
-            })
-        )
-        for (const scUrl of scansUrl) {
-            this.loadBookmark({ scanUrl: scUrl })
-        }
+    /**
+     * Clear all state to prevent memory leaks when switching chapters
+     * This should be called before loading a new chapter
+     */
+    clear() {
+        this.state.booked = false
+        this.state.note = undefined
+        this.state.scans.splice(0, this.state.scans.length)
+        this.state.scansMap.clear()
     },
 
-    /** retrieve a scan from state */
+    /** Initialize state with a whole list of scans urls */
+    init(scansUrl, mirror) {
+        // Clean up previous state first (Memory Leak Fix)
+        this.clear()
+        this.mirror = mirror
+        // Clear existing scans and push new ones to maintain reactivity
+        this.state.scans.length = 0
+        this.state.scansMap.clear()
+
+        const newScans = scansUrl.map((url, i) => {
+            return {
+                index: i,
+                url: url,
+                name: "" + (i + 1),
+                booked: false,
+                note: undefined
+            }
+        })
+
+        this.state.scans.push(...newScans)
+
+        // Build the Map for O(1) lookups
+        for (const scan of newScans) {
+            this.state.scansMap.set(scan.url, scan)
+        }
+
+        // Load all bookmarks in one batched call instead of per-scan messages
+        this.loadAllBookmarks(scansUrl)
+    },
+
+    /** retrieve a scan from state with O(1) lookup */
     getScan(scanUrl) {
-        return this.state.scans.find(scan => scan.url === scanUrl)
+        return this.state.scansMap.get(scanUrl) || null
     },
 
     /** Save a bookmark */
     async saveBookmark({ note, scanUrl, scanName } = {}) {
-        console.log("[DEBUG] saveBookmark called", { note, scanUrl, scanName })
-        console.log("[DEBUG] mirror:", this.mirror)
-        console.log("[DEBUG] pageData.state:", pageData.state)
+        debug.storage.debug("saveBookmark called", { note, scanUrl, scanName })
+        debug.storage.debug("mirror:", this.mirror)
+        debug.storage.debug("pageData.state:", pageData.state)
 
         const obj = {
             action: "addUpdateBookmark",
@@ -68,12 +88,12 @@ export default {
             obj.scanUrl = scanUrl
             obj.scanName = scanName
         }
-        console.log("[DEBUG] Sending bookmark message:", obj)
+        debug.storage.debug("Sending bookmark message:", obj)
         try {
             const result = await browser.runtime.sendMessage(obj)
-            console.log("[DEBUG] Bookmark save result:", result)
+            debug.storage.debug("Bookmark save result:", result)
         } catch (error) {
-            console.error("[DEBUG] Bookmark save error:", error)
+            debug.storage.error("Bookmark save error:", error)
             throw error
         }
 
@@ -87,7 +107,7 @@ export default {
                 sc.booked = true
             }
         }
-        console.log("[DEBUG] Bookmark state updated:", this.state)
+        debug.storage.debug("Bookmark state updated:", this.state)
     },
     /** Delete a bookmark */
     async deleteBookmark({ scanUrl } = {}) {
@@ -117,7 +137,37 @@ export default {
         }
     },
 
-    /** Check data for a bookmark from server */
+    /** Load all bookmarks for chapter and scans in one batched call */
+    async loadAllBookmarks(scanUrls) {
+        const obj = {
+            action: "getBookmarksForChapter",
+            mirror: this.mirror.mirrorName,
+            url: pageData.state.currentMangaURL,
+            chapUrl: pageData.state.currentChapterURL,
+            scanUrls: scanUrls
+        }
+
+        const result = await browser.runtime.sendMessage(obj)
+
+        // Update chapter bookmark
+        if (result.chapter) {
+            this.state.note = result.chapter.note
+            this.state.booked = result.chapter.isBooked
+        }
+
+        // Update all scan bookmarks
+        if (result.scans) {
+            for (const scanUrl in result.scans) {
+                const sc = this.getScan(scanUrl)
+                if (sc) {
+                    sc.note = result.scans[scanUrl].note
+                    sc.booked = result.scans[scanUrl].isBooked
+                }
+            }
+        }
+    },
+
+    /** Check data for a bookmark from server (legacy single-scan API, kept for compatibility) */
     async loadBookmark({ scanUrl } = {}) {
         const obj = {
             action: "getBookmarkNote",

@@ -13,22 +13,22 @@ const samples: SampleManga[] = [
     {
         mirror: "Manga-Fox",
         name: "One Piece",
-        url: "http://fanfox.net/manga/one_piece/"
-    },
-    {
-        mirror: "Manhuaus",
-        name: "Against the Gods",
-        url: "https://manhuaus.com/manga/against-the-gods/"
-    },
-    {
-        mirror: "Readm.org",
-        name: "Fairy Tail",
-        url: "https://readm.org/manga/2004"
+        url: "https://fanfox.net/manga/one_piece/"
     },
     {
         mirror: "Manga-Fox",
         name: "Naruto",
-        url: "http://fanfox.net/manga/naruto"
+        url: "https://fanfox.net/manga/naruto/"
+    },
+    {
+        mirror: "Manga-Fox",
+        name: "Bleach",
+        url: "https://fanfox.net/manga/bleach/"
+    },
+    {
+        mirror: "Manga Katana",
+        name: "Dragon Ball Super",
+        url: "https://mangakatana.com/manga/dragon-ball-super.2080"
     }
 ]
 

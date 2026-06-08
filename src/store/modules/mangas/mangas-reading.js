@@ -6,8 +6,9 @@
 import { mangaKey, chapPath } from "../../../shared/utils"
 import { getIconHelper } from "../../../amr/icon-helper"
 import { getSyncManager, getSyncManagerInstance, setSyncManagerInstance } from "./mangas-sync-manager"
+import { debug as coreDebug } from "../../../core/debug"
 
-const logger = { debug: console.debug, info: console.info, error: console.error }
+const logger = { debug: coreDebug.reader.debug, info: coreDebug.reader.info, error: coreDebug.reader.error }
 
 /**
  * Reading-related actions
@@ -17,11 +18,11 @@ export const readingActions = {
      * Read a manga: update latest read chapter if the current chapter is more recent than the previous one
      */
     async readManga({ dispatch, commit, getters, rootState, state }, message) {
-        console.log("[DEBUG] readManga action called:", message.name, message.mirror)
+        coreDebug.reader.debug("readManga action called:", { name: message.name, mirror: message.mirror })
 
         // Validate required fields to prevent _no_key_ entries
         if (!message.url) {
-            console.error("[DEBUG] readManga FAILED - missing URL. Manga data:", {
+            coreDebug.reader.error("readManga FAILED - missing URL. Manga data:", {
                 name: message.name,
                 mirror: message.mirror,
                 url: message.url
@@ -35,7 +36,7 @@ export const readingActions = {
         }
 
         if (!message.mirror) {
-            console.error("[DEBUG] readManga FAILED - missing mirror. Manga data:", {
+            coreDebug.reader.error("readManga FAILED - missing mirror. Manga data:", {
                 name: message.name,
                 mirror: message.mirror,
                 url: message.url
@@ -53,11 +54,11 @@ export const readingActions = {
             language: message.language,
             rootState: { state: rootState }
         })
-        console.log("[DEBUG] readManga key:", key)
+        coreDebug.reader.debug("readManga key:", key)
 
         // Prevent _no_key_ entries from being created
         if (key === "_no_key_") {
-            console.error("[DEBUG] readManga FAILED - would create _no_key_ entry:", message)
+            coreDebug.reader.error("readManga FAILED - would create _no_key_ entry:", message)
             return {
                 success: false,
                 error: "INVALID_KEY",
@@ -66,8 +67,7 @@ export const readingActions = {
         }
 
         if (key.indexOf("unknown") === 0) {
-            console.error("[DEBUG] readManga FAILED - unknown mirror:", message.mirror)
-            console.error(message)
+            coreDebug.reader.error("readManga FAILED - unknown mirror: " + message.mirror, message)
             return {
                 success: false,
                 error: "UNKNOWN_MIRROR",
@@ -77,9 +77,9 @@ export const readingActions = {
         const iconHelper = getIconHelper({ state: rootState, getters })
         const mg = state.all.find(manga => manga.key === key)
         if (mg === undefined) {
-            console.log("[DEBUG] readManga - manga not in list, creating unlisted manga")
+            coreDebug.reader.debug("readManga - manga not in list, creating unlisted manga")
             await dispatch("createUnlistedManga", message)
-            console.log("[DEBUG] readManga - createUnlistedManga completed")
+            coreDebug.reader.debug("readManga - createUnlistedManga completed")
             iconHelper.refreshBadgeAndIcon()
             return
         }
@@ -87,7 +87,7 @@ export const readingActions = {
         try {
             await dispatch("consultManga", message)
         } catch (e) {
-            console.error(e)
+            coreDebug.reader.error("consultManga error:", e)
         }
 
         dispatch("findAndUpdateManga", mg)

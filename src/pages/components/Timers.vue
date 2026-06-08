@@ -60,9 +60,8 @@ export default {
         }
     },
     mounted: async function () {
-        var self = this
-        this.tickerInterval = setInterval(function () {
-            self.$data.ticker = Date.now()
+        this.tickerInterval = setInterval(() => {
+            this.$data.ticker = Date.now()
         }, 1000)
         this.stats = await storedb.getListsOfMangaStats()
     },

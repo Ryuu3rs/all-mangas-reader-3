@@ -197,6 +197,7 @@
 import i18n from "../../amr/i18n"
 import browser from "webextension-polyfill"
 import PerformanceOverlay from "./PerformanceOverlay.vue"
+import { debug } from "../../core/debug"
 
 export default {
     name: "NavigationBar",
@@ -271,7 +272,7 @@ export default {
                     const data = JSON.parse(e.target.result)
                     this.$emit("import-manga-list", data)
                 } catch (err) {
-                    console.error("Failed to parse manga list file:", err)
+                    debug.ui.error("Failed to parse manga list file:", err)
                     alert("Invalid JSON file. Please select a valid AMR export file.")
                 }
             }
@@ -287,7 +288,7 @@ export default {
                     const data = JSON.parse(e.target.result)
                     this.$emit("import-stats", data)
                 } catch (err) {
-                    console.error("Failed to parse stats file:", err)
+                    debug.ui.error("Failed to parse stats file:", err)
                     alert("Invalid JSON file. Please select a valid stats/achievements export file.")
                 }
             }

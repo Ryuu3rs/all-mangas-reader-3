@@ -5,39 +5,38 @@
 -->
 
 <template>
-    <v-dialog
-        :persistent="options.persistent"
+    <AmrDialog
         v-model="dialog"
-        :max-width="options.width"
-        @keydown.esc="options.persistent ? () => {} : cancel()"
-        v-bind:style="{ zIndex: options.zIndex }">
-        <v-card>
-            <v-toolbar :color="options.color" density="compact" variant="flat" v-show="!!title">
-                <v-toolbar-title class="text-white">{{ title }}</v-toolbar-title>
-            </v-toolbar>
-            <v-card-text v-show="!!message" text-no-wrap :class="{ 'text-center': options.center }">
-                <span v-html="messageHtml"></span>
-            </v-card-text>
-            <v-card-actions class="pt-0" v-show="options.buttons.length > 0 || options.cancel">
-                <v-spacer></v-spacer>
-                <v-btn v-if="options.cancel" color="grey" variant="text" @click="cancel">
-                    {{ i18n("button_cancel") }}
-                </v-btn>
-                <v-btn
-                    v-for="(but, i) in options.buttons"
-                    :key="i"
-                    :color="but.color || 'grey'"
-                    variant="text"
-                    @click="clickButton(but)">
-                    {{ but.title }}
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+        :width="options.width"
+        :persistent="options.persistent"
+        :close-on-backdrop="!options.persistent"
+        :show-close="false">
+        <template #header v-if="!!title">
+            <div class="amr-wizdialog-title">{{ title }}</div>
+        </template>
+        <div v-show="!!message" :class="{ 'text-center': options.center }">
+            <span v-html="messageHtml"></span>
+        </div>
+        <template #actions v-if="options.buttons.length > 0 || options.cancel">
+            <AmrButton v-if="options.cancel" @click.stop.prevent="cancel">
+                {{ i18n("button_cancel") }}
+            </AmrButton>
+            <AmrButton
+                v-for="(but, i) in options.buttons"
+                :key="i"
+                :variant="getButtonVariant(but.color)"
+                @click.stop.prevent="clickButton(but)">
+                {{ but.title }}
+            </AmrButton>
+        </template>
+    </AmrDialog>
 </template>
 
 <script>
 import { i18n, i18nmixin } from "../../mixins/i18n-mixin"
+import { debug } from "../../core/debug"
+import AmrDialog from "./AmrDialog"
+import AmrButton from "./AmrButton"
 
 const default_options = {
     color: "primary",
@@ -56,8 +55,10 @@ const default_options = {
         }
     ]
 }
+
 export default {
     mixins: [i18nmixin],
+    components: { AmrDialog, AmrButton },
     data() {
         return {
             dialog: false,
@@ -70,7 +71,7 @@ export default {
     },
     watch: {
         dialog(newVal, oldVal) {
-            console.log("[DEBUG] WizDialog.dialog changed:", oldVal, "->", newVal, new Error().stack)
+            debug.ui.trace("WizDialog.dialog changed:", oldVal, "->", newVal)
         }
     },
     computed: {
@@ -131,12 +132,29 @@ export default {
     methods: {
         /** An action button is clicked */
         clickButton(but) {
-            but.click({
-                agree: this.agree,
-                cancel: this.cancel,
-                changeMessage: this.changeMessage,
-                changeTitle: this.changeTitle
+            debug.ui.debug("WizDialog.clickButton() called", {
+                hasButton: !!but,
+                title: but && but.title,
+                hasClick: !!(but && typeof but.click === "function")
             })
+            try {
+                if (!but || typeof but.click !== "function") {
+                    debug.ui.warn("WizDialog.clickButton - button has no valid click handler", but)
+                    // Fallback: close dialog positively so it never becomes stuck
+                    this.agree()
+                    return
+                }
+                but.click({
+                    agree: this.agree,
+                    cancel: this.cancel,
+                    changeMessage: this.changeMessage,
+                    changeTitle: this.changeTitle
+                })
+            } catch (e) {
+                debug.ui.error("WizDialog.clickButton - button handler threw", e)
+                // Ensure the dialog is at least closed to avoid trapping the user
+                this.cancel()
+            }
         },
         /** Callback of the click attribute on buttons to change message content */
         changeMessage(nMess) {
@@ -180,26 +198,32 @@ export default {
         },
         /** Open a dialog, no options buttons --> alert */
         open(title, message, options) {
-            console.log("[DEBUG] WizDialog.open() called", {
+            debug.ui.debug("WizDialog.open() called", {
                 title,
                 currentDialogOpen: this.dialog,
                 currentImportant: this.options?.important
             })
             if (this.dialog) {
                 if (this.options.important) {
-                    console.log("[DEBUG] WizDialog.open(): current dialog is important, ignoring new open request")
+                    debug.ui.debug("WizDialog.open(): current dialog is important, ignoring new open request")
                     return Promise.resolve() // do not close current if important
                 }
-                console.log("[DEBUG] WizDialog.open(): closing existing non-important dialog")
+                debug.ui.debug("WizDialog.open(): closing existing non-important dialog")
                 this.cancel()
             }
             this.dialog = true
             this.title = title
             this.message = message
-            this.options = Object.assign(Object.assign({}, default_options), options)
-            console.log("[DEBUG] WizDialog.open(): dialog opened with options", {
+            // Always start from the default options and make sure buttons is an array
+            const mergedOptions = Object.assign(Object.assign({}, default_options), options || {})
+            if (!Array.isArray(mergedOptions.buttons)) {
+                mergedOptions.buttons = []
+            }
+            this.options = mergedOptions
+            debug.ui.debug("WizDialog.open(): dialog opened with options", {
                 persistent: this.options.persistent,
-                important: this.options.important
+                important: this.options.important,
+                buttons: (this.options.buttons || []).map(b => b && b.title)
             })
             return new Promise((resolve, reject) => {
                 this.resolve = resolve
@@ -217,17 +241,26 @@ export default {
         },
         /** Finish the dialog and returns true */
         agree() {
-            console.log("[DEBUG] WizDialog.agree() called")
+            debug.ui.debug("WizDialog.agree() called")
             this.resolve(true)
             this.dialog = false
-            console.log("[DEBUG] WizDialog.agree() completed, dialog =", this.dialog)
+            debug.ui.debug("WizDialog.agree() completed, dialog =", this.dialog)
         },
         /** Finish the dialog and returns false */
         cancel() {
-            console.log("[DEBUG] WizDialog.cancel() called")
+            debug.ui.debug("WizDialog.cancel() called")
             this.resolve(false)
             this.dialog = false
-            console.log("[DEBUG] WizDialog.cancel() completed, dialog =", this.dialog)
+            debug.ui.debug("WizDialog.cancel() completed, dialog =", this.dialog)
+        },
+        /** Map Vuetify color names to our button variants */
+        getButtonVariant(color) {
+            if (!color || color === "grey") return null
+            if (color.includes("primary")) return "primary"
+            if (color.includes("success") || color.includes("green")) return "success"
+            if (color.includes("warning") || color.includes("orange")) return "warning"
+            if (color.includes("error") || color.includes("red")) return "error"
+            return "primary"
         }
     }
 }
@@ -241,5 +274,15 @@ a:visited {
 
 .amr-filler-tag {
     text-decoration: none;
+}
+
+.amr-wizdialog-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--amr-text-primary);
+}
+
+.text-center {
+    text-align: center;
 }
 </style>

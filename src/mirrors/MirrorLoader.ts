@@ -49,8 +49,12 @@ export class MirrorLoader {
     async getImpl(name: string) {
         return this.lookupMap.get(name)
     }
-    getMirror(name: string) {
-        return this.toMirror(this.lookupMap.get(name))
+    getMirror(name: string): MirrorObject | null {
+        const impl = this.lookupMap.get(name)
+        if (!impl) {
+            return null
+        }
+        return this.toMirror(impl)
     }
 
     getAll() {

@@ -6,6 +6,7 @@
 import storedb from "../../../amr/storedb"
 import Manga from "../../../amr/manga"
 import { mangaKey } from "../../../shared/utils"
+import { debug } from "../../../core/debug"
 
 // Import state and getters
 import { state, getters } from "./mangas-state"
@@ -35,14 +36,14 @@ const initActions = {
             // Filter out corrupted entries and delete them from DB
             const corruptedEntries = mangasdb.filter(mg => !mg.key || mg.key === "_no_key_" || !mg.url || !mg.mirror)
             if (corruptedEntries.length > 0) {
-                console.warn(
-                    `[Cleanup] Found ${corruptedEntries.length} corrupted manga entries, removing from database`
+                debug.storage.warn(
+                    "Cleanup Found " + corruptedEntries.length + " corrupted manga entries, removing from database"
                 )
                 for (const corrupted of corruptedEntries) {
                     try {
                         await storedb.deleteManga(corrupted.key || "_no_key_")
                     } catch (e) {
-                        console.error("Failed to delete corrupted entry:", corrupted.key, e)
+                        debug.storage.error("Failed to delete corrupted entry: " + corrupted.key, e)
                     }
                 }
             }

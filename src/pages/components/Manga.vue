@@ -1090,6 +1090,16 @@ export default {
             if (this.selected) this.selected = false
         })
     },
+    beforeUnmount() {
+        // Clean up EventBus listeners to prevent memory leaks
+        this.$eventBus.$off("multi-manga:open-latest:" + this.manga.key)
+        this.$eventBus.$off("multi-manga:open-first-new:" + this.manga.key)
+        this.$eventBus.$off("multi-manga:show-multiselect")
+        this.$eventBus.$off("multi-manga:hide-multiselect")
+        this.$eventBus.$off("multi-manga:select-all")
+        this.$eventBus.$off("multi-manga:select-unread")
+        this.$eventBus.$off("multi-manga:deselect-all")
+    },
     // Name of the component
     name: "Manga",
     components: { Flag }

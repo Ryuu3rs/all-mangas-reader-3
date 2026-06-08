@@ -2,6 +2,7 @@ import browser from "webextension-polyfill"
 import i18n from "./i18n"
 import { AppManga, AppStore, NotificationCreate } from "../types/common"
 import { findNextChapter } from "../shared/utils"
+import { debug } from "../core/debug"
 
 /**
  * Manage browser notifications
@@ -15,19 +16,19 @@ export class NotificationManager {
     constructor(private readonly store: AppStore) {}
 
     notificationClickCallback = (id: string | undefined) => {
-        console.debug(`[Notification] Click callback triggered for ID: ${id}`)
-        console.debug(`[Notification] Known notifications:`, Object.keys(this.notifications))
+        debug.ui.debug("Notification Click callback triggered for ID:", id)
+        debug.ui.trace("Notification Known notifications:", Object.keys(this.notifications))
 
         if (this.notifications[id] !== undefined) {
             const url = this.notifications[id]
-            console.debug(`[Notification] Opening URL: ${url}`)
+            debug.ui.debug("Notification Opening URL:", url)
 
             if (url) {
                 browser.tabs.create({ url }).catch(e => {
-                    console.error(`[Notification] Failed to open URL: ${url}`, e)
+                    debug.ui.error("Notification Failed to open URL: " + url, e)
                 })
             } else {
-                console.warn(`[Notification] No URL stored for notification ${id}`)
+                debug.ui.warn("Notification No URL stored for notification:", id)
             }
 
             // It deletes the used URL to avoid unbounded object growing.
@@ -35,7 +36,7 @@ export class NotificationManager {
             // If this proves to be a issue a close callback should be added too.
             delete this.notifications[id]
         } else {
-            console.warn(`[Notification] Unknown notification ID: ${id}`)
+            debug.ui.warn("Notification Unknown notification ID:", id)
         }
     }
 
@@ -56,7 +57,7 @@ export class NotificationManager {
                 isClickable: notification.isClickable
             })
             .catch(e => {
-                console.error(new Error(`Failed to create notification`, { cause: e }))
+                debug.ui.error("Failed to create notification:", e)
                 return undefined
             })
     }
@@ -67,7 +68,7 @@ export class NotificationManager {
      */
     notifyNewChapter(mg: AppManga) {
         if (!browser.notifications) {
-            console.error("Browser does not support notifications")
+            debug.ui.error("Browser does not support notifications")
             return
         }
 
@@ -89,8 +90,8 @@ export class NotificationManager {
         }
 
         // Debug logging
-        console.debug(`[Notification] Creating notification for: ${mangaData.name}`)
-        console.debug(`[Notification] Chapter found: ${!!chapter}, URL: ${clickUrl}`)
+        debug.ui.debug("Notification Creating notification for:", mangaData.name)
+        debug.ui.trace("Notification Chapter found: " + !!chapter + ", URL:", clickUrl)
 
         // The URL must be saved under a global object, mapped by ID.
         // (no one would like to click a manga notification and ending up opening another manga)
@@ -108,9 +109,7 @@ export class NotificationManager {
                 isClickable: true // Always clickable - opens manga page if no chapter URL
             })
             .catch(e => {
-                console.error(
-                    new Error(`Failed to create ${mangaData.name} notification for ${mangaData.mirror}`, { cause: e })
-                )
+                debug.ui.error("Failed to create " + mangaData.name + " notification for " + mangaData.mirror, e)
             })
 
         //Auto close notification if required

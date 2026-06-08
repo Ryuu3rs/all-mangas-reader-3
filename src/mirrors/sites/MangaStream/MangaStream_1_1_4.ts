@@ -347,7 +347,8 @@ export const getMangaStream114Implementations = (mirrorHelper: MirrorHelper): Mi
                 domains: ["cypherscans.xyz"],
                 home: "https://cypherscans.xyz",
                 // canListFullMangas: true,
-                chapter_url: /chapter\-\d+/g
+                chapter_url: /chapter\-\d+/g,
+                disabledForSearch: true // Search is timing out consistently
             },
             {
                 base_url: "https://cypherscans.xyz/",

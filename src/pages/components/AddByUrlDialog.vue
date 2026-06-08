@@ -47,6 +47,7 @@
 <script>
 import browser from "webextension-polyfill"
 import { matchDomainRule } from "../../shared/utils"
+import { debug } from "../../core/debug"
 
 export default {
     name: "AddByUrlDialog",
@@ -131,14 +132,18 @@ export default {
                 })
 
                 if (result?.success) {
-                    this.successMessage = `Added "${result.mangaName}" to your library!`
+                    if (result.isUpdate) {
+                        this.successMessage = `Updated "${result.mangaName}" - chapter list refreshed!`
+                    } else {
+                        this.successMessage = `Added "${result.mangaName}" to your library!`
+                    }
                     this.$emit("manga-added", result)
                     setTimeout(() => this.close(), 1500)
                 } else {
                     this.errorMessage = result?.error || "Failed to add manga. Please try again."
                 }
             } catch (e) {
-                console.error("Error adding manga by URL:", e)
+                debug.ui.error("Error adding manga by URL:", e)
                 this.errorMessage = e.message || "An error occurred. Please try again."
             } finally {
                 this.loading = false

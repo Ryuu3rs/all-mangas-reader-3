@@ -10,6 +10,7 @@ export class TestSite extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Test Site"
     canListFullMangas = false
+    disabledForSearch = true // Development-only local mirror
     mirrorIcon = Icon
     languages = "en"
     domains = ["localhost:3456"]

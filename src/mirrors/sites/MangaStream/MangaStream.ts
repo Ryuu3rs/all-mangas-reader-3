@@ -114,7 +114,7 @@ class MangaStream extends BaseMirror implements MirrorImplementation {
 
         const $ = this.parseHtml(doc)
 
-        var res = []
+        const res = []
         $(this.options.chapters_a_sel, doc).each(function (index) {
             let chapter_text = $(this).text().trim()
             if (_self.options.chapters_text_sel !== "") {

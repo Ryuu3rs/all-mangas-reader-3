@@ -20,6 +20,9 @@ export class HandleBookmarks {
                     note: noteBM.note,
                     scanSrc: noteBM.scanSrc
                 }
+            case "getBookmarksForChapter":
+                // Batched API: get all scan bookmarks for a chapter in one call
+                return this.getBookmarksForChapter(message)
             case "deleteBookmark":
                 this.deleteBookmark(message)
                 return {}
@@ -63,7 +66,7 @@ export class HandleBookmarks {
         return impl.getImageUrlFromPage(message.url)
     }
     /**
-     * Find a bookmark from store
+     * Find a bookmark from store using O(1) index lookup
      * @param {*} obj
      */
     findBookmark(obj) {
@@ -73,13 +76,24 @@ export class HandleBookmarks {
             rootState: this.store
         })
 
-        const scanUrl = mangaKey({
-            url: obj.scanUrl,
-            mirror: obj.mirror,
-            rootState: this.store
-        })
+        // Only generate scanUrl key if scanUrl is defined (for scan bookmarks, not chapter bookmarks)
+        let key = prefixKey
+        if (obj.scanUrl) {
+            const scanUrlKey = mangaKey({
+                url: obj.scanUrl,
+                mirror: obj.mirror,
+                rootState: this.store
+            })
+            key = `${prefixKey}_${scanUrlKey}`
+        }
 
-        const key = prefixKey + (obj.scanUrl ? `_${scanUrl}` : "")
+        // Use index for O(1) lookup instead of O(n) linear search
+        const index = this.store.state.bookmarks._keyIndex
+        if (index && index.has(key)) {
+            return index.get(key)
+        }
+
+        // Fallback to linear search if index not available (shouldn't happen)
         return this.store.state.bookmarks.all.find(bookmark => bookmark.key === key)
     }
 
@@ -102,6 +116,48 @@ export class HandleBookmarks {
             note: bm.note,
             scanSrc: obj.scanUrl
         }
+    }
+
+    /**
+     * Get all scan bookmarks for a chapter in one batch call
+     * Reduces O(scans) messages to O(1) message
+     * @param {*} obj - { mirror, url, chapUrl, scanUrls: string[] }
+     * @returns {Object} - Map of scanUrl -> { isBooked, note }
+     */
+    getBookmarksForChapter(obj) {
+        const result = {
+            chapter: { isBooked: false, note: "" },
+            scans: {}
+        }
+
+        // Get chapter bookmark
+        const chapterBm = this.getBookmark({
+            mirror: obj.mirror,
+            url: obj.url,
+            chapUrl: obj.chapUrl,
+            type: "chapter"
+        })
+        result.chapter = {
+            isBooked: chapterBm.booked,
+            note: chapterBm.note
+        }
+
+        // Get all scan bookmarks
+        for (const scanUrl of obj.scanUrls || []) {
+            const scanBm = this.getBookmark({
+                mirror: obj.mirror,
+                url: obj.url,
+                chapUrl: obj.chapUrl,
+                scanUrl: scanUrl,
+                type: "scan"
+            })
+            result.scans[scanUrl] = {
+                isBooked: scanBm.booked,
+                note: scanBm.note
+            }
+        }
+
+        return result
     }
 
     /**

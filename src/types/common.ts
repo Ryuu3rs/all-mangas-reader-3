@@ -6,7 +6,10 @@ export interface RootState {
     options: AppOptions
     mangas: { all: AppManga[] }
     mirrors: { all: Mirror[] }
-    bookmarks: { all: Bookmark[] }
+    bookmarks: {
+        all: Bookmark[]
+        _keyIndex: Map<string, Bookmark>
+    }
 }
 
 export interface Bookmark {

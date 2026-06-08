@@ -118,7 +118,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 languages: "en",
                 domains: ["hiperdex.com", "hiperdex.top"],
                 home: "https://www.hiperdex.top/",
-                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g
+                chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
+                disabledForSearch: true // Domain appears offline
             },
             {
                 search_url: "https://www.hiperdex.top/",
@@ -273,7 +274,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["manhwatop.com"],
                 home: "https://manhwatop.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series|read)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // Search endpoint currently returns HTTP errors
             },
             {
                 search_url: "https://manhwatop.com/",
@@ -310,7 +312,8 @@ export const getMadaraImplementations = (mirrorHelper: MirrorHelper): MirrorImpl
                 domains: ["en.ruyamanga.com"],
                 home: "https://en.ruyamanga.com/",
                 chapter_url: /^\/(manhwa|comic|manga|webtoon|manhua|series)\/.*\/.+$/g,
-                canListFullMangas: false
+                canListFullMangas: false,
+                disabledForSearch: true // Domain appears offline
             },
             {
                 search_url: "https://en.ruyamanga.com/"

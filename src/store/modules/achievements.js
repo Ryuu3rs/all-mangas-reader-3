@@ -1,4 +1,5 @@
 import storedb from "../../amr/storedb"
+import { debug } from "../../core/debug"
 
 /**
  * Achievement definitions - organized by category
@@ -201,7 +202,7 @@ const actions = {
             if (data) commit("setAchievements", data)
             commit("setInitialized", true)
         } catch (e) {
-            console.error("[Achievements] Failed to load from DB:", e)
+            debug.storage.error("Achievements Failed to load from DB:", e)
             commit("setInitialized", true)
         }
     },

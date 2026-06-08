@@ -9,8 +9,9 @@ import * as syncUtils from "../../../amr/sync/utils"
 import { shouldDelayUpdate } from "../../../shared/chapterUpdaterUtil"
 import { shouldCheckForUpdate } from "../../../shared/utils"
 import { ABSTRACT_MANGA_MSG, ERROR_CODE_FAILED_UPDATE } from "./mangas-constants"
+import { debug as coreDebug } from "../../../core/debug"
 
-const logger = { debug: console.debug, info: console.info, error: console.error }
+const logger = { debug: coreDebug.storage.debug, info: coreDebug.storage.info, error: coreDebug.storage.error }
 
 /**
  * Update-related actions

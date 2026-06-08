@@ -2,6 +2,7 @@ import { AnyNode, BasicAcceptedElems, load } from "cheerio"
 import { MirrorHelper } from "../../MirrorHelper"
 import browser from "webextension-polyfill"
 import { ScriptJsonInject } from "../../../types/common"
+import { debug } from "../../../core/debug"
 
 export abstract class BaseMirror {
     protected constructor(protected mirrorHelper: MirrorHelper) {}
@@ -36,11 +37,12 @@ export abstract class BaseMirror {
 
         const [fetchResponse] = await browser.scripting.executeScript({
             target: target,
+            // Note: This function runs in page context via scripting API, so we use console.error
             func: function ({ url, config }) {
                 return fetch(url, config)
                     .then(r => r.json())
                     .catch(e => {
-                        console.error(e)
+                        console.error("[AMR BaseMirror]", e)
                         throw e
                     })
             },

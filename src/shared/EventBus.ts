@@ -1,5 +1,5 @@
 /**
- * Shared EventBus singleton using mitt (Vue 3 compatible)
+ * Shared EventBus singleton using core/events (no external dependencies)
  *
  * This module provides a centralized event bus that can be used across
  * all contexts: popup, dashboard, reader, and components.
@@ -20,7 +20,8 @@
  * - check-viewport - Reader: check visible pages
  * - offset-book - Reader: offset book mode first page
  */
-import mitt, { Emitter, Handler } from "mitt"
+import { createEventEmitter } from "../core/events"
+import { debug } from "../core/debug"
 
 // Define event types for better type safety
 export type EventBusEvents = {
@@ -46,18 +47,22 @@ export type EventBusEvents = {
     "go-to-scanurl": string
     "check-viewport": void
     "offset-book": unknown
+    "reload-all-errors": void
     // Dynamic events (multi-manga with key suffix)
     [key: `multi-manga:open-latest:${string}`]: void
     [key: `multi-manga:open-first-new:${string}`]: void
     [key: `multi-manga:refresh:${string}`]: void
 }
 
-// Create the mitt emitter with typed events
-const emitter: Emitter<EventBusEvents> = mitt<EventBusEvents>()
+// Handler type for compatibility
+type Handler<T> = (payload: T) => void
+
+// Create the emitter using our core events module
+const emitter = createEventEmitter<EventBusEvents>()
 
 /**
- * EventBus interface with Vue 2 compatible API ($on, $off, $emit)
- * and direct mitt methods (on, off, emit)
+ * EventBus interface with Vue 2 compatible API ($on, $off, $emit, $once)
+ * and direct methods (on, off, emit)
  */
 export interface IEventBus {
     // Vue 2 compatible API (for backwards compatibility)
@@ -67,12 +72,14 @@ export interface IEventBus {
         event: K,
         ...args: EventBusEvents[K] extends void ? [] : [EventBusEvents[K]]
     ) => void
-    // Direct mitt methods
+    $once: <K extends keyof EventBusEvents>(event: K, handler: Handler<EventBusEvents[K]>) => void
+    // Direct methods
     on: <K extends keyof EventBusEvents>(event: K, handler: Handler<EventBusEvents[K]>) => void
     off: <K extends keyof EventBusEvents>(event: K, handler?: Handler<EventBusEvents[K]>) => void
     emit: <K extends keyof EventBusEvents>(event: K, payload?: EventBusEvents[K]) => void
-    // Access to all handlers
-    all: Emitter<EventBusEvents>["all"]
+    once: <K extends keyof EventBusEvents>(event: K, handler: Handler<EventBusEvents[K]>) => void
+    // Listener count for debugging
+    listenerCount: <K extends keyof EventBusEvents>(event: K) => number
 }
 
 /**
@@ -91,20 +98,53 @@ export interface IEventBus {
  */
 const EventBus: IEventBus = {
     // Vue 2 compatible API
-    $on: (event, handler) => emitter.on(event, handler),
-    $off: (event, handler) => emitter.off(event, handler),
+    $on: (event, handler) => {
+        debug.events.trace(`$on: ${String(event)}`)
+        emitter.on(event, handler)
+    },
+    $off: (event, handler) => {
+        debug.events.trace(`$off: ${String(event)}`)
+        emitter.off(event, handler)
+    },
     $emit: (event, ...args) => {
-        const payload = args.length === 1 ? args[0] : args.length === 0 ? undefined : args
-        emitter.emit(event, payload as never)
+        debug.events.trace(`$emit: ${String(event)}`, args.length > 0 ? "(with payload)" : "")
+        // Use type assertion to handle the conditional spread
+        if (args.length > 0) {
+            ;(emitter.emit as (e: typeof event, p: unknown) => void)(event, args[0])
+        } else {
+            ;(emitter.emit as (e: typeof event) => void)(event)
+        }
+    },
+    $once: (event, handler) => {
+        debug.events.trace(`$once: ${String(event)}`)
+        emitter.once(event, handler)
     },
 
-    // Direct mitt methods
-    on: (event, handler) => emitter.on(event, handler),
-    off: (event, handler) => emitter.off(event, handler),
-    emit: (event, payload) => emitter.emit(event, payload as never),
+    // Direct methods
+    on: (event, handler) => {
+        debug.events.trace(`on: ${String(event)}`)
+        emitter.on(event, handler)
+    },
+    off: (event, handler) => {
+        debug.events.trace(`off: ${String(event)}`)
+        emitter.off(event, handler)
+    },
+    emit: (event, payload) => {
+        debug.events.trace(`emit: ${String(event)}`, payload !== undefined ? "(with payload)" : "")
+        // Use type assertion to handle the conditional spread
+        if (payload !== undefined) {
+            ;(emitter.emit as (e: typeof event, p: unknown) => void)(event, payload)
+        } else {
+            ;(emitter.emit as (e: typeof event) => void)(event)
+        }
+    },
+    once: (event, handler) => {
+        debug.events.trace(`once: ${String(event)}`)
+        emitter.once(event, handler)
+    },
 
-    // Access to all handlers (for debugging)
-    all: emitter.all
+    // Listener count for debugging
+    listenerCount: event => emitter.listenerCount(event)
 }
 
 export default EventBus

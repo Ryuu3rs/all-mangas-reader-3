@@ -1,7 +1,6 @@
 <template>
-    <v-container
-        class="text-center pa-0 pb-4"
-        fluid
+    <div
+        class="amr-reader-container text-center"
         :class="{ 'no-full-chapter': !fullchapter }"
         @click="pageChange"
         @dblclick="tryChapterChange"
@@ -15,9 +14,12 @@
             border="0"
             cellspacing="0"
             cellpadding="0">
+            <!-- CRITICAL FIX: Use simple index-based key
+                 Vue will properly destroy and recreate Page components when pages array changes
+                 The key cleanup happens in Page.vue's beforeUnmount() hook -->
             <Page
                 v-for="(scans, i) in pages"
-                :key="i"
+                :key="'page-' + i"
                 :index="i"
                 :scans="scans"
                 :direction="direction"
@@ -28,31 +30,34 @@
                 @become-current="becomeCurrent" />
         </table>
         <!-- Pages navigator -->
-        <v-hover v-if="options.bottomNavigationEnabled" v-slot="{ isHovering: hover }">
-            <div class="amr-pages-nav" :class="{ display: hover, 'shrink-draw': drawer }">
-                <!-- Current page state + previous next buttons -->
-                <PageNavigator
-                    :current-page="currentPage"
-                    :first-scan="firstScan"
-                    :go-next-scan="goNextScan"
-                    :go-previous-scan="goPreviousScan"
-                    :i18n="i18n"
-                    :last-scan="lastScan"
-                    :pages="pages"
-                    :should-invert-keys="shouldInvertKeys" />
-                <ThumbnailNavigator
-                    v-show="scansState.loaded"
-                    ref="page-navigator"
-                    :current-page="currentPage"
-                    :direction="direction"
-                    :display-page-scans-indexes="displayPageScansIndexes"
-                    :go-scan="goScan"
-                    :pages="pages"
-                    :scans-state="scansState"
-                    :should-invert-keys="shouldInvertKeys" />
-            </div>
-        </v-hover>
-    </v-container>
+        <div
+            v-if="options.bottomNavigationEnabled"
+            class="amr-pages-nav"
+            :class="{ display: navHover, 'shrink-draw': drawer }"
+            @mouseenter="navHover = true"
+            @mouseleave="navHover = false">
+            <!-- Current page state + previous next buttons -->
+            <PageNavigator
+                :current-page="currentPage"
+                :first-scan="firstScan"
+                :go-next-scan="goNextScan"
+                :go-previous-scan="goPreviousScan"
+                :i18n="i18n"
+                :last-scan="lastScan"
+                :pages="pages"
+                :should-invert-keys="shouldInvertKeys" />
+            <ThumbnailNavigator
+                v-show="scansState.loaded"
+                ref="page-navigator"
+                :current-page="currentPage"
+                :direction="direction"
+                :display-page-scans-indexes="displayPageScansIndexes"
+                :go-scan="goScan"
+                :pages="pages"
+                :scans-state="scansState"
+                :should-invert-keys="shouldInvertKeys" />
+        </div>
+    </div>
 </template>
 
 <script>
@@ -71,10 +76,10 @@ import Page from "./Page"
 import ThumbnailNavigator from "./ThumbnailNavigator"
 import PageNavigator from "./PageNavigator"
 import { isFirefox } from "../../shared/utils"
+import { debug } from "../../core/debug"
 
 /** Create a custom scroller (alias of $scrollTo method) to enable multiple scrollings (thumbs scroll simultaneously page scroll) */
 const thumbsScroller = scroller()
-let currentlyThumbsScrolling = false
 
 /**
  * Simple debounce utility function (Performance Fix C)
@@ -105,7 +110,8 @@ function debounce(fn, delay) {
 function throttle(fn, delay) {
     let lastCall = 0
     let timeoutId = null
-    return function (...args) {
+
+    const throttled = function (...args) {
         const now = Date.now()
         const remaining = delay - (now - lastCall)
 
@@ -126,6 +132,17 @@ function throttle(fn, delay) {
             }, remaining)
         }
     }
+
+    // FIX #5: Add cancel method for proper cleanup on unmount
+    throttled.cancel = function () {
+        if (timeoutId) {
+            clearTimeout(timeoutId)
+            timeoutId = null
+        }
+        lastCall = 0
+    }
+
+    return throttled
 }
 
 export default {
@@ -133,6 +150,7 @@ export default {
     data() {
         return {
             regroupablePages: [] /* How to regroup pages to make a book */,
+            pages: [] /* Current list of pages to render, built from scans/regroupablePages */,
             visible: [
                 0
             ] /* List of indexes of visible pages, used when not fullchapter, one one in list except for transitions */,
@@ -154,7 +172,10 @@ export default {
             pageData: pageData.state /* reactive pageData state (current manga chapter infos) */,
 
             scanClickTimeout:
-                -1 /* When clicking for next scan, if this is the last scan, wait for dblclick, this is the associated timeout, we need to clear it if going next chapter */
+                -1 /* When clicking for next scan, if this is the last scan, wait for dblclick, this is the associated timeout, we need to clear it if going next chapter */,
+            currentlyThumbsScrolling: false /* Track if currently scrolling in thumbs bar (moved from module-level) */,
+            isMounted: false /* Track if component is mounted to prevent race conditions in $nextTick callbacks */,
+            navHover: false /* Track hover state for bottom navigation (replaces v-hover) */
         }
     },
     props: {
@@ -172,6 +193,27 @@ export default {
         shouldInvertKeys: Boolean /* If keys and buttons should be flipped */
     },
     created() {
+        debug.reader.debug("Reader.created() - scansState.scans.length:", this.scansState.scans.length)
+
+        // PERFORMANCE MONITORING: Track check-viewport event frequency
+        this._checkViewportCount = 0
+        this._checkViewportStartTime = Date.now()
+
+        // Instrumentation: track whether we are rebuilding pages repeatedly
+        this._rebuildPagesCount = 0
+        this._rebuildPagesBurstCount = 0
+        this._rebuildPagesLastTs = 0
+
+        // Leak instrumentation: periodic snapshot timer
+        this._leakReaderTimer = null
+        this._leakReaderStartTs = Date.now()
+        this._leakReaderLastViewportCount = 0
+        this._leakReaderLastViewportTs = Date.now()
+
+        // Leak instrumentation: small persistent ring-buffer (avoid console lockups)
+        this._leakReaderLines = []
+        this._leakReaderLastPersistTs = 0
+
         this.util = new Util(this.mirror)
         /** Initialize key handlers */
         this.autoNextChapter = false
@@ -193,62 +235,143 @@ export default {
         }, 500)
 
         /**
-         * Throttled scroll handler (Performance Fix B)
+         * Throttled scroll handler (Performance Fix B + Critical Fix)
          * Single centralized scroll listener instead of one per Page component
-         * Throttled to 60fps (16ms) for smooth performance
+         * Throttled to 100ms (10fps) - reduced from 16ms to prevent event storm
+         *
+         * CRITICAL: At 16ms (60fps) with 100 pages, this caused 6000 checkInViewPort()
+         * calls per second, each doing DOM traversal. This was the primary cause of
+         * "unresponsive script" crashes in Firefox.
          */
         this.throttledScrollHandler = throttle(() => {
             // Update scroll ratio
             this.scrollRatio = window.pageYOffset / document.documentElement.scrollHeight
+
+            // Leak instrumentation: count check-viewport emissions
+            this._checkViewportCount++
+
             // Broadcast to all Page components to check viewport
             EventBus.$emit("check-viewport")
-        }, 16) // ~60fps
+        }, 100) // 10fps - much more reasonable for viewport checks
+
+        /** Store resize handler so we can remove it later */
+        this._resizeHandler = () => {
+            this.keepScrollPos(10)
+            // Also check viewport on resize
+            EventBus.$emit("check-viewport")
+        }
+
+        /** Store EventBus handlers for cleanup */
+        this._eventHandlers = {
+            loadedScan: this.updateProgress,
+            chapterLoaded: this.loadedChapter,
+            goToScanurl: url => {
+                this.util.debug("Restore previous last scan : " + url)
+                // Use $once instead of $on to prevent listener accumulation
+                EventBus.$once("pages-loaded", () => {
+                    setTimeout(() => this.goScanUrl(url), 0)
+                })
+            },
+            offsetBook: () => {
+                this.scansState.scans[0].doublepage = !this.scansState.scans[0].doublepage
+                this.loadedChapter()
+            }
+        }
 
         /** Keep scroll ratio - now using throttled handler */
         window.addEventListener("scroll", this.throttledScrollHandler)
         /** Keep scroll ratio when resizing */
-        window.addEventListener("resize", () => {
-            this.keepScrollPos(10)
-            // Also check viewport on resize
-            EventBus.$emit("check-viewport")
-        })
-        /** Register loaded scans events */
-        EventBus.$on("loaded-scan", this.updateProgress)
-        /** Listen for a request of going to specific scan url */
-        EventBus.$on("go-to-scanurl", url => {
-            this.util.debug("Restore previous last scan : " + url)
-            EventBus.$on("pages-loaded", () => {
-                // wait for the pages to be fully loaded
-                setTimeout(() => this.goScanUrl(url), 0) // add additional wait so the scroll is correct enough, 0 is enough because we just need to do it after the nextTick (in nextTick, pages are rearranged and watcher on pages will reset currentPage, do it after that)
-            })
-        })
-        /** Register loaded scans events */
-        EventBus.$on("chapter-loaded", this.loadedChapter)
+        window.addEventListener("resize", this._resizeHandler)
+        /** Register EventBus listeners */
+        EventBus.$on("loaded-scan", this._eventHandlers.loadedScan)
+        EventBus.$on("go-to-scanurl", this._eventHandlers.goToScanurl)
+        EventBus.$on("chapter-loaded", this._eventHandlers.chapterLoaded)
+        EventBus.$on("offset-book", this._eventHandlers.offsetBook)
 
-        /** Event for offsetting first page of book */
-        EventBus.$on("offset-book", obj => {
-            this.scansState.scans[0].doublepage = !this.scansState.scans[0].doublepage
-            this.loadedChapter()
-        })
+        // If scans are already present when Reader is created (common when coming from background state),
+        // build the initial pages once here. This avoids using an `immediate` watcher on
+        // scansState.scans.length, which was causing double-render and duplicate Page/Scan instances.
+        if (this.scansState.scans.length > 0) {
+            debug.reader.debug("Reader.created() - scans already available, rebuilding pages once")
+            this.rebuildPages()
+        }
+    },
+    beforeUnmount() {
+        // Clear mounted flag to prevent race conditions (Issue 14 fix)
+        this.isMounted = false
+
+        // Clean up window event listeners
+        window.removeEventListener("scroll", this.throttledScrollHandler)
+        window.removeEventListener("resize", this._resizeHandler)
+
+        // Clean up keyboard listeners (registered in handlekeys)
+        if (this._keydownHandler) {
+            window.removeEventListener("keydown", this._keydownHandler, true)
+        }
+        if (this._keyupHandler) {
+            window.removeEventListener("keyup", this._keyupHandler, true)
+        }
+        if (this._keypressHandler) {
+            window.removeEventListener("keypress", this._keypressHandler, true)
+        }
+
+        // Clean up EventBus listeners
+        if (this._eventHandlers) {
+            EventBus.$off("loaded-scan", this._eventHandlers.loadedScan)
+            EventBus.$off("go-to-scanurl", this._eventHandlers.goToScanurl)
+            EventBus.$off("chapter-loaded", this._eventHandlers.chapterLoaded)
+            EventBus.$off("offset-book", this._eventHandlers.offsetBook)
+            this._eventHandlers = null
+        }
+
+        // Cancel any pending debounced operations
+        if (this.debouncedSaveState && this.debouncedSaveState.cancel) {
+            this.debouncedSaveState.cancel()
+        }
+        if (this.throttledScrollHandler && this.throttledScrollHandler.cancel) {
+            this.throttledScrollHandler.cancel()
+        }
+
+        // Clear scanClickTimeout to prevent timer firing after unmount (Issue 9 fix)
+        if (this.scanClickTimeout && this.scanClickTimeout !== -1) {
+            clearTimeout(this.scanClickTimeout)
+            this.scanClickTimeout = -1
+        }
     },
     watch: {
+        // Rebuild pages whenever the number of scans changes after mount.
+        // NOTE: no `immediate: true` here on purpose to avoid double-render on initial mount.
+        "scansState.scans.length": {
+            handler(newLength, oldLength) {
+                if (newLength === oldLength) return
+                debug.reader.debug("scansState.scans.length changed:", oldLength, "->", newLength)
+
+                // CRITICAL: Check for infinite growth
+                if (newLength > 1000) {
+                    debug.reader.error("scans.length is growing infinitely!", newLength, "- indicates memory leak")
+                    return // Don't rebuild pages if we're in an infinite loop
+                }
+
+                this.rebuildPages()
+            }
+        },
         /** Adjust the scroll in the thumbnails bar to have at most the currentPage centered and at least visible */
         currentPage(nVal, oVal) {
             // while scrolling main page to go to selected page, currentPage is updated multiple times, do not rescroll if currently scrolling
-            if (currentlyThumbsScrolling) return
-            currentlyThumbsScrolling = true
+            if (this.currentlyThumbsScrolling) return
+            this.currentlyThumbsScrolling = true
             this.$nextTick(() => {
                 // Rely on scansState.loaded
                 const pageNavigator = this.$refs["page-navigator"]
                 if (!pageNavigator) {
-                    currentlyThumbsScrolling = false
+                    this.currentlyThumbsScrolling = false
                     return
                 }
 
                 // Guard against thumbnail not being available
                 const thumbnail = pageNavigator.$refs.thumbnail?.[nVal]
                 if (!thumbnail?.$el) {
-                    currentlyThumbsScrolling = false
+                    this.currentlyThumbsScrolling = false
                     return
                 }
 
@@ -261,7 +384,7 @@ export default {
                     x: true,
                     y: false,
                     onDone: () => {
-                        currentlyThumbsScrolling = false
+                        this.currentlyThumbsScrolling = false
                     }
                 })
             })
@@ -279,12 +402,17 @@ export default {
         book(nVal, oVal) {
             // keep the scrolling ratio when changing book mode / not really relevant but better than nothing...
             this.keepScrollPos(100)
+            // Rebuild pages when toggling book mode so layout matches the mode
+            if (this.scansState.scans.length > 0) {
+                this.rebuildPages()
+            }
         },
         /**
          * When pages change (from not fully loaded to loaded and booked or when book property is changed),
          * try to keep the old visible scan still visible.
          */
         pages(nVal, oVal) {
+            debug.reader.debug("pages watcher fired - old length:", oVal?.length, "new length:", nVal?.length)
             if (nVal.length === oVal.length) return // pages didn't change that much :)
             let furl // url of the first viewable scan on currentpage
             if (nVal.length < oVal.length) {
@@ -324,30 +452,25 @@ export default {
         }
     },
     mounted() {
+        // Set mounted flag to prevent race conditions in $nextTick callbacks
+        this.isMounted = true
+        debug.reader.debug("Reader.mounted() - Reader component mounted")
         /* Check if page can scroll vertically */
         this.checkResizeOverflow()
+
+        // Safety: ensure pages are built even if created() timing was off
+        // This handles edge case where scans are populated between created() and mounted()
+        // or where scans.length doesn't change after mount (watcher won't fire)
+        this.$nextTick(() => {
+            // Guard against unmounted component (Issue 14 fix)
+            if (!this.isMounted) return
+            if (this.scansState.scans.length > 0 && this.pages.length === 0) {
+                debug.reader.debug("Reader.mounted() $nextTick - pages empty but scans exist, rebuilding")
+                this.rebuildPages()
+            }
+        })
     },
     computed: {
-        /* Current displayed pages */
-        pages() {
-            /* First, list of pages is single scan pages with all the chapter's scans */
-            console.log("[DEBUG] Reader.pages computed", {
-                loaded: this.scansState.loaded,
-                book: this.book,
-                scansLength: this.scansState.scans?.length,
-                regroupablePagesLength: this.regroupablePages?.length
-            })
-            // If not loaded, not in book mode, OR regroupablePages hasn't been populated yet,
-            // fall back to single page layout
-            if (!this.scansState.loaded || !this.book || this.regroupablePages.length === 0) {
-                const result = this.scansState.scans.map((sc, i) => [{ src: sc.url, name: "" + (i + 1) }])
-                console.log("[DEBUG] Reader.pages returning single pages:", result.length)
-                return result
-            } else {
-                console.log("[DEBUG] Reader.pages returning regroupablePages:", this.regroupablePages?.length)
-                return this.regroupablePages
-            }
-        },
         firstScan() {
             const cur = this.currentPage
             let n = cur
@@ -363,6 +486,65 @@ export default {
     },
     components: { PageNavigator, ThumbnailNavigator, Page },
     methods: {
+        /**
+         * Rebuild the list of pages from the current scans state and book mode.
+         * This replaces the old `pages()` computed + `cachedSinglePages` watcher combo
+         * that caused duplicate Page/Scan instances and EventBus listener leaks.
+         */
+        rebuildPages() {
+            // FIX #6: Guard against concurrent rebuilds
+            if (this._isRebuilding) {
+                debug.reader.debug("rebuildPages() skipped - already rebuilding")
+                return
+            }
+            this._isRebuilding = true
+
+            // Detect excessive rebuildPages() calls
+            this._rebuildPagesCount = (this._rebuildPagesCount || 0) + 1
+            const now = Date.now()
+            const lastTs = this._rebuildPagesLastTs || 0
+            if (lastTs && now - lastTs < 250) {
+                this._rebuildPagesBurstCount = (this._rebuildPagesBurstCount || 0) + 1
+                if (this._rebuildPagesBurstCount > 20) {
+                    debug.reader.warn(
+                        `rebuildPages() called frequently (burst=${this._rebuildPagesBurstCount}) scans=${
+                            this.scansState?.scans?.length || 0
+                        } pages=${this.pages?.length || 0}`
+                    )
+                }
+            } else {
+                this._rebuildPagesBurstCount = 0
+            }
+            this._rebuildPagesLastTs = now
+
+            const scans = this.scansState.scans || []
+            const nbscans = scans.length
+            if (!nbscans) {
+                debug.reader.debug("rebuildPages - no scans, clearing pages")
+                this.pages = []
+                this._isRebuilding = false
+                return
+            }
+
+            // If in book mode and regroupablePages has been populated, use it as source of truth.
+            if (this.book && this.regroupablePages.length > 0) {
+                debug.reader.debug("rebuildPages - using regroupablePages, length:", this.regroupablePages.length)
+                this.pages = this.regroupablePages
+                this._isRebuilding = false
+                return
+            }
+
+            // Default: single-page layout, one scan per page in order
+            const newPages = []
+            for (let i = 0; i < nbscans; i++) {
+                const sc = scans[i]
+                if (!sc) continue
+                newPages.push([{ src: sc.url, name: "" + (i + 1) }])
+            }
+            debug.reader.debug("rebuildPages - single-page layout, length:", newPages.length)
+            this.pages = newPages
+            this._isRebuilding = false
+        },
         /**
          * Click on the scans container, if single page mode, go to next or previous page
          */
@@ -474,6 +656,12 @@ export default {
 
             // Pages are loaded
             EventBus.$emit("pages-loaded")
+
+            // If we are in book mode, regroupablePages has just been updated, so rebuild pages
+            if (this.book && this.scansState.scans.length > 0) {
+                debug.reader.debug("loadedChapter() - rebuilding pages for book mode")
+                this.rebuildPages()
+            }
         },
         /** Return a string containing the scan indexes (1-based) contained in the page of index page_index in the right order (using direction ltr or rtl) */
         displayPageScansIndexes(page_index) {
@@ -769,7 +957,7 @@ export default {
                                     this.autoNextChapter = true
                                     // gotta press spacebar again within 4s
                                     // im doing this rather than using this.goNextScan(doubletap) cause i don't like how that works
-                                    setTimeout(function () {
+                                    setTimeout(() => {
                                         this.autoNextChapter = false
                                     }, 4000)
                                 }
@@ -850,12 +1038,16 @@ export default {
                     }
                 }
             }
-            window.addEventListener("keydown", registerKeys, true)
+            // Store references for cleanup in beforeUnmount
+            this._keydownHandler = registerKeys
+            window.addEventListener("keydown", this._keydownHandler, true)
 
             //disable default websites shortcuts
             const stopProp = e => e.stopImmediatePropagation()
-            window.addEventListener("keyup", stopProp, true)
-            window.addEventListener("keypress", stopProp, true)
+            this._keyupHandler = stopProp
+            this._keypressHandler = stopProp
+            window.addEventListener("keyup", this._keyupHandler, true)
+            window.addEventListener("keypress", this._keypressHandler, true)
         },
         /** Return page index from scan url */
         getPageIndexFromScanUrl(url) {
@@ -875,6 +1067,17 @@ export default {
 </script>
 
 <style data-amr="true">
+/* Reader container (replaces v-container) */
+.amr-reader-container {
+    width: 100%;
+    padding: 0;
+    padding-bottom: 16px;
+}
+
+.amr-reader-container.text-center {
+    text-align: center;
+}
+
 /** Scans container table */
 .amr-scan-container {
     margin-left: auto;
@@ -917,8 +1120,8 @@ html {
     overflow: auto;
 }
 
-/** Pages navigator */
-.amr-page-next-prev .v-toolbar {
+/** Pages navigator toolbar */
+.amr-page-next-prev .amr-toolbar {
     opacity: 0.8;
     padding: 5px 10px;
     border-radius: 5px;

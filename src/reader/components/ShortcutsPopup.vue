@@ -1,37 +1,33 @@
 <template>
-    <v-dialog v-model="dialog" :max-width="800" @keydown.esc="dialog = false" v-bind:style="{ zIndex: 5 }">
-        <v-card>
-            <v-toolbar color="primary" density="compact" variant="flat">
-                <v-toolbar-title class="text-white">{{ i18n("reader_shortcuts_title") }}</v-toolbar-title>
-            </v-toolbar>
-            <v-card-text text-no-wrap>
-                <div class="text-h6 py-3">{{ i18n("reader_shortcuts_section_chapters") }}</div>
-                <shortcuts :items="shortcuts_chapter" />
-                <div class="text-h6 py-3">{{ i18n("reader_shortcuts_section_manga") }}</div>
-                <shortcuts :items="shortcuts_manga" />
-                <div class="text-h6 py-3">{{ i18n("reader_shortcuts_section_layout") }}</div>
-                <shortcuts :items="shortcuts_layout" />
-                <div class="text-h6 py-3">{{ i18n("reader_shortcuts_section_actions") }}</div>
-                <shortcuts :items="shortcuts_actions" />
-            </v-card-text>
-            <v-card-actions class="pt-0">
-                <v-spacer></v-spacer>
-                <v-btn color="grey" variant="text" @click="dialog = false">
-                    {{ i18n("button_close") }}
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    <AmrDialog v-model="dialog" :width="800" title="">
+        <template #header>
+            <div class="amr-shortcuts-header">{{ i18n("reader_shortcuts_title") }}</div>
+        </template>
+        <div class="amr-shortcuts-section-title">{{ i18n("reader_shortcuts_section_chapters") }}</div>
+        <shortcuts :items="shortcuts_chapter" />
+        <div class="amr-shortcuts-section-title">{{ i18n("reader_shortcuts_section_manga") }}</div>
+        <shortcuts :items="shortcuts_manga" />
+        <div class="amr-shortcuts-section-title">{{ i18n("reader_shortcuts_section_layout") }}</div>
+        <shortcuts :items="shortcuts_layout" />
+        <div class="amr-shortcuts-section-title">{{ i18n("reader_shortcuts_section_actions") }}</div>
+        <shortcuts :items="shortcuts_actions" />
+        <template #actions>
+            <AmrButton @click="dialog = false">{{ i18n("button_close") }}</AmrButton>
+        </template>
+    </AmrDialog>
 </template>
 
 <script>
 import Shortcuts from "./Shortcuts"
+import AmrDialog from "./AmrDialog"
+import AmrButton from "./AmrButton"
 import { i18nmixin } from "../../mixins/i18n-mixin"
 
 const alt = "Alt",
     shift = "Shift"
 export default {
     mixins: [i18nmixin],
+    components: { Shortcuts, AmrDialog, AmrButton },
     data() {
         return {
             dialog: false /* display or not dialog */,
@@ -96,17 +92,25 @@ export default {
             ]
         }
     },
-    components: { Shortcuts },
     methods: {
         open() {
             this.dialog = true
         }
     }
 }
-/**
-Manga actions
- - add manga to reading list ^+
- - remove manga from reading list ^-
- - play pause notifications for manga ^p
-*/
 </script>
+
+<style data-amr="true">
+.amr-shortcuts-header {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--amr-text-primary);
+}
+
+.amr-shortcuts-section-title {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 0;
+    color: var(--amr-text-primary);
+}
+</style>

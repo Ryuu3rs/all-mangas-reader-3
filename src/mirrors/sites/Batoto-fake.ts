@@ -2,6 +2,7 @@ import { BaseMirror } from "./abstract/BaseMirror"
 import { MirrorImplementation } from "../../types/common"
 import { MirrorHelper } from "../MirrorHelper"
 import Icon from "../icons/batoto-optimized.png"
+import { debug } from "../../core/debug"
 
 export class BatotoFake extends BaseMirror implements MirrorImplementation {
     constructor(mirrorHelper: MirrorHelper) {
@@ -9,6 +10,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
     }
 
     mirrorName = "Batoto (fake)"
+    disabledForSearch = true // Expensive recursive search often times out
     mirrorIcon = Icon
     languages = "en"
     domains = [
@@ -171,7 +173,7 @@ export class BatotoFake extends BaseMirror implements MirrorImplementation {
             )
             return images.map((image, index) => image + "?" + decrypted[index])
         } catch (e) {
-            console.error("Batoto decryption failed:", e, "batoPass:", batoPass)
+            debug.mirrors.error("Batoto decryption failed:", { error: e, batoPass })
             // Return images without tokens as fallback
             return images
         }

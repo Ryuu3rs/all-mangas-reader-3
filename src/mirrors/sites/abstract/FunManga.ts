@@ -25,6 +25,7 @@ class FunManga extends BaseMirror implements MirrorImplementation {
     mirrorIcon: string
     mirrorName: string
     disabled: boolean | undefined
+    disabledForSearch: boolean | undefined
 
     baseUrl: string
 
@@ -40,6 +41,7 @@ class FunManga extends BaseMirror implements MirrorImplementation {
         this.chapter_url = mirror.chapter_url
         this.languages = mirror.languages
         this.disabled = mirror.disabled
+        this.disabledForSearch = mirror.disabledForSearch
 
         this.baseUrl = stripTrailingSlash(mirror.home)
 
@@ -170,7 +172,8 @@ export const getFunMangaImplementations = (mirrorHelper: MirrorHelper): MirrorIm
                 languages: "en",
                 domains: ["mangainn.net"],
                 home: "http://www.mangainn.net",
-                chapter_url: /^\/.*\/[0-9]+\.?[0-9]*\/.+$/g
+                chapter_url: /^\/.*\/[0-9]+\.?[0-9]*\/.+$/g,
+                disabledForSearch: true // Search endpoint frequently times out
             },
             {
                 search_url: "http://www.mangainn.net/service/advanced_search",

@@ -1,47 +1,40 @@
 <template>
-    <v-dialog v-model="dialog" max-width="500px">
-        <v-card>
-            <v-card-title>
-                <span class="text-h5">{{ i18n("bookmark_popup_title") }}</span>
-            </v-card-title>
-            <v-card-text>
-                {{
-                    !scanName
-                        ? i18n("bookmark_chapter_text", chapterName, mangaName, mirrorName)
-                        : i18n("bookmark_chapter_scan", scanName, chapterName, mangaName, mirrorName)
-                }}
-                <v-container class="pb-0">
-                    <v-row dense>
-                        <v-col cols="12">
-                            <v-textarea
-                                variant="filled"
-                                hide-details
-                                name="input-7-4"
-                                :label="i18n('bookmark_popup_note')"
-                                v-model="note"></v-textarea>
-                        </v-col>
-                    </v-row>
-                </v-container>
-            </v-card-text>
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="grey-darken-1" variant="text" @click="cancel">{{ i18n("button_cancel") }}</v-btn>
-                <v-btn color="primary-darken-1" variant="text" @click="deleteBookmark" v-show="alreadyBookmarked">{{
-                    i18n("button_delete")
-                }}</v-btn>
-                <v-btn color="primary-darken-1" variant="text" @click="saveBookmark">{{ i18n("button_save") }}</v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    <AmrDialog v-model="dialog" :width="500">
+        <template #header>
+            <span class="amr-bookmark-title">{{ i18n("bookmark_popup_title") }}</span>
+        </template>
+        <div class="amr-bookmark-text">
+            {{
+                !scanName
+                    ? i18n("bookmark_chapter_text", chapterName, mangaName, mirrorName)
+                    : i18n("bookmark_chapter_scan", scanName, chapterName, mangaName, mirrorName)
+            }}
+        </div>
+        <div class="amr-bookmark-note-container">
+            <label class="amr-bookmark-note-label">{{ i18n("bookmark_popup_note") }}</label>
+            <textarea class="amr-bookmark-textarea" v-model="note" rows="3"></textarea>
+        </div>
+        <template #actions>
+            <AmrButton @click="cancel">{{ i18n("button_cancel") }}</AmrButton>
+            <AmrButton v-show="alreadyBookmarked" variant="error" @click="deleteBookmark"
+                >{{ i18n("button_delete") }}
+            </AmrButton>
+            <AmrButton variant="primary" @click="saveBookmark">{{ i18n("button_save") }}</AmrButton>
+        </template>
+    </AmrDialog>
 </template>
 
 <script>
 import { i18nmixin } from "../../mixins/i18n-mixin"
 import pageData from "../state/pagedata"
 import bookmarks from "../state/bookmarks"
+import { debug } from "../../core/debug"
+import AmrDialog from "./AmrDialog"
+import AmrButton from "./AmrButton"
 
 export default {
     mixins: [i18nmixin],
+    components: { AmrDialog, AmrButton },
     props: {
         mirror: Object
     },
@@ -76,7 +69,7 @@ export default {
     methods: {
         /** Open the bookmark dialog with options (default chapter, with scanUrl : corresponding scan) */
         open({ scanUrl } = {}) {
-            console.log("[DEBUG] BookmarkPopup.open() called", { scanUrl })
+            debug.ui.debug("BookmarkPopup.open() called", { scanUrl })
             this.dialog = true
             this.scanUrl = scanUrl
             if (scanUrl) {
@@ -89,7 +82,7 @@ export default {
                 this.alreadyBookmarked = bookmarks.state.booked
                 this.scanName = undefined
             }
-            console.log("[DEBUG] BookmarkPopup dialog state:", this.dialog)
+            debug.ui.debug("BookmarkPopup dialog state:", this.dialog)
             return new Promise((resolve, reject) => {
                 this.resolve = resolve
                 this.reject = reject
@@ -120,3 +113,44 @@ export default {
     }
 }
 </script>
+
+<style data-amr="true">
+.amr-bookmark-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--amr-text-primary);
+}
+
+.amr-bookmark-text {
+    margin-bottom: 16px;
+    color: var(--amr-text-secondary);
+}
+
+.amr-bookmark-note-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.amr-bookmark-note-label {
+    font-size: 12px;
+    color: var(--amr-text-secondary);
+}
+
+.amr-bookmark-textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--amr-border);
+    border-radius: 4px;
+    background-color: var(--amr-surface);
+    color: var(--amr-text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.amr-bookmark-textarea:focus {
+    outline: none;
+    border-color: var(--amr-primary);
+}
+</style>

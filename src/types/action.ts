@@ -14,11 +14,18 @@ export type TriggerNotificationAction = {
 
 export type AddMangaByUrlAction = { action: "addMangaByUrl"; url: string; mirrorName: string }
 
+export type DebugDumpLogsAction = {
+    action: "debugDumpLogs"
+    source: string
+    payload: unknown
+}
+
 export type AllActions =
     | SearchListAction
     | LastSyncAction
     | TriggerNotificationAction
     | AddMangaByUrlAction
+    | DebugDumpLogsAction
     | BaseAction
 
 export type DispatchMethod = (action: string, payload: unknown, silent?: boolean | unknown) => Promise<unknown>

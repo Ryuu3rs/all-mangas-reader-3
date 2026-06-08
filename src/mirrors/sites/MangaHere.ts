@@ -3,6 +3,7 @@ import { CurrentPageInfo, InfoResult, MirrorImplementation } from "../../types/c
 import { MirrorHelper } from "../MirrorHelper"
 import MangaHereIcon from "../icons/mangahere-optimized.png"
 import { extractListOfImages } from "../zjcdn"
+import { debug } from "../../core/debug"
 
 export class MangaHere extends BaseMirror implements MirrorImplementation {
     constructor(amrLoader: MirrorHelper) {
@@ -97,14 +98,13 @@ export class MangaHere extends BaseMirror implements MirrorImplementation {
     }
 
     async getImageUrlFromPage(urlImg: string) {
-        console.log("[DEBUG] MangaHere getImageUrlFromPage called with:", urlImg)
-
         // Relative schema url, pass it back.
         if (urlImg.startsWith("//") || urlImg.startsWith("https://zjcdn")) {
-            // "//zjcdn.mangahere.org/store/manga/39145/001.0/compressed/m000.jpg",
-            console.log("[DEBUG] MangaHere returning zjcdn url directly:", urlImg)
             return urlImg
         }
+
+        // CRITICAL FIX: Add overall timeout to prevent indefinite hanging
+        const TIMEOUT_MS = 20000 // 20 seconds per image URL extraction
 
         // Queue this request - wait for all previous requests to complete, then add delay
         // This serializes all requests to prevent rate limiting
@@ -112,40 +112,38 @@ export class MangaHere extends BaseMirror implements MirrorImplementation {
 
         // Create the actual work function
         const doRequest = async (): Promise<string> => {
-            // Wait for previous request to complete
-            await previousRequest
+            // Wait for previous request to complete, but with timeout
+            const waitTimeout = new Promise<void>(resolve => setTimeout(resolve, 5000))
+            await Promise.race([previousRequest, waitTimeout])
 
             // Add delay between requests
-            console.log("[DEBUG] MangaHere throttle: waiting", MangaHere.REQUEST_DELAY_MS, "ms before request")
             await new Promise(resolve => setTimeout(resolve, MangaHere.REQUEST_DELAY_MS))
 
             try {
                 // loads the page containing the current scan
-                console.log("[DEBUG] MangaHere loading page:", urlImg)
-                const doc = await this.mirrorHelper.loadPage(urlImg, { crossdomain: true, redirect: "follow" })
-                console.log("[DEBUG] MangaHere page loaded, length:", doc?.length)
+                const doc = await this.mirrorHelper.loadPage(urlImg, {
+                    crossdomain: true,
+                    redirect: "follow",
+                    timeoutInMs: 15000 // 15 second timeout for page load
+                })
 
                 // Extract dm5_key from the HTML page
                 // The key is embedded as a concatenated string like: \'\'+\'c\'+\'a\'+\'6\'+...+\'d\'
-                // This is the same method used by MangaFox mirror
                 let mkey = ""
                 try {
-                    // Method 1: Extract guidkey from concatenated string pattern (same as MangaFox)
+                    // Method 1: Extract guidkey from concatenated string pattern
                     const keyRegex = /(?:\\'\w{0,1}\\'\+{0,1}){10,}/
                     const keyMatch = doc.match(keyRegex)
                     if (keyMatch) {
                         const unparsedKey = keyMatch[0]
                         mkey = unparsedKey.replace(/[\\'\+]/g, "")
-                        console.log("[DEBUG] MangaHere extracted key via concat pattern:", mkey)
                     }
 
                     // Method 2: If that fails, try to find the key in a script variable
                     if (!mkey) {
-                        // Look for: var guidkey = '...'; or guidkey = "...";
                         const guidkeyMatch = doc.match(/guidkey\s*=\s*['"]([a-f0-9]+)['"]/i)
                         if (guidkeyMatch) {
                             mkey = guidkeyMatch[1]
-                            console.log("[DEBUG] MangaHere extracted key via guidkey var:", mkey)
                         }
                     }
 
@@ -155,13 +153,11 @@ export class MangaHere extends BaseMirror implements MirrorImplementation {
                         const dm5KeyVal = $("#dm5_key").val()
                         if (dm5KeyVal && typeof dm5KeyVal === "string" && dm5KeyVal.length > 0) {
                             mkey = dm5KeyVal
-                            console.log("[DEBUG] MangaHere extracted key via #dm5_key input:", mkey)
                         }
                     }
                 } catch (e) {
-                    console.error("[DEBUG] MangaHere failed to extract dm5_key from script:", e)
+                    // Silent fail - key extraction is best-effort
                 }
-                console.log("[DEBUG] MangaHere dm5_key:", mkey || "<empty string>")
 
                 const curl = urlImg.substr(0, urlImg.lastIndexOf("/") + 1)
                 let cid, curpage
@@ -169,36 +165,24 @@ export class MangaHere extends BaseMirror implements MirrorImplementation {
                     cid = this.getVariable({ doc, variableName: "chapterid" })
                     curpage = this.getVariable({ doc, variableName: "imagepage" })
                 } catch (e) {
-                    console.error("[DEBUG] MangaHere failed to get chapterid/imagepage:", e)
                     return "error"
                 }
-                console.log("[DEBUG] MangaHere cid:", cid, "curpage:", curpage)
 
-                const chapfunurl = curl + "chapterfun.ashx" // url to retrieve scan url
-
-                // get scan url (this function seems to work only within DM5, perhaps a control on Referer)
+                const chapfunurl = curl + "chapterfun.ashx"
                 const queryParams = new URLSearchParams({
                     cid: cid,
                     page: curpage,
                     key: mkey
                 })
 
-                // get scan url (this function seems to work only within DM5, perhaps a control on Referer)
                 const url = `${chapfunurl}?${queryParams}`
-                console.log("[DEBUG] MangaHere chapterfun.ashx URL:", url)
-
                 const data = await this.mirrorHelper.loadPage(url, {
                     nocontenttype: true,
-                    credentials: "include", // Include cookies for authentication
-                    headers: {
-                        // Note: Referer and X-Requested-With are set by declarativeNetRequest rules
-                    }
+                    credentials: "include",
+                    timeoutInMs: 10000 // 10 second timeout for chapterfun.ashx
                 })
-                console.log("[DEBUG] MangaHere chapterfun.ashx response:", data?.substring(0, 200))
 
                 // the retrieved data is packed through an obfuscator
-                // dm5 is unpacking the images url through an eval, we can't do that in AMR due to CSP
-                // we do it manually (below is the unpack function shipped with the data to decode)
                 const unpack = function (p, a, c, k, e, d) {
                     e = function (c) {
                         return (
@@ -223,38 +207,39 @@ export class MangaHere extends BaseMirror implements MirrorImplementation {
                     return p
                 }
 
-                // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
+                // regexp to parse the arguments to pass to the unpack function
                 const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g
                 const match = regexpargs.exec(data)
-                console.log("[DEBUG] MangaHere regex match:", match ? "found" : "NOT FOUND")
 
                 if (match) {
-                    let sc = unpack(match[1], match[3], match[4], match[5].split("|"), 0, {}) // call the unpack function
-                    sc = sc.replace(/\\'/g, "'") // unquote the result
-                    console.log("[DEBUG] MangaHere unpacked script:", sc?.substring(0, 200))
+                    let sc = unpack(match[1], match[3], match[4], match[5].split("|"), 0, {})
+                    sc = sc.replace(/\\'/g, "'")
 
-                    // the result is another js function containing the data, we mimic here what it does
-                    // retrieve the variables
                     const pix = this.mirrorHelper.getVariableFromScript("pix", sc)
-                    let pvalue = this.mirrorHelper.getVariableFromScript("pvalue", sc) // array of scan urls (contains current one and next one)
-                    console.log("[DEBUG] MangaHere pix:", pix, "pvalue:", pvalue)
+                    let pvalue = this.mirrorHelper.getVariableFromScript("pvalue", sc)
 
-                    pvalue = pvalue.map(img => pix + img) // mimic the returned function which rebuilds the url depending on its parts
-                    console.log("[DEBUG] MangaHere final image URL:", pvalue[0])
+                    pvalue = pvalue.map(img => pix + img)
                     return pvalue[0]
                 }
-                console.error("[DEBUG] MangaHere no match found in chapterfun data")
                 return "error"
             } catch (e) {
-                console.error("[DEBUG] MangaHere getImageUrlFromPage ERROR:", e)
                 return "error"
             }
         }
 
         // Chain this request to the queue and return its result
+        // Wrap in overall timeout to prevent indefinite hanging
         const requestPromise = doRequest()
-        MangaHere.requestQueue = requestPromise.catch(() => {}) // Ensure queue continues even on error
-        return requestPromise
+        MangaHere.requestQueue = requestPromise.catch(() => {})
+
+        const timeoutPromise = new Promise<string>(resolve => {
+            setTimeout(() => {
+                debug.mirrors.error("MangaHere getImageUrlFromPage timeout for:", urlImg?.substring(0, 60))
+                resolve("error")
+            }, TIMEOUT_MS)
+        })
+
+        return Promise.race([requestPromise, timeoutPromise])
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {

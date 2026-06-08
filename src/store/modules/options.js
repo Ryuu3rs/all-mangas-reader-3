@@ -1,4 +1,5 @@
 import { getDefaultOptions, OptionStorage } from "../../shared/OptionStorage"
+import { debug } from "../../core/debug"
 
 const optionStorage = new OptionStorage()
 
@@ -163,7 +164,7 @@ const mutations = {
      * @param {*} obj containing key and value
      */
     setOption(state, { key, value }) {
-        if (!key) console.error("Impossible to set option with undefined key; value is " + value)
+        if (!key) debug.storage.error("Impossible to set option with undefined key; value is " + value)
         else state[key] = value
     },
     /**

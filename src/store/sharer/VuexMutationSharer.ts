@@ -1,5 +1,5 @@
 import BroadcastChannelStrategy from "./broadcastChannelStrategy"
-import { ShareStrategy } from "./Strategy"
+import { ShareStrategy, SharedMutation } from "./Strategy"
 type PredicateFn = (props: { type: string }, state: unknown) => boolean
 
 interface MutationConfig {
@@ -41,7 +41,7 @@ export default ({ predicate, strategy }: MutationConfig) => {
             })
         })
 
-        selectedStrategy.addEventListener(mutation => {
+        selectedStrategy.addEventListener((mutation: SharedMutation) => {
             try {
                 sharingInProgress = true
                 store.commit(mutation.type, mutation.payload)

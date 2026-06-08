@@ -10,6 +10,7 @@ export class ZeroScans extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "Zero Scans"
     canListFullMangas = true
+    disabledForSearch = true // API endpoint currently returning HTTP errors
     mirrorIcon = ZeroScansIcon
     languages = "en"
     domains = ["zscans.com", "zeroscans.com"]

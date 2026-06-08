@@ -1,3 +1,5 @@
+import { debug } from "../core/debug"
+
 /**
  * Class helping to store data in IndexedDb
  * In AMR V1, objects were stored in WebDB. WebDB is deprecated and Mozilla never implemented WebDB in FireFox
@@ -30,14 +32,17 @@ class StoreDB {
                     globalThis.msIndexedDB
             }
             if (!globalThis.indexedDB) {
-                console.error("Browser does not support IndexedDB. Storage will fail")
+                debug.storage.error("Browser does not support IndexedDB. Storage will fail")
                 store.status = 2
                 reject()
             }
 
             const request = globalThis.indexedDB.open("AllMangasReader", this.dbversion)
             request.onerror = function (event) {
-                console.error("Impossible to open database All Mangas Reader. Error code : " + event.target.errorCode)
+                debug.storage.error(
+                    "Impossible to open database All Mangas Reader. Error code:",
+                    event.target.errorCode
+                )
                 store.status = 2
                 reject()
             }
@@ -98,8 +103,7 @@ class StoreDB {
             if (this.status == 2 || !this.db) return Promise.reject()
             return Promise.resolve()
         } catch (e) {
-            console.error("Error while initializing IndexedDB")
-            console.error(e)
+            debug.storage.error("Error while initializing IndexedDB:", e)
             return Promise.reject()
         }
     }
@@ -250,33 +254,24 @@ class StoreDB {
     // add an entry
     storeManga(manga) {
         const store = this
-        console.log("[DEBUG] storedb.storeManga called for:", manga?.key, manga?.name)
-        return this.checkInit()
-            .then(() => {
-                return new Promise((resolve, reject) => {
-                    const transaction = store.db.transaction(["mangas"], "readwrite")
+        return this.checkInit().then(() => {
+            return new Promise((resolve, reject) => {
+                const transaction = store.db.transaction(["mangas"], "readwrite")
 
-                    transaction.onerror = function (event) {
-                        console.error("[DEBUG] storedb.storeManga transaction error:", event.target.errorCode)
-                        reject("Impossible to store manga " + manga.key + ". Error code : " + event.target.errorCode)
-                    }
+                transaction.onerror = function (event) {
+                    reject("Impossible to store manga " + manga.key + ". Error code : " + event.target.errorCode)
+                }
 
-                    const objectStore = transaction.objectStore("mangas")
-                    const request = objectStore.put(manga)
-                    request.onsuccess = function (event) {
-                        console.log("[DEBUG] storedb.storeManga SUCCESS for:", manga?.key)
-                        resolve(event.target.result)
-                    }
-                    request.onerror = function (event) {
-                        console.error("[DEBUG] storedb.storeManga request error:", event.target.error)
-                        reject("Failed to store manga " + manga.key + ": " + event.target.error)
-                    }
-                })
+                const objectStore = transaction.objectStore("mangas")
+                const request = objectStore.put(manga)
+                request.onsuccess = function (event) {
+                    resolve(event.target.result)
+                }
+                request.onerror = function (event) {
+                    reject("Failed to store manga " + manga.key + ": " + event.target.error)
+                }
             })
-            .catch(err => {
-                console.error("[DEBUG] storedb.storeManga FAILED:", err)
-                throw err
-            })
+        })
     }
     // deletes an entry
     deleteManga(key) {

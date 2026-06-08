@@ -1,52 +1,22 @@
 /**
- * Debug utility for AMR
+ * Debug utility for AMR - Backwards compatibility wrapper
+ *
+ * This file wraps the new core/debug.ts module for backwards compatibility.
+ * New code should import directly from '@/core/debug' instead.
  *
  * To enable debug logging:
- * - Set DEBUG_ENABLED to true below
- * - Or call window.AMR_DEBUG = true in browser console
- * - Or add ?debug=true to the URL
+ * - Call window.AMR_DEBUG = true in browser console
+ * - Or call enableAMRDebug() in browser console
  */
 
-// Extend Window interface for debug globals
-declare global {
-    interface Window {
-        AMR_DEBUG?: boolean
-        enableAMRDebug?: () => void
-        disableAMRDebug?: () => void
-    }
-}
-
-// Default debug state - set to true to enable debug logging
-const DEBUG_ENABLED = false
-
-/**
- * Check if debug mode is enabled
- * Checks multiple sources: file constant, window global, URL param
- */
-function isDebugEnabled(): boolean {
-    // Check file constant first
-    if (DEBUG_ENABLED) return true
-
-    // Check window global (can be set from browser console)
-    if (typeof window !== "undefined" && window.AMR_DEBUG) return true
-
-    // Check URL parameter
-    if (typeof window !== "undefined" && window.location) {
-        const urlParams = new URLSearchParams(window.location.search)
-        if (urlParams.get("debug") === "true") return true
-    }
-
-    return false
-}
+import { debug, isDebugEnabled, enableDebug as coreEnableDebug, disableDebug as coreDisableDebug } from "../core/debug"
 
 /**
  * Debug log - only logs if debug mode is enabled
  * @param args - Arguments to pass to console.log
  */
 export function debugLog(...args: unknown[]): void {
-    if (isDebugEnabled()) {
-        console.log("[DEBUG]", ...args)
-    }
+    debug.ui.info(args.map(a => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" "))
 }
 
 /**
@@ -54,9 +24,7 @@ export function debugLog(...args: unknown[]): void {
  * @param args - Arguments to pass to console.warn
  */
 export function debugWarn(...args: unknown[]): void {
-    if (isDebugEnabled()) {
-        console.warn("[DEBUG]", ...args)
-    }
+    debug.ui.warn(args.map(a => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" "))
 }
 
 /**
@@ -64,9 +32,7 @@ export function debugWarn(...args: unknown[]): void {
  * @param args - Arguments to pass to console.error
  */
 export function debugError(...args: unknown[]): void {
-    if (isDebugEnabled()) {
-        console.error("[DEBUG]", ...args)
-    }
+    debug.ui.error(args.map(a => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" "))
 }
 
 /**
@@ -74,10 +40,7 @@ export function debugError(...args: unknown[]): void {
  * Call this from browser console: enableAMRDebug()
  */
 export function enableAMRDebug(): void {
-    if (typeof window !== "undefined") {
-        window.AMR_DEBUG = true
-        console.log("[DEBUG] Debug mode enabled")
-    }
+    coreEnableDebug()
 }
 
 /**
@@ -85,16 +48,7 @@ export function enableAMRDebug(): void {
  * Call this from browser console: disableAMRDebug()
  */
 export function disableAMRDebug(): void {
-    if (typeof window !== "undefined") {
-        window.AMR_DEBUG = false
-        console.log("[DEBUG] Debug mode disabled")
-    }
-}
-
-// Expose functions globally for console access
-if (typeof window !== "undefined") {
-    window.enableAMRDebug = enableAMRDebug
-    window.disableAMRDebug = disableAMRDebug
+    coreDisableDebug()
 }
 
 export default {

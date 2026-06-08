@@ -94,6 +94,30 @@ const mangaFoxRule: RuleInfo = {
     }
 }
 
+const mangaFoxImageRule: RuleInfo = {
+    action: {
+        // Ensure hotlink-protected CDNs accept requests from the extension
+        type: "modifyHeaders" as const,
+        requestHeaders: [
+            {
+                header: "Referer",
+                operation: "set" as const,
+                value: "https://fanfox.net"
+            },
+            {
+                header: "Origin",
+                operation: "set" as const,
+                value: "https://fanfox.net"
+            }
+        ]
+    },
+    condition: {
+        initiatorDomains: [thisExtensionId],
+        regexFilter: "https://(zjcdn\\.[^/]+|fmcdn\\.mfcdn\\.net)/.*",
+        resourceTypes: ["image" as const, "xmlhttprequest" as const]
+    }
+}
+
 const mangaHereRule: RuleInfo = {
     action: {
         // Replaces Referer and Origin request headers to bypass site's protection
@@ -130,7 +154,8 @@ const amrNetRules: browser.DeclarativeNetRequest.Rule[] = [
     { id: 1, ...manhwaTopRule },
     { id: 2, ...mangaHubRule },
     { id: 3, ...mangaFoxRule },
-    { id: 4, ...mangaHereRule }
+    { id: 4, ...mangaHereRule },
+    { id: 5, ...mangaFoxImageRule }
 ]
 
 export function getNetRulesForMirrors(): browser.DeclarativeNetRequest.Rule[] {

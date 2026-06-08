@@ -67,6 +67,9 @@ export class Handler {
                 return browser.tabs.create({ url: message.url })
             case "mirrorInfos":
                 const mirror = this.store.state.mirrors.all.find(mir => mir.mirrorName === message.name)
+                if (!mirror) {
+                    return Promise.resolve(null)
+                }
                 return Promise.resolve({
                     // can't send a vuex object through js instances on Firefox --> convert
                     activated: mirror.activated,
@@ -92,10 +95,16 @@ export class Handler {
             try {
                 const result = await handler.handle(message, sender)
                 if (result !== NOT_HANDLED_MESSAGE) {
+                    // Debug logging for getImageUrlFromPageUrl
+                    if (message.action === "getImageUrlFromPageUrl") {
+                        const resultStr = typeof result === "string" ? result.substring(0, 80) : result
+                        console.log("[AMR Handler] returning result for getImageUrlFromPageUrl:", resultStr)
+                    }
                     return result
                 }
-            } catch (e) {
+            } catch (e: any) {
                 this.logger.error(e)
+                console.log("[AMR Handler] EXCEPTION in handler:", e?.message || e)
                 return undefined
             }
         }

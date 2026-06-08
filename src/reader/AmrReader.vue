@@ -1,11 +1,8 @@
 <template>
-    <v-app id="amrapp">
+    <div id="amrapp" :data-theme="themeAttr" class="amr-app">
         <!-- Global cover for loading when transition from a chapter to another one -->
-        <div
-            v-show="loading"
-            class="amr-transition-cover"
-            :class="darkreader ? 'bg-grey-darken-4' : 'bg-grey-lighten-5'">
-            <v-progress-circular indeterminate color="primary" :size="128" :width="12"></v-progress-circular>
+        <div v-show="loading" class="amr-transition-cover" :style="{ backgroundColor: 'var(--amr-bg-primary)' }">
+            <div class="amr-spinner-large"></div>
         </div>
         <!-- Global component to show confirmation dialogs, alert dialogs / other -->
         <WizDialog ref="wizdialog"></WizDialog>
@@ -14,630 +11,473 @@
         <!-- Popup displaying shortcuts -->
         <ShortcutsPopup ref="shortcuts"></ShortcutsPopup>
         <!-- Global always visible buttons -->
-        <v-hover v-slot="{ isHovering: hover }">
-            <div class="d-flex flex-column fab-container">
-                <!-- Button to open side drawer -->
-                <v-btn
-                    :class="`elevation-${hover ? 12 : 2} opacity-${hover || drawer ? 'full' : 'transparent'}`"
-                    color="red-darken-2"
+        <div class="d-flex flex-column fab-container" @mouseenter="fabHover = true" @mouseleave="fabHover = false">
+            <!-- Button to open side drawer -->
+            <AmrButton
+                :class="['amr-fab-btn', { 'amr-fab-visible': fabHover || drawer }]"
+                variant="danger"
+                size="small"
+                icon
+                @click="drawer = !drawer">
+                <AmrIcon :icon="icons.mdiMenu" />
+            </AmrButton>
+            <!-- Quick button to go to next chapter -->
+            <AmrTooltip
+                location="left"
+                :text="
+                    i18n('list_mg_act_next') +
+                    ' ' +
+                    (nextchapLoading ? i18n('reader_loading', Math.floor(nextchapProgress)) : '')
+                ">
+                <div class="amr-progress-btn mt-2" v-show="!lastChapter && nextchapLoading && !drawer && fabHover">
+                    <svg class="amr-progress-ring" width="42" height="42">
+                        <circle class="amr-progress-ring-bg" cx="21" cy="21" r="18" />
+                        <circle
+                            class="amr-progress-ring-fg amr-progress-green"
+                            cx="21"
+                            cy="21"
+                            r="18"
+                            :stroke-dasharray="113"
+                            :stroke-dashoffset="113 - (nextchapProgress / 100) * 113" />
+                    </svg>
+                    <AmrButton size="small" icon class="amr-progress-inner text-green" @click.stop="goNextChapter">
+                        <AmrIcon :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight" />
+                    </AmrButton>
+                </div>
+                <div class="amr-progress-btn mt-2" v-show="!lastChapter && !nextchapLoading && !drawer && fabHover">
+                    <svg class="amr-progress-ring amr-progress-spin" width="42" height="42">
+                        <circle class="amr-progress-ring-bg" cx="21" cy="21" r="18" />
+                        <circle
+                            class="amr-progress-ring-fg amr-progress-red"
+                            cx="21"
+                            cy="21"
+                            r="18"
+                            stroke-dasharray="28 85" />
+                    </svg>
+                    <AmrButton size="small" icon class="amr-progress-inner text-red" @click.stop="goNextChapter">
+                        <AmrIcon :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight" />
+                    </AmrButton>
+                </div>
+            </AmrTooltip>
+            <AmrTooltip location="left" :text="i18n('content_nav_last_chap')">
+                <AmrButton size="small" class="mt-2" icon v-show="fabHover && !drawer && lastChapter" variant="warning">
+                    <AmrIcon :icon="icons.mdiAlert" />
+                </AmrButton>
+            </AmrTooltip>
+            <!-- Quick button to add a manga to reading list -->
+            <AmrTooltip location="left" :text="i18n('content_nav_add_list')">
+                <AmrButton
                     size="small"
+                    class="mt-2 text-green"
                     icon
-                    @click="drawer = !drawer">
-                    <v-icon :icon="icons.mdiMenu"></v-icon>
-                </v-btn>
-                <!-- Quick button to go to next chapter -->
-                <v-tooltip location="start">
-                    <template v-slot:activator="{ props }">
-                        <v-progress-circular
-                            v-bind="props"
-                            class="mt-2 amr-floting-progress"
-                            :rotate="90"
-                            :size="42"
-                            :width="3"
-                            :model-value="nextchapProgress"
-                            color="green-lighten-2"
-                            v-show="!lastChapter && nextchapLoading && !drawer && hover">
-                            <v-btn size="small" icon @click.stop="goNextChapter" class="text-green">
-                                <v-icon
-                                    :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight"></v-icon>
-                            </v-btn>
-                        </v-progress-circular>
-                        <v-progress-circular
-                            v-bind="props"
-                            class="mt-2 amr-floting-progress"
-                            :rotate="90"
-                            :size="42"
-                            :width="3"
-                            :model-value="nextchapProgress"
-                            indeterminate
-                            color="red-darken-2"
-                            v-show="!lastChapter && !nextchapLoading && !drawer && hover">
-                            <v-btn size="small" icon @click.stop="goNextChapter" class="text-red">
-                                <v-icon
-                                    :icon="shouldInvertKeys ? icons.mdiChevronLeft : icons.mdiChevronRight"></v-icon>
-                            </v-btn>
-                        </v-progress-circular>
-                    </template>
-                    <span
-                        >{{ i18n("list_mg_act_next") }}
-                        {{ nextchapLoading ? i18n("reader_loading", Math.floor(nextchapProgress)) : "" }}</span
-                    >
-                </v-tooltip>
-                <v-tooltip location="start">
-                    <template v-slot:activator="{ props }">
-                        <v-btn
-                            v-bind="props"
-                            size="small"
-                            class="mt-2"
-                            icon
-                            v-show="hover && !drawer && lastChapter"
-                            color="orange">
-                            <v-icon :icon="icons.mdiAlert"></v-icon>
-                        </v-btn>
-                    </template>
-                    <span>{{ i18n("content_nav_last_chap") }}</span>
-                </v-tooltip>
-                <!-- Quick button to add a manga to reading list -->
-                <v-tooltip location="start">
-                    <template v-slot:activator="{ props }">
-                        <v-btn
-                            v-bind="props"
-                            size="small"
-                            class="mt-2 text-green"
-                            icon
-                            v-show="!mangaExists && options.addauto === 0 && hover && !drawer"
-                            @click.stop="addManga">
-                            <v-icon :icon="icons.mdiPlus"></v-icon>
-                        </v-btn>
-                    </template>
-                    <span>{{ i18n("content_nav_add_list") }}</span>
-                </v-tooltip>
-            </div>
-        </v-hover>
+                    v-show="!mangaExists && options.addauto === 0 && fabHover && !drawer"
+                    @click.stop="addManga">
+                    <AmrIcon :icon="icons.mdiPlus" />
+                </AmrButton>
+            </AmrTooltip>
+        </div>
         <!-- AMR Reader side bar -->
-        <v-navigation-drawer
-            v-model="drawer"
-            location="right"
-            :class="'amr-drawer ' + backcolor()"
-            ref="navdrawer"
-            width="300">
-            <v-card rounded="0" :color="backcolor()" class="text-white">
+        <div v-show="drawer" class="amr-drawer-backdrop" @click="drawer = false"></div>
+        <div
+            :class="['amr-navigation-drawer', 'amr-drawer', backcolor(), { 'amr-drawer-open': drawer }]"
+            ref="navdrawer">
+            <div :class="['amr-card', backcolor()]">
                 <!-- Manga Title -->
-                <v-card-title class="text-white amr-manga-title">
+                <div class="amr-card-title amr-manga-title">
                     <div class="text-subtitle-1">
-                        <v-tooltip location="bottom" v-if="mirrorDesc">
-                            <template v-slot:activator="{ props }">
-                                <a v-bind="props" :href="mirrorDesc.home" target="_blank">
-                                    <!-- Mirror icon -->
-                                    <img :src="mirrorDesc.mirrorIcon" />
-                                </a>
-                            </template>
-                            <span>{{ i18n("reader_click_go_mirror") }}</span>
-                        </v-tooltip>
-                        <v-tooltip location="bottom">
-                            <template v-slot:activator="{ props }">
-                                <!-- Manga name -->
-                                <a v-bind="props" :href="manga.currentMangaURL" target="_blank">{{
-                                    mangaInfos && mangaInfos.displayName ? mangaInfos.displayName : manga.name
-                                }}</a>
-                            </template>
-                            <span>{{ i18n("reader_click_go_manga") }}</span>
-                        </v-tooltip>
+                        <AmrTooltip location="bottom" :text="i18n('reader_click_go_mirror')" v-if="mirrorDesc">
+                            <a :href="mirrorDesc.home" target="_blank">
+                                <img :src="mirrorDesc.mirrorIcon" />
+                            </a>
+                        </AmrTooltip>
+                        <AmrTooltip location="bottom" :text="i18n('reader_click_go_manga')">
+                            <a :href="manga.currentMangaURL" target="_blank">{{
+                                mangaInfos && mangaInfos.displayName ? mangaInfos.displayName : manga.name
+                            }}</a>
+                        </AmrTooltip>
                     </div>
-                </v-card-title>
+                </div>
                 <!-- Chapters navigation -->
-                <v-card-actions class="pa-0">
-                    <v-row no-gutters>
-                        <v-col cols="12">
-                            <v-toolbar class="pa-0 amr-chapters-toolbar">
+                <div class="amr-card-actions pa-0">
+                    <div class="amr-row">
+                        <div class="amr-col-12">
+                            <div class="amr-toolbar amr-chapters-toolbar">
                                 <div class="d-flex align-center py-1">
                                     <!-- Previous chapter button -->
-                                    <v-tooltip location="bottom">
-                                        <template v-slot:activator="{ props }">
-                                            <v-btn
-                                                class="select-btn"
-                                                v-bind="props"
-                                                variant="text"
-                                                size="small"
-                                                v-show="shouldInvertKeys ? !lastChapter : !firstChapter"
-                                                @click.stop="shouldInvertKeys ? goNextChapter() : goPreviousChapter()">
-                                                <v-icon :icon="icons.mdiChevronLeft"></v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>
-                                            {{
-                                                shouldInvertKeys
-                                                    ? i18n("list_mg_act_next") +
-                                                      " " +
-                                                      (nextchapLoading
-                                                          ? i18n("reader_loading", Math.floor(nextchapProgress))
-                                                          : "")
-                                                    : i18n("list_mg_act_prev")
-                                            }}
-                                        </span>
-                                    </v-tooltip>
+                                    <AmrTooltip
+                                        location="bottom"
+                                        :text="
+                                            shouldInvertKeys
+                                                ? i18n('list_mg_act_next') +
+                                                  ' ' +
+                                                  (nextchapLoading
+                                                      ? i18n('reader_loading', Math.floor(nextchapProgress))
+                                                      : '')
+                                                : i18n('list_mg_act_prev')
+                                        ">
+                                        <AmrButton
+                                            class="select-btn"
+                                            variant="text"
+                                            size="small"
+                                            v-show="shouldInvertKeys ? !lastChapter : !firstChapter"
+                                            @click.stop="shouldInvertKeys ? goNextChapter() : goPreviousChapter()">
+                                            <AmrIcon :icon="icons.mdiChevronLeft" />
+                                        </AmrButton>
+                                    </AmrTooltip>
                                     <!-- List of chapters -->
-                                    <v-select
+                                    <AmrSelect
                                         v-model="selchap"
                                         :items="chapters"
-                                        item-title="title"
-                                        item-value="url"
-                                        variant="solo"
-                                        density="compact"
-                                        single-line
-                                        hide-details
+                                        itemTitle="title"
+                                        itemValue="url"
                                         class="amr-chapter-select truncate"
-                                        :loading="chapters.length === 0 ? 'primary' : false"
-                                        @update:model-value="goToChapter"></v-select>
-                                    <v-spacer></v-spacer>
-                                    <v-tooltip location="bottom">
-                                        <template v-slot:activator="{ props }">
-                                            <!-- Next chapter button -->
-                                            <v-btn
-                                                class="select-btn"
-                                                v-bind="props"
-                                                variant="text"
-                                                size="small"
-                                                v-show="shouldInvertKeys ? !firstChapter : !lastChapter"
-                                                @click.stop="shouldInvertKeys ? goPreviousChapter() : goNextChapter()">
-                                                <v-icon :icon="icons.mdiChevronRight"></v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>
-                                            {{
-                                                shouldInvertKeys
-                                                    ? i18n("list_mg_act_prev")
-                                                    : i18n("list_mg_act_next") +
-                                                      " " +
-                                                      (nextchapLoading
-                                                          ? i18n("reader_loading", Math.floor(nextchapProgress))
-                                                          : "")
-                                            }}
-                                        </span>
-                                    </v-tooltip>
+                                        @update:modelValue="goToChapter" />
+                                    <div class="amr-spacer"></div>
+                                    <AmrTooltip
+                                        location="bottom"
+                                        :text="
+                                            shouldInvertKeys
+                                                ? i18n('list_mg_act_prev')
+                                                : i18n('list_mg_act_next') +
+                                                  ' ' +
+                                                  (nextchapLoading
+                                                      ? i18n('reader_loading', Math.floor(nextchapProgress))
+                                                      : '')
+                                        ">
+                                        <!-- Next chapter button -->
+                                        <AmrButton
+                                            class="select-btn"
+                                            variant="text"
+                                            size="small"
+                                            v-show="shouldInvertKeys ? !firstChapter : !lastChapter"
+                                            @click.stop="shouldInvertKeys ? goPreviousChapter() : goNextChapter()">
+                                            <AmrIcon :icon="icons.mdiChevronRight" />
+                                        </AmrButton>
+                                    </AmrTooltip>
                                 </div>
-                            </v-toolbar>
-                        </v-col>
+                            </div>
+                        </div>
                         <!-- Next chapter preloading progression bar -->
-                        <v-col cols="12" class="amr-chapter-progress-cont">
-                            <v-tooltip location="bottom">
-                                <template v-slot:activator="{ props }">
-                                    <v-progress-linear
-                                        v-show="nextchapLoading"
-                                        v-bind="props"
-                                        class="amr-floting-progress"
-                                        :height="3"
-                                        :model-value="nextchapProgress"
-                                        color="red-darken-2"></v-progress-linear>
-                                </template>
-                                <span>{{ i18n("reader_loading", Math.floor(nextchapProgress)) }}</span>
-                            </v-tooltip>
-                        </v-col>
+                        <div class="amr-col-12 amr-chapter-progress-cont">
+                            <AmrTooltip location="bottom" :text="i18n('reader_loading', Math.floor(nextchapProgress))">
+                                <div
+                                    v-show="nextchapLoading"
+                                    class="amr-progress-linear amr-floting-progress"
+                                    :style="{ width: nextchapProgress + '%' }"></div>
+                            </AmrTooltip>
+                        </div>
                         <!-- Action buttons -->
-                        <v-col class="text-center pa-2" cols="12">
-                            <v-menu :close-on-content-click="false" v-model="bookmarkMenuOpen">
+                        <div class="amr-col-12 text-center pa-2">
+                            <AmrMenu v-model="bookmarkMenuOpen" :closeOnContentClick="false">
                                 <!-- Bookmarks button -->
-                                <template v-slot:activator="{ props: menuProps }">
-                                    <v-tooltip location="bottom" class="ml-1">
-                                        <template v-slot:activator="{ props: tooltipProps }">
-                                            <v-btn
-                                                v-bind="{ ...tooltipProps, ...menuProps }"
-                                                icon
-                                                :color="bookstate.booked ? 'yellow' : 'yellow-lighten-4'">
-                                                <v-icon :icon="icons.mdiStar"></v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>{{ i18n("content_nav_click_bm") }}</span>
-                                    </v-tooltip>
+                                <template #activator="{ open }">
+                                    <AmrTooltip location="bottom" :text="i18n('content_nav_click_bm')" class="ml-1">
+                                        <AmrButton
+                                            icon
+                                            :class="bookstate.booked ? 'amr-btn-yellow' : 'amr-btn-yellow-light'"
+                                            @click="open">
+                                            <AmrIcon :icon="icons.mdiStar" />
+                                        </AmrButton>
+                                    </AmrTooltip>
                                 </template>
                                 <!-- Menu displayed when bookmarks button activate -->
-                                <v-card>
-                                    <!-- Bookmark note of the chapter -->
-                                    <v-card-title v-if="bookstate.note">
+                                <div class="amr-card amr-bookmark-menu">
+                                    <div class="amr-card-title" v-if="bookstate.note">
                                         {{ i18n("reader_bookmarked_note", bookstate.note) }}
-                                    </v-card-title>
-                                    <v-card-actions>
-                                        <!-- Action to update / delete bookmark for chapter > open popup -->
-                                        <v-btn
+                                    </div>
+                                    <div class="amr-card-actions">
+                                        <AmrButton
                                             @click="handleBookmarkButtonClick"
                                             @mousedown.stop
-                                            color="yellow"
-                                            :class="!darkreader ? 'text-grey-darken-3' : ''">
-                                            <v-icon :icon="icons.mdiStar"></v-icon>&nbsp;
-                                            {{
+                                            class="amr-btn-yellow">
+                                            <AmrIcon :icon="icons.mdiStar" />&nbsp;{{
                                                 bookstate.booked
                                                     ? i18n("reader_bookmark_update")
                                                     : i18n("reader_bookmark_create")
                                             }}
-                                        </v-btn>
-                                        <v-spacer></v-spacer>
-                                        <v-tooltip location="bottom">
-                                            <template v-slot:activator="{ props }">
-                                                <v-btn v-bind="props" icon @click="openBookmarksTab" color="blue">
-                                                    <v-icon :icon="icons.mdiOpenInNew"></v-icon>
-                                                </v-btn>
-                                            </template>
-                                            <span>{{ i18n("reader_open_bookmarks_tab") }}</span>
-                                        </v-tooltip>
-                                    </v-card-actions>
-                                    <v-card-text>
-                                        <!-- No bookmarked scans in chapter -->
+                                        </AmrButton>
+                                        <div class="amr-spacer"></div>
+                                        <AmrTooltip location="bottom" :text="i18n('reader_open_bookmarks_tab')">
+                                            <AmrButton icon @click="openBookmarksTab" variant="primary">
+                                                <AmrIcon :icon="icons.mdiOpenInNew" />
+                                            </AmrButton>
+                                        </AmrTooltip>
+                                    </div>
+                                    <div class="amr-card-text">
                                         <div v-if="bookedScans.length === 0">
                                             {{ i18n("reader_no_bookmarked_scans") }}
                                         </div>
-                                        <!-- List of bookmarked scans -->
-                                        <v-container v-else class="amr-bookmarked-scans-cont pa-0">
-                                            <v-row dense>
-                                                <v-col
-                                                    cols="4"
+                                        <div v-else class="amr-bookmarked-scans-cont">
+                                            <div class="amr-row-dense">
+                                                <div
+                                                    class="amr-col-4 amr-bookmarked-scan"
                                                     v-for="(scan, i) in bookedScans"
                                                     :key="i"
-                                                    @click.stop="$refs.reader.goScan(scan.page)"
-                                                    class="amr-bookmarked-scan">
-                                                    <v-tooltip location="bottom" v-if="scan.note">
-                                                        <template v-slot:activator="{ props }">
-                                                            <Scan
-                                                                v-bind="props"
-                                                                :full="false"
-                                                                :src="scan.url"
-                                                                resize="container"
-                                                                :bookmark="false" />
-                                                        </template>
-                                                        <span>{{ scan.note }}</span>
-                                                    </v-tooltip>
+                                                    @click.stop="$refs.reader.goScan(scan.page)">
+                                                    <AmrTooltip location="bottom" :text="scan.note" v-if="scan.note">
+                                                        <Scan
+                                                            :full="false"
+                                                            :src="scan.url"
+                                                            resize="container"
+                                                            :bookmark="false" />
+                                                    </AmrTooltip>
                                                     <Scan
                                                         v-else
                                                         :full="false"
                                                         :src="scan.url"
                                                         resize="container"
                                                         :bookmark="false" />
-                                                </v-col>
-                                            </v-row>
-                                        </v-container>
-                                    </v-card-text>
-                                </v-card>
-                            </v-menu>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </AmrMenu>
                             <!-- Mark as latest chapter read button -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        color="orange"
-                                        v-show="showLatestRead"
-                                        @click.stop="markAsLatest">
-                                        <v-icon :icon="icons.mdiPageLast"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_mark_read") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_mark_read')" class="ml-1">
+                                <AmrButton icon variant="warning" v-show="showLatestRead" @click.stop="markAsLatest">
+                                    <AmrIcon :icon="icons.mdiPageLast" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- Add to reading list button -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        color="green"
-                                        v-show="!mangaExists && options.addauto === 0"
-                                        @click.stop="addManga">
-                                        <v-icon :icon="icons.mdiPlus"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_add_list") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_add_list')" class="ml-1">
+                                <AmrButton
+                                    icon
+                                    variant="success"
+                                    v-show="!mangaExists && options.addauto === 0"
+                                    @click.stop="addManga">
+                                    <AmrIcon :icon="icons.mdiPlus" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- Remove from reading list button -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        color="red"
-                                        v-show="mangaExists"
-                                        @click.stop="deleteManga">
-                                        <v-icon :icon="icons.mdiDelete"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("reader_delete_manga") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('reader_delete_manga')" class="ml-1">
+                                <AmrButton icon variant="danger" v-show="mangaExists" @click.stop="deleteManga">
+                                    <AmrIcon :icon="icons.mdiDelete" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- Pause following updates on manga -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        color="blue"
-                                        @click.stop="markMangaReadTop(1)"
-                                        v-show="mangaExists && mangaInfos && mangaInfos.read === 0">
-                                        <v-icon :icon="icons.mdiPause"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_stopfollow") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_stopfollow')" class="ml-1">
+                                <AmrButton
+                                    icon
+                                    variant="primary"
+                                    @click.stop="markMangaReadTop(1)"
+                                    v-show="mangaExists && mangaInfos && mangaInfos.read === 0">
+                                    <AmrIcon :icon="icons.mdiPause" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- Follow updates on manga -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        color="blue"
-                                        @click.stop="markMangaReadTop(0)"
-                                        v-show="mangaExists && mangaInfos && mangaInfos.read === 1">
-                                        <v-icon :icon="icons.mdiPlay"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_follow") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_follow')" class="ml-1">
+                                <AmrButton
+                                    icon
+                                    variant="primary"
+                                    @click.stop="markMangaReadTop(0)"
+                                    v-show="mangaExists && mangaInfos && mangaInfos.read === 1">
+                                    <AmrIcon :icon="icons.mdiPlay" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- Reload all scan errors -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" icon color="red" @click.stop="reloadErrors">
-                                        <v-icon :icon="icons.mdiReplay"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_reload") }}</span>
-                            </v-tooltip>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_reload')" class="ml-1">
+                                <AmrButton icon variant="danger" @click.stop="reloadErrors">
+                                    <AmrIcon :icon="icons.mdiReplay" />
+                                </AmrButton>
+                            </AmrTooltip>
                             <!-- download chapter button -->
-                            <v-tooltip location="bottom" class="ml-1">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" icon color="red" @click.stop="DownloadChapter">
-                                        <v-progress-circular indeterminate v-if="zip" />
-                                        <v-icon v-if="!zip" :icon="icons.mdiDownloadOutline"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("content_nav_downlaod") }}</span>
-                            </v-tooltip>
-                        </v-col>
-                    </v-row>
-                </v-card-actions>
-            </v-card>
+                            <AmrTooltip location="bottom" :text="i18n('content_nav_downlaod')" class="ml-1">
+                                <AmrButton icon variant="danger" @click.stop="DownloadChapter">
+                                    <div v-if="zip" class="amr-spinner-small"></div>
+                                    <AmrIcon v-else :icon="icons.mdiDownloadOutline" />
+                                </AmrButton>
+                            </AmrTooltip>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Display options -->
-            <v-card rounded="0" :color="backcolor(1)" class="text-white">
-                <v-card-title>
-                    <v-row dense>
-                        <v-col cols="12">
+            <div :class="['amr-card', backcolor(1)]">
+                <div class="amr-card-title">
+                    <div class="amr-row-dense">
+                        <div class="amr-col-12">
                             <!-- Display book checkbox -->
-                            <v-switch
-                                density="compact"
-                                v-model="book"
-                                :label="i18n('option_read_book')"
-                                hide-details
-                                class="pb-1"></v-switch>
+                            <AmrSwitch v-model="book" :label="i18n('option_read_book')" class="pb-1" />
                             <span>
-                                <v-tooltip location="top">
-                                    <template v-slot:activator="{ props }">
-                                        <!-- Book offset button -->
-                                        <v-switch
-                                            :disabled="!book"
-                                            density="compact"
-                                            v-show="displayBookOffsetButton"
-                                            v-bind="props"
-                                            @click="offsetBook"
-                                            :label="i18n('reader_book_offset')"
-                                            hide-details
-                                            class="pb-1"></v-switch>
-                                    </template>
-                                    <span>{{ i18n("reader_book_offset_description") }}</span>
-                                </v-tooltip>
+                                <AmrTooltip location="top" :text="i18n('reader_book_offset_description')">
+                                    <!-- Book offset button -->
+                                    <AmrSwitch
+                                        :disabled="!book"
+                                        v-show="displayBookOffsetButton"
+                                        @click="offsetBook"
+                                        :label="i18n('reader_book_offset')"
+                                        class="pb-1" />
+                                </AmrTooltip>
                             </span>
-                        </v-col>
-                        <v-col cols="12">
-                            <v-divider></v-divider>
-                        </v-col>
-                        <v-col cols="12">
+                        </div>
+                        <div class="amr-col-12">
+                            <div class="amr-divider"></div>
+                        </div>
+                        <div class="amr-col-12">
                             <!-- Display full chapter checkbox -->
-                            <v-switch
-                                density="compact"
-                                v-model="fullchapter"
-                                :label="i18n('option_read_fullchapter')"
-                                hide-details
-                                class="pb-1"></v-switch>
-                        </v-col>
-                        <v-col cols="12">
+                            <AmrSwitch v-model="fullchapter" :label="i18n('option_read_fullchapter')" class="pb-1" />
+                        </div>
+                        <div class="amr-col-12">
                             <!-- Webtoon Mode checkbox -->
-                            <v-switch
-                                density="compact"
+                            <AmrSwitch
                                 v-model="webtoonMode"
                                 :label="i18n('option_read_webtoon')"
-                                hide-details
                                 class="pb-1"
-                                :disabled="!fullchapter"></v-switch>
-                        </v-col>
-                        <v-col cols="12">
-                            <v-divider></v-divider>
-                        </v-col>
-                        <v-col cols="12">
+                                :disabled="!fullchapter" />
+                        </div>
+                        <div class="amr-col-12">
+                            <div class="amr-divider"></div>
+                        </div>
+                        <div class="amr-col-12">
                             <!-- Scale Up Image checkbox -->
-                            <v-switch
-                                density="compact"
-                                v-model="scaleUp"
-                                :label="i18n('option_read_scaleup')"
-                                hide-details
-                                class="pb-1"></v-switch>
-                        </v-col>
-                    </v-row>
-                    <v-row dense>
+                            <AmrSwitch v-model="scaleUp" :label="i18n('option_read_scaleup')" class="pb-1" />
+                        </div>
+                    </div>
+                    <div class="amr-row-dense">
                         <!-- Reading direction -->
-                        <v-col class="text-center mt-2" cols="12">
-                            <v-btn-toggle v-model="direction" mandatory color="primary">
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn v-bind="props" variant="text" value="ltr">
-                                            <!--<span>Left to right</span>-->
-                                            <v-icon :icon="icons.mdiArrowRight"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_book_ltr") }}</span>
-                                </v-tooltip>
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn variant="text" v-bind="props" value="rtl">
-                                            <!--<span>Right to left</span>-->
-                                            <v-icon :icon="icons.mdiArrowLeft"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_book_rtl") }}</span>
-                                </v-tooltip>
-                            </v-btn-toggle>
-                        </v-col>
+                        <div class="amr-col-12 text-center mt-2">
+                            <div class="amr-btn-toggle">
+                                <AmrTooltip location="bottom" :text="i18n('option_read_book_ltr')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': direction === 'ltr' }"
+                                        @click="direction = 'ltr'">
+                                        <AmrIcon :icon="icons.mdiArrowRight" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                                <AmrTooltip location="bottom" :text="i18n('option_read_book_rtl')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': direction === 'rtl' }"
+                                        @click="direction = 'rtl'">
+                                        <AmrIcon :icon="icons.mdiArrowLeft" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                            </div>
+                        </div>
                         <!-- Resize mode -->
-                        <v-col class="text-center" cols="12">
-                            <v-btn-toggle v-model="resize" mandatory color="primary">
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn v-bind="props" variant="text" value="width">
-                                            <!--<span>Width</span>-->
-                                            <v-icon :icon="icons.mdiArrowExpandHorizontal"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_resize_w") }}</span>
-                                </v-tooltip>
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn v-bind="props" variant="text" value="height" v-show="!fullchapter">
-                                            <!--<span>Height</span>-->
-                                            <v-icon :icon="icons.mdiArrowExpandVertical"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_resize_h") }}</span>
-                                </v-tooltip>
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn v-bind="props" variant="text" value="container" v-show="!fullchapter">
-                                            <!--<span>Container</span>-->
-                                            <v-icon :icon="icons.mdiArrowExpandAll"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_resize_c") }}</span>
-                                </v-tooltip>
-                                <v-tooltip location="bottom">
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn v-bind="props" variant="text" value="none">
-                                            <!--<span>None</span>-->
-                                            <v-icon :icon="icons.mdiBorderNoneVariant"></v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>{{ i18n("option_read_resize_n") }}</span>
-                                </v-tooltip>
-                            </v-btn-toggle>
-                        </v-col>
+                        <div class="amr-col-12 text-center">
+                            <div class="amr-btn-toggle">
+                                <AmrTooltip location="bottom" :text="i18n('option_read_resize_w')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': resize === 'width' }"
+                                        @click="resize = 'width'">
+                                        <AmrIcon :icon="icons.mdiArrowExpandHorizontal" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                                <AmrTooltip location="bottom" :text="i18n('option_read_resize_h')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': resize === 'height' }"
+                                        v-show="!fullchapter"
+                                        @click="resize = 'height'">
+                                        <AmrIcon :icon="icons.mdiArrowExpandVertical" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                                <AmrTooltip location="bottom" :text="i18n('option_read_resize_c')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': resize === 'container' }"
+                                        v-show="!fullchapter"
+                                        @click="resize = 'container'">
+                                        <AmrIcon :icon="icons.mdiArrowExpandAll" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                                <AmrTooltip location="bottom" :text="i18n('option_read_resize_n')">
+                                    <AmrButton
+                                        variant="text"
+                                        :class="{ 'amr-btn-active': resize === 'none' }"
+                                        @click="resize = 'none'">
+                                        <AmrIcon :icon="icons.mdiBorderNoneVariant" />
+                                    </AmrButton>
+                                </AmrTooltip>
+                            </div>
+                        </div>
                         <!-- Zoom Value -->
-                        <v-col class="text-center mt-2" cols="12" v-if="showMaxWidth">
-                            <v-slider
-                                v-model="maxWidthValueStore"
-                                density="compact"
-                                min="10"
-                                max="100"
-                                track-fill-color="primary"
-                                :thumb-color="backcolor(3)"
-                                thumb-label="always"
-                                hide-details>
-                                <template v-slot:prepend>
-                                    <v-icon :color="backcolor(3)" @click="zoomOut" :icon="icons.mdiMinus"></v-icon>
-                                </template>
-                                <template v-slot:append>
-                                    <v-icon :color="backcolor(3)" @click="zoomIn" :icon="icons.mdiPlus"></v-icon>
-                                </template>
-                            </v-slider>
-                        </v-col>
-                        <v-col cols="12" class="mt-2" style="min-height: 40px !important" v-else />
-                        <v-col class="text-center mt-2" cols="12">
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        @click="toggleDark"
-                                        :color="darkreader ? 'white' : 'black'"
-                                        class="ma-0">
-                                        <v-icon :icon="icons.mdiBrightness6"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{
-                                    !darkreader ? i18n("reader_button_dark") : i18n("reader_button_light")
-                                }}</span>
-                            </v-tooltip>
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" icon @click="toggleFullScreen" class="ma-0">
-                                        <v-icon
-                                            :icon="fullscreen ? icons.mdiFullscreenExit : icons.mdiFullscreen"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{
+                        <div class="amr-col-12 text-center mt-2" v-if="showMaxWidth">
+                            <div class="amr-zoom-row">
+                                <AmrIcon :icon="icons.mdiMinus" @click="zoomOut" class="amr-zoom-icon" />
+                                <AmrSlider v-model="maxWidthValueStore" :min="10" :max="100" class="amr-zoom-slider" />
+                                <AmrIcon :icon="icons.mdiPlus" @click="zoomIn" class="amr-zoom-icon" />
+                            </div>
+                        </div>
+                        <div class="amr-col-12 mt-2" style="min-height: 40px !important" v-else></div>
+                        <div class="amr-col-12 text-center mt-2">
+                            <AmrTooltip
+                                location="top"
+                                :text="!darkreader ? i18n('reader_button_dark') : i18n('reader_button_light')">
+                                <AmrButton
+                                    icon
+                                    @click="toggleDark"
+                                    :class="darkreader ? 'amr-btn-light' : 'amr-btn-dark'"
+                                    class="ma-0">
+                                    <AmrIcon :icon="icons.mdiBrightness6" />
+                                </AmrButton>
+                            </AmrTooltip>
+                            <AmrTooltip
+                                location="top"
+                                :text="
                                     !fullscreen
-                                        ? i18n("reader_button_fullscreen")
-                                        : i18n("reader_button_exit_fullscreen")
-                                }}</span>
-                            </v-tooltip>
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        @click="showMaxWidth = !showMaxWidth"
-                                        class="ma-0"
-                                        :disabled="['height', 'none'].includes(resize)">
-                                        <v-icon :icon="icons.mdiMagnify"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("reader_zoom_show") }}</span>
-                            </v-tooltip>
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" icon @click="openShortcuts" class="ma-0">
-                                        <v-icon :icon="icons.mdiKeyboard"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("reader_shortcuts_tooltip") }}</span>
-                            </v-tooltip>
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn v-bind="props" icon @click="displayTips" color="blue" class="ma-0">
-                                        <v-icon :icon="icons.mdiLightbulbOn"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>{{ i18n("reader_button_tips") }}</span>
-                            </v-tooltip>
-                        </v-col>
-                        <v-col class="text-center mt-2" cols="12">
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        @click="saveOptionsAsDefault(false)"
-                                        color="primary"
-                                        v-if="layoutDiffFromOptions"
-                                        class="ma-0">
-                                        <v-icon :icon="icons.mdiContentSave"></v-icon>
-                                    </v-btn>
-                                    <v-btn v-else icon disabled class="select-btn" />
-                                </template>
-                                <span>{{ i18n("reader_button_saveoptions") }}</span>
-                            </v-tooltip>
-                            <v-tooltip location="top">
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        @click="resetOptionsToDefault"
-                                        color="primary"
-                                        v-if="layoutDiffFromOptions"
-                                        class="ma-0">
-                                        <v-icon :icon="icons.mdiReload"></v-icon>
-                                    </v-btn>
-                                    <v-btn v-else icon disabled class="select-btn" />
-                                </template>
-                                <span>{{ i18n("reader_button_resetoptions") }}</span>
-                            </v-tooltip>
-                        </v-col>
-                    </v-row>
-                </v-card-title>
-            </v-card>
-        </v-navigation-drawer>
+                                        ? i18n('reader_button_fullscreen')
+                                        : i18n('reader_button_exit_fullscreen')
+                                ">
+                                <AmrButton icon @click="toggleFullScreen" class="ma-0">
+                                    <AmrIcon :icon="fullscreen ? icons.mdiFullscreenExit : icons.mdiFullscreen" />
+                                </AmrButton>
+                            </AmrTooltip>
+                            <AmrTooltip location="top" :text="i18n('reader_zoom_show')">
+                                <AmrButton
+                                    icon
+                                    @click="showMaxWidth = !showMaxWidth"
+                                    class="ma-0"
+                                    :disabled="['height', 'none'].includes(resize)">
+                                    <AmrIcon :icon="icons.mdiMagnify" />
+                                </AmrButton>
+                            </AmrTooltip>
+                            <AmrTooltip location="top" :text="i18n('reader_shortcuts_tooltip')">
+                                <AmrButton icon @click="openShortcuts" class="ma-0">
+                                    <AmrIcon :icon="icons.mdiKeyboard" />
+                                </AmrButton>
+                            </AmrTooltip>
+                            <AmrTooltip location="top" :text="i18n('reader_button_tips')">
+                                <AmrButton icon @click="displayTips" variant="primary" class="ma-0">
+                                    <AmrIcon :icon="icons.mdiLightbulbOn" />
+                                </AmrButton>
+                            </AmrTooltip>
+                        </div>
+                        <div class="amr-col-12 text-center mt-2">
+                            <AmrTooltip location="top" :text="i18n('reader_button_saveoptions')">
+                                <AmrButton
+                                    icon
+                                    @click="saveOptionsAsDefault(false)"
+                                    variant="primary"
+                                    v-if="layoutDiffFromOptions"
+                                    class="ma-0">
+                                    <AmrIcon :icon="icons.mdiContentSave" />
+                                </AmrButton>
+                                <AmrButton v-else icon disabled class="select-btn" />
+                            </AmrTooltip>
+                            <AmrTooltip location="top" :text="i18n('reader_button_resetoptions')">
+                                <AmrButton
+                                    icon
+                                    @click="resetOptionsToDefault"
+                                    variant="primary"
+                                    v-if="layoutDiffFromOptions"
+                                    class="ma-0">
+                                    <AmrIcon :icon="icons.mdiReload" />
+                                </AmrButton>
+                                <AmrButton v-else icon disabled class="select-btn" />
+                            </AmrTooltip>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <SocialBar v-show="drawer" />
         <!-- End AMR Reader Side bar -->
-        <v-main>
+        <main class="amr-main">
             <Reader
                 ref="reader"
                 :mirror="mirror"
@@ -651,8 +491,8 @@
                 :maxWidthValue="maxWidthValue"
                 :scaleUp="scaleUp"
                 :shouldInvertKeys="shouldInvertKeys" />
-        </v-main>
-    </v-app>
+        </main>
+    </div>
 </template>
 
 <script>
@@ -666,6 +506,7 @@ import bookmarks from "./state/bookmarks"
 import { saveAs, Util } from "./helpers/util"
 import * as dialogs from "./helpers/dialogs"
 import ChapterLoader from "./helpers/ChapterLoader"
+import { scansProvider } from "./helpers/ScansProvider"
 import EventBus from "./helpers/EventBus"
 import mimedb from "mime-db"
 import Reader from "./components/Reader"
@@ -674,6 +515,13 @@ import WizDialog from "./components/WizDialog"
 import BookmarkPopup from "./components/BookmarkPopup"
 import ShortcutsPopup from "./components/ShortcutsPopup"
 import SocialBar from "./components/SocialBar"
+import AmrIcon from "./components/AmrIcon"
+import AmrButton from "./components/AmrButton"
+import AmrSwitch from "./components/AmrSwitch"
+import AmrSlider from "./components/AmrSlider"
+import AmrSelect from "./components/AmrSelect"
+import AmrMenu from "./components/AmrMenu"
+import AmrTooltip from "./components/AmrTooltip"
 import {
     mdiMenu,
     mdiChevronRight,
@@ -709,9 +557,19 @@ import {
 } from "@mdi/js"
 import { THINSCAN } from "../shared/Options"
 import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js"
+import { debug } from "../core/debug"
 
 /** Possible values for resize (readable), the stored value is the corresponding index */
 const resize_values = ["width", "height", "container", "none"]
+
+// DISABLED: Memory watcher was part of debugging infrastructure that relied on
+// the log buffer, which has been disabled due to causing performance issues.
+// See memory-leak-analysis.txt for details.
+// To re-enable, set AMR_MEMWATCH=1 in environment AND re-enable log buffer.
+const MEMWATCH_ENABLED = false // Disabled - was: process.env.AMR_MEMWATCH === "1" || process.env.NODE_ENV === "development"
+const MEMWATCH_INTERVAL_MS = 30000 // Increased from 15s to reduce overhead if re-enabled
+const MEMWATCH_HEAP_MB_THRESHOLD = 250
+const MEMWATCH_SCAN_THRESHOLD = 60
 
 export default {
     mixins: [i18nmixin],
@@ -724,6 +582,7 @@ export default {
         zip: false,
         drawer: false /* Display the side drawer or not */,
         loading: false /* Display the loading cover */,
+        fabHover: false /* FAB button hover state */,
 
         chapters: [] /* List of chapters */,
         selchap: null /* Current chapter */,
@@ -742,8 +601,10 @@ export default {
 
         displayBookOffsetButton: false /* This button will offset the chapter in book mode if there is a title page. Only display after chapter loads */,
 
-        nextChapterLoader: null /* A ChapterLoader object to preload next chapter scans */,
-        nextchapProgress: 0 /* Progression of next chapter loading */,
+        nextChapterLoader:
+            null /* A ChapterLoader object holding metadata (and optionally scans) for the next chapter */,
+        nextchapProgress: 0 /* Progression of next chapter preloading (metadata only by default) */,
+        preloadNextInProgress: false /* Internal flag to avoid running preloadNextChapter concurrently */,
 
         bookstate: bookmarks.state /* bookmarks state */,
         thinscan: options.thinscan /* top telling that the chapter is containing thin scans (height >= 3 * width) */,
@@ -751,7 +612,8 @@ export default {
         darkreader: options.darkreader === 1 /* Top for using dark background */,
         options:
             options /* Make it reactive so update to local options object will be reflected in computed properties */,
-        fullscreen: window.fullScreen /* fullscreen window state */,
+        fullscreen:
+            !!document.fullscreenElement /* fullscreen window state - use standard API instead of deprecated window.fullScreen */,
 
         chaploaded: false /* Top telling if all scans have been loaded */,
         pageData: pageData.state /* reactive data from pageData */,
@@ -765,6 +627,16 @@ export default {
         // Reading time tracking
         sessionStartTime: null /* Timestamp when reading session started */,
         chaptersReadInSession: 0 /* Number of chapters read in this session */,
+
+        // Memory debug watcher (temporary, for leak investigation)
+        memoryWatchInterval: null,
+        memoryDumpTriggered: false,
+
+        // EventBus handlers (stored for cleanup)
+        amrEventHandlers: null,
+
+        // Fullscreen change handler (stored for cleanup)
+        fullscreenChangeHandler: null,
 
         icons: {
             mdiMenu,
@@ -822,43 +694,45 @@ export default {
         })
         /** Load current bar state (drawer visible or not) */
         this.loadBarState()
-        /** Listen to global bus events */
-        EventBus.$on("open-bookmarks", obj => {
-            // request to open bookmarks popup
-            this.$refs.book.open(obj)
-        })
-        EventBus.$on("thin-scan", obj => {
-            // a thin scan (height >= 3 * width) has been detected
-            this.handleThinScan()
-        })
-        EventBus.$on("go-next-chapter", obj => {
-            // go to next chapter
-            this.goNextChapter()
-        })
-        EventBus.$on("go-previous-chapter", obj => {
-            // go to previous chapter
-            this.goPreviousChapter()
-        })
-        EventBus.$on("temporary-dialog", obj => {
-            // display a temporary message
-            this.$refs.wizdialog.temporary(obj.message, obj.duration)
-        })
-        EventBus.$on("pages-loaded", obj => {
-            // Allow book mode offset button to display
-            this.displayBookOffsetButton = true
-        })
-        EventBus.$on("chapter-loaded", obj => {
-            // consult current manga
-            this.chaploaded = true
-            // Preload next chapter
-            if (options.prefetch == 1) {
-                this.preloadNextChapter()
+
+        /** Listen to global bus events - store handlers for cleanup */
+        this.amrEventHandlers = {
+            openBookmarks: obj => {
+                this.$refs.book.open(obj)
+            },
+            thinScan: () => {
+                this.handleThinScan()
+            },
+            goNextChapter: () => {
+                this.goNextChapter()
+            },
+            goPreviousChapter: () => {
+                this.goPreviousChapter()
+            },
+            temporaryDialog: obj => {
+                this.$refs.wizdialog.temporary(obj.message, obj.duration)
+            },
+            pagesLoaded: () => {
+                this.displayBookOffsetButton = true
+            },
+            chapterLoaded: () => {
+                this.chaploaded = true
+                if (options.prefetch == 1) {
+                    this.preloadNextChapter()
+                }
+                if (options.markwhendownload === 1) {
+                    this.consultManga()
+                }
             }
-            // Mark current chapter as read if option mark as read when dowloaded checked
-            if (options.markwhendownload === 1) {
-                this.consultManga()
-            }
-        })
+        }
+
+        EventBus.$on("open-bookmarks", this.amrEventHandlers.openBookmarks)
+        EventBus.$on("thin-scan", this.amrEventHandlers.thinScan)
+        EventBus.$on("go-next-chapter", this.amrEventHandlers.goNextChapter)
+        EventBus.$on("go-previous-chapter", this.amrEventHandlers.goPreviousChapter)
+        EventBus.$on("temporary-dialog", this.amrEventHandlers.temporaryDialog)
+        EventBus.$on("pages-loaded", this.amrEventHandlers.pagesLoaded)
+        EventBus.$on("chapter-loaded", this.amrEventHandlers.chapterLoaded)
     },
     mounted() {
         /* Load chapters list */
@@ -880,12 +754,87 @@ export default {
 
         // Record reading time when page is closed
         window.addEventListener("beforeunload", this.recordReadingSession)
+
+        // Listen for fullscreen changes to update state properly (replaces deprecated window.fullScreen)
+        this.fullscreenChangeHandler = () => {
+            this.fullscreen = !!document.fullscreenElement
+        }
+        document.addEventListener("fullscreenchange", this.fullscreenChangeHandler)
+
+        // Start memory watcher (temporary debug tool to help detect leaks)
+        if (MEMWATCH_ENABLED && typeof window !== "undefined") {
+            if (!this.memoryWatchInterval) {
+                this.memoryWatchInterval = window.setInterval(() => {
+                    try {
+                        this.checkMemoryAndMaybeDump()
+                    } catch (e) {
+                        debug.reader.warn("MEMWATCH checkMemoryAndMaybeDump failed", e)
+                    }
+                }, MEMWATCH_INTERVAL_MS)
+            }
+        }
     },
     beforeUnmount() {
-        // Clean up event listener
+        // Clean up window event listener
         window.removeEventListener("beforeunload", this.recordReadingSession)
         // Record reading session when component unmounts
         this.recordReadingSession()
+
+        // Clean up fullscreen change listener
+        if (this.fullscreenChangeHandler) {
+            document.removeEventListener("fullscreenchange", this.fullscreenChangeHandler)
+            this.fullscreenChangeHandler = null
+        }
+
+        // Clean up EventBus listeners to prevent memory leaks
+        if (this.amrEventHandlers) {
+            EventBus.$off("open-bookmarks", this.amrEventHandlers.openBookmarks)
+            EventBus.$off("thin-scan", this.amrEventHandlers.thinScan)
+            EventBus.$off("go-next-chapter", this.amrEventHandlers.goNextChapter)
+            EventBus.$off("go-previous-chapter", this.amrEventHandlers.goPreviousChapter)
+            EventBus.$off("temporary-dialog", this.amrEventHandlers.temporaryDialog)
+            EventBus.$off("pages-loaded", this.amrEventHandlers.pagesLoaded)
+            EventBus.$off("chapter-loaded", this.amrEventHandlers.chapterLoaded)
+            this.amrEventHandlers = null
+        }
+
+        // Clean up keyboard event listeners (registered in handlekeys)
+        if (this.amrKeydownHandler) {
+            window.removeEventListener("keydown", this.amrKeydownHandler, true)
+        }
+        if (this.amrKeyupHandler) {
+            window.removeEventListener("keyup", this.amrKeyupHandler, true)
+        }
+        if (this.amrKeypressHandler) {
+            window.removeEventListener("keypress", this.amrKeypressHandler, true)
+        }
+
+        // Clean up chapter loaders to release image memory
+        if (this.nextChapterLoader) {
+            try {
+                this.deleteChapterLoader({ chaploader: this.nextChapterLoader })
+            } catch (e) {
+                debug.reader.warn("beforeUnmount - error deleting nextChapterLoader:", e)
+            }
+            this.nextChapterLoader = null
+        }
+        if (window["__current_chapterloader__"]) {
+            try {
+                this.deleteChapterLoader({ chaploader: window["__current_chapterloader__"] })
+            } catch (e) {
+                debug.reader.warn("beforeUnmount - error deleting __current_chapterloader__:", e)
+            }
+            window["__current_chapterloader__"] = null
+        }
+
+        // Clean up scansProvider state
+        scansProvider.cleanup()
+
+        // Stop memory watcher interval
+        if (this.memoryWatchInterval) {
+            clearInterval(this.memoryWatchInterval)
+            this.memoryWatchInterval = null
+        }
     },
     watch: {
         /** Change resize value if passing from !fullchapter to fullchapter (height and container are no more available) */
@@ -987,6 +936,10 @@ export default {
         },
         /** list of bookmarked scans urls */
         bookedScans() {
+            // Guard: $refs.reader may not be available during initial render
+            if (!this.$refs.reader || !this.$refs.reader.getPageIndexFromScanUrl) {
+                return []
+            }
             return this.bookstate.scans
                 .filter(sc => sc.booked)
                 .map(sc => {
@@ -1021,22 +974,53 @@ export default {
                 }, 2000)
             }
         },
-        /* Top telling if we already tried loading next chapter */
+        /* Tells if we have a prepared ChapterLoader for the next chapter
+           We now only preload metadata (infos + image URLs) to avoid loading all
+           next-chapter images into memory in advance. When nextChapterLoader is
+           non-null and points to a valid chapter, goNextChapter() will reuse it. */
         nextchapLoading() {
-            return this.nextChapterLoader && this.nextChapterLoader.scansProvider
+            return !!(
+                this.nextChapterLoader &&
+                this.nextChapterLoader.isAChapter &&
+                this.nextChapterLoader.images &&
+                this.nextChapterLoader.images.length > 0
+            )
         },
         /**
          * If UI buttons and keys should be flipped
          */
         shouldInvertKeys() {
             return this.direction === "rtl" && this.invertKeys && !this.fullchapter
+        },
+        /**
+         * Theme attribute for CSS custom properties
+         * Returns 'dark' or 'light' based on darkreader state
+         */
+        themeAttr() {
+            return this.darkreader ? "dark" : "light"
         }
     },
-    components: { Reader, Scan, WizDialog, BookmarkPopup, ShortcutsPopup, SocialBar },
+    components: {
+        Reader,
+        Scan,
+        WizDialog,
+        BookmarkPopup,
+        ShortcutsPopup,
+        SocialBar,
+        AmrIcon,
+        AmrButton,
+        AmrSwitch,
+        AmrSlider,
+        AmrSelect,
+        AmrMenu,
+        AmrTooltip
+    },
     methods: {
-        /** Return drawer background color taking a light into account and the dark or not back */
+        /** Return drawer background color class (uses CSS custom properties now) */
         backcolor(light = 0) {
-            return "grey " + (!this.darkreader ? "lighten-" + (4 - light) : "darken-" + (4 - light))
+            // Map light values to CSS custom property classes
+            const lightMap = ["amr-bg-drawer", "amr-bg-drawer-1", "amr-bg-drawer-2", "amr-bg-drawer-3"]
+            return lightMap[light] || "amr-bg-drawer"
         },
         /** Record reading session duration to statistics */
         recordReadingSession() {
@@ -1053,6 +1037,70 @@ export default {
             }
             // Reset to prevent double recording
             this.sessionStartTime = null
+        },
+        /**
+         * Temporary memory watcher for debugging leaks in the reader.
+         * Uses performance.memory when available (Chrome/Chromium) and falls
+         * back to a heuristic based on scans count in Firefox.
+         */
+        checkMemoryAndMaybeDump() {
+            try {
+                let usedMb = null
+                const perf = typeof performance !== "undefined" ? performance : null
+                if (perf && perf.memory && typeof perf.memory.usedJSHeapSize === "number") {
+                    usedMb = perf.memory.usedJSHeapSize / (1024 * 1024)
+                }
+
+                const scansState = scansProvider.state || {}
+                const totalScans =
+                    Array.isArray(scansState.scans) && scansState.scans.length ? scansState.scans.length : 0
+                const loadedScans = typeof scansState.loaded === "number" ? scansState.loaded : 0
+
+                const overHeap = usedMb !== null && usedMb >= MEMWATCH_HEAP_MB_THRESHOLD
+                const overScans = totalScans >= MEMWATCH_SCAN_THRESHOLD
+
+                // Log a lightweight heartbeat so we can see in the console
+                // that MEMWATCH is actually running and what it sees. This
+                // only logs a few times to avoid flooding the buffer.
+                if (!this.memoryDumpTriggered) {
+                    this.memoryWatchTickCount = (this.memoryWatchTickCount || 0) + 1
+                    const tick = this.memoryWatchTickCount
+                    if (tick <= 5 || tick % 10 === 0) {
+                        debug.reader.debug("MEMWATCH tick", {
+                            tick,
+                            usedMb,
+                            totalScans,
+                            loadedScans,
+                            overHeap,
+                            overScans
+                        })
+                    }
+                }
+
+                if ((overHeap || overScans) && !this.memoryDumpTriggered) {
+                    this.memoryDumpTriggered = true
+                    debug.reader.warn(
+                        "MEMWATCH Threshold exceeded, triggering log dump. heapMb=",
+                        usedMb,
+                        "totalScans=",
+                        totalScans,
+                        "loadedScans=",
+                        loadedScans
+                    )
+                    const globalAny = globalThis
+                    if (globalAny && typeof globalAny.__amrDebugDumpLogs === "function") {
+                        const reason =
+                            usedMb !== null
+                                ? `auto-threshold-${usedMb.toFixed(1)}MB`
+                                : `auto-threshold-scans-${totalScans}`
+                        globalAny.__amrDebugDumpLogs(reason)
+                    } else {
+                        debug.reader.warn("MEMWATCH __amrDebugDumpLogs not available; skipping automatic dump.")
+                    }
+                }
+            } catch (e) {
+                debug.reader.error("MEMWATCH checkMemoryAndMaybeDump failed", e)
+            }
         },
         /** Inform background that current chapter has been read (will update reading state and eventually add manga to list) */
         async consultManga(force) {
@@ -1139,8 +1187,8 @@ export default {
         },
         /** Load chapters list for current manga */
         async loadChapters() {
-            console.log(
-                "[DEBUG] loadChapters called for:",
+            debug.reader.debug(
+                "loadChapters called for:",
                 this.pageData.currentMangaURL,
                 "mirror:",
                 this.mirror?.mirrorName
@@ -1155,8 +1203,8 @@ export default {
                     mirror: this.mirror?.mirrorName,
                     language: this.pageData.language
                 })
-                console.log(
-                    "[DEBUG] loadChapters - alreadyLoadedListChaps:",
+                debug.reader.debug(
+                    "loadChapters - alreadyLoadedListChaps:",
                     alreadyLoadedListChaps
                         ? Array.isArray(alreadyLoadedListChaps)
                             ? alreadyLoadedListChaps.length + " chapters"
@@ -1164,46 +1212,91 @@ export default {
                         : "null/undefined"
                 )
             } catch (e) {
-                console.log("[DEBUG] loadChapters - getListChaps error:", e)
+                debug.reader.debug("loadChapters - getListChaps error:", e)
             }
 
             if (alreadyLoadedListChaps && alreadyLoadedListChaps.length > 0) {
-                console.log(
-                    "[DEBUG] loadChapters - using cached chapters, count:",
+                debug.reader.debug(
+                    "loadChapters - using cached chapters, count:",
                     alreadyLoadedListChaps.length,
                     "first raw:",
-                    JSON.stringify(alreadyLoadedListChaps[0])
+                    JSON.stringify(alreadyLoadedListChaps[0])?.substring(0, 200)
                 )
                 this.chapters = alreadyLoadedListChaps.map(arr => {
                     return { url: arr[1], title: arr[0] }
                 })
-                console.log(
-                    "[DEBUG] loadChapters - chapters mapped, count:",
+                debug.reader.debug(
+                    "loadChapters - chapters mapped, count:",
                     this.chapters.length,
                     "first mapped:",
-                    JSON.stringify(this.chapters[0])
+                    JSON.stringify(this.chapters[0])?.substring(0, 200)
                 )
             } else {
                 let list = []
                 // we need to load chapters using background page
                 // Try to fetch manga page HTML in content script context (bypasses Cloudflare)
                 let htmlContent = undefined
-                console.log(
-                    "[DEBUG] loadChapters - no cached chapters, fetching manga page HTML from:",
+                debug.reader.debug(
+                    "loadChapters - no cached chapters, fetching manga page HTML from:",
                     this.pageData.currentMangaURL
                 )
                 try {
-                    const response = await fetch(this.pageData.currentMangaURL)
-                    console.log("[DEBUG] loadChapters - fetch response status:", response.status, response.ok)
+                    let response
+                    // Use a timeout so we don't hang forever if the site never
+                    // responds or streams content without ending. In that case we
+                    // fall back to letting the background page fetch the HTML.
+                    if (typeof AbortController !== "undefined") {
+                        const controller = new AbortController()
+                        const timeoutMs = 30000 // Increased from 15s to 30s for slow connections
+                        const timeoutId = setTimeout(() => {
+                            try {
+                                controller.abort()
+                            } catch (abortError) {
+                                // Ignore abort errors – we only care that the
+                                // promise settles so we can fall back.
+                            }
+                        }, timeoutMs)
+                        try {
+                            response = await fetch(this.pageData.currentMangaURL, {
+                                signal: controller.signal
+                            })
+                        } finally {
+                            clearTimeout(timeoutId)
+                        }
+                    } else {
+                        // Older environments without AbortController – just
+                        // perform a normal fetch.
+                        response = await fetch(this.pageData.currentMangaURL)
+                    }
+                    debug.reader.debug("loadChapters - fetch response status:", response.status, response.ok)
                     if (response.ok) {
-                        htmlContent = await response.text()
-                        console.log("[DEBUG] loadChapters - fetched HTML length:", htmlContent?.length)
+                        debug.reader.debug("loadChapters - calling response.text()...")
+                        // FIXED: Add timeout to response.text() to prevent infinite hang
+                        // Some sites stream content slowly or never finish
+                        const textTimeoutMs = 15000 // 15 second timeout for reading body
+                        const textPromise = response.text()
+                        const textTimeout = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error("response.text() timeout")), textTimeoutMs)
+                        })
+                        try {
+                            htmlContent = await Promise.race([textPromise, textTimeout])
+                            debug.reader.debug("loadChapters - fetched HTML length:", htmlContent?.length)
+                        } catch (textErr) {
+                            debug.reader.debug("loadChapters - response.text() failed:", textErr?.message)
+                            htmlContent = undefined
+                        }
+                    } else {
+                        debug.reader.debug("loadChapters - fetch response not OK, status:", response.status)
                     }
                 } catch (e) {
-                    console.log("[DEBUG] loadChapters - failed to fetch manga page HTML:", e)
+                    if (e && e.name === "AbortError") {
+                        debug.reader.debug("loadChapters - fetch aborted after timeout")
+                    } else {
+                        debug.reader.debug("loadChapters - failed to fetch manga page HTML:", e)
+                    }
                 }
-                console.log(
-                    "[DEBUG] loadChapters - sending loadListChaps with htmlContent:",
+                debug.reader.debug(
+                    "loadChapters - sending loadListChaps with htmlContent:",
                     htmlContent ? htmlContent.length + " chars" : "undefined"
                 )
                 try {
@@ -1214,32 +1307,64 @@ export default {
                         language: this.pageData.language,
                         htmlContent: htmlContent
                     })
-                    console.log(
-                        "[DEBUG] loadChapters - loadListChaps response:",
+                    debug.reader.debug(
+                        "loadChapters - loadListChaps response:",
                         list ? (Array.isArray(list) ? list.length + " items" : typeof list) : "null/undefined"
                     )
                 } catch (e) {
-                    console.log("[DEBUG] loadChapters - loadListChaps error:", e)
+                    debug.reader.debug("loadChapters - loadListChaps error:", e)
                     list = []
                 }
-                if (list !== undefined && !Array.isArray(list)) {
+                if (list && typeof list === "object" && !Array.isArray(list)) {
                     // case of returned list is an object keys are languages and values are list of mangas
-                    if (list[this.manga.language] && list[this.manga.language].length > 0) {
-                        this.chapters = list[this.manga.language].map(arr => {
+                    const langs = Object.keys(list || {})
+                    debug.reader.debug(
+                        "loadChapters - multi-language chapter list object",
+                        "availableLangs=",
+                        langs,
+                        "requestedLang=",
+                        this.manga?.language
+                    )
+
+                    // Try requested language first, but only if it has non-empty chapters
+                    let langKey = null
+                    if (
+                        this.manga?.language &&
+                        Array.isArray(list[this.manga.language]) &&
+                        list[this.manga.language].length > 0
+                    ) {
+                        langKey = this.manga.language
+                    }
+
+                    // Fallback: use first available language with non-empty chapters
+                    if (!langKey) {
+                        langKey = langs.find(k => Array.isArray(list[k]) && list[k].length > 0) || null
+                    }
+
+                    if (langKey && Array.isArray(list[langKey]) && list[langKey].length > 0) {
+                        this.chapters = list[langKey].map(arr => {
                             return { url: arr[1], title: arr[0] }
                         })
+                        debug.reader.debug(
+                            "loadChapters - using language list",
+                            langKey,
+                            "count=",
+                            this.chapters.length,
+                            langKey !== this.manga?.language ? "(fallback)" : "(requested)"
+                        )
                     } else {
-                        // current language chapter does not exist in returned chapter list... shrödinger case...
+                        // No valid language found with chapters
                         this.chapters = []
+                        debug.reader.debug("loadChapters - no chapters found in multi-language list, using empty list")
                     }
-                } else if (list.length > 0) {
+                } else if (Array.isArray(list) && list.length > 0) {
                     // normal use case, one language
                     this.chapters = list.map(arr => {
                         return { url: arr[1], title: arr[0] }
                     })
                     // Store chapters to database so popup can access them
-                    console.log(
-                        "[DEBUG] loadChapters - storing",
+                    debug.reader.debug(
+                        "loadChapters - storing",
                         list.length,
                         "chapters to database for manga:",
                         this.pageData.currentMangaURL
@@ -1252,7 +1377,7 @@ export default {
                             listChaps: list
                         })
                     } catch (e) {
-                        console.log("[DEBUG] loadChapters - failed to store chapters:", e)
+                        debug.reader.debug("loadChapters - failed to store chapters:", e)
                     }
                 } else {
                     // no chapters
@@ -1315,6 +1440,20 @@ export default {
         deleteChapterLoader(obj) {
             // encapsulate chaploader in object to be able to delete it in sctrict mode
             if (obj.chaploader) {
+                // Clean up the scansProvider/scansLoader to release image references
+                if (obj.chaploader.scansProvider) {
+                    // Clear each scan's image reference
+                    for (const scan of obj.chaploader.scansProvider.scans) {
+                        if (scan && scan.scan) {
+                            scan.scan.src = ""
+                            scan.scan = null
+                        }
+                    }
+                    obj.chaploader.scansProvider.scans.length = 0
+                    obj.chaploader.scansProvider.onloadchapter = null
+                    obj.chaploader.scansProvider.onloadscan = null
+                    delete obj.chaploader.scansProvider
+                }
                 if (obj.chaploader.scansLoader) delete obj.chaploader.scansLoader
                 delete obj.chaploader
             }
@@ -1326,7 +1465,7 @@ export default {
         async loadChapterInReader(url) {
             // add a covering loader
             this.loading = true
-            console.log("Change Reader chapter : load chapter " + url)
+            debug.reader.debug("Change Reader chapter : load chapter " + url)
             const chap = new ChapterLoader(url, this.mirror)
             await chap.checkAndLoadInfos() // get is a chapter ?, infos (current manga, chapter) and scans urls
             this.loadChapterInReaderUsingChapterLoader(chap)
@@ -1338,10 +1477,21 @@ export default {
         async loadChapterInReaderUsingChapterLoader(chapterloader) {
             // delete references to the old chapter loader
             if (window["__current_chapterloader__"] && window["__current_chapterloader__"].url !== chapterloader.url) {
-                this.deleteChapterLoader({ chaploader: window["__current_chapterloader__"] })
+                try {
+                    this.deleteChapterLoader({ chaploader: window["__current_chapterloader__"] })
+                } catch (e) {
+                    debug.reader.warn(
+                        "loadChapterInReaderUsingChapterLoader - error deleting __current_chapterloader__:",
+                        e
+                    )
+                }
             }
             if (this.nextChapterLoader && this.nextChapterLoader.url !== chapterloader.url) {
-                this.deleteChapterLoader({ chaploader: this.nextChapterLoader }) // delete loaded next chapter reference if not navigating to this one
+                try {
+                    this.deleteChapterLoader({ chaploader: this.nextChapterLoader }) // delete loaded next chapter reference if not navigating to this one
+                } catch (e) {
+                    debug.reader.warn("loadChapterInReaderUsingChapterLoader - error deleting nextChapterLoader:", e)
+                }
             }
 
             //keep a reference to the one loading
@@ -1442,26 +1592,47 @@ export default {
             if (!this.nextChapter) {
                 return
             }
-            this.util.debug("Loading next chapter " + this.nextChapter)
-            // instance a chapter loader for the next chapter
-            this.nextChapterLoader = new ChapterLoader(this.nextChapter, this.mirror)
-            await this.nextChapterLoader.checkAndLoadInfos() // get is a chapter ?, infos (current manga, chapter) and scans urls
-            if (!this.nextChapterLoader.isAChapter) {
-                this.nextChapterLoader = null // next is not recognized as a chapter
-            } else {
-                // preload the scans
-                const scansProvider = this.nextChapterLoader.loadScans()
-                /** Compute scans loading progress when a scan is loaded */
-                scansProvider.onloadscan = () => {
-                    const nbloaded = scansProvider.scans.reduce((acc, sc) => acc + (sc.loading ? 0 : 1), 0)
-                    this.nextchapProgress = Math.floor((nbloaded / scansProvider.scans.length) * 100)
+            // Avoid running multiple concurrent preloads
+            if (this.preloadNextInProgress) {
+                this.util?.debug && this.util.debug("preloadNextChapter already in progress, skipping")
+                return
+            }
+            this.preloadNextInProgress = true
+            this.nextchapProgress = 0
+            try {
+                this.util.debug("Preloading next chapter metadata (no images) " + this.nextChapter)
+                // Instantiate a temporary chapter loader for the next chapter
+                const loader = new ChapterLoader(this.nextChapter, this.mirror)
+                await loader.checkAndLoadInfos() // get is a chapter ?, infos (current manga, chapter) and scans urls
+                if (!loader.isAChapter) {
+                    this.util.debug("preloadNextChapter: next URL is not recognized as a chapter")
+                    // Do not keep a loader around if it is not a valid chapter
+                    this.nextChapterLoader = null
+                    this.nextchapProgress = 0
+                } else {
+                    // We only keep metadata (infos + image URLs) and avoid loading all
+                    // images into memory ahead of time. Actual image loading will
+                    // occur when the user navigates to the next chapter.
+                    this.nextChapterLoader = loader
+                    this.nextchapProgress = 100
+                    this.util.debug(
+                        "preloadNextChapter: metadata loaded for next chapter with " +
+                            (loader.images ? loader.images.length : 0) +
+                            " images (no image prefetch)"
+                    )
                 }
+            } catch (e) {
+                debug.reader.error("preloadNextChapter failed", e)
+                this.nextChapterLoader = null
+                this.nextchapProgress = 0
+            } finally {
+                this.preloadNextInProgress = false
             }
         },
         /** Handle key shortcuts */
         handlekeys() {
             const registerKeys = e => {
-                e = e || window.event
+                // Removed deprecated window.event fallback - modern browsers always pass event as parameter
                 const t = e.target || e.srcElement
                 const prevent = () => {
                     e.preventDefault()
@@ -1637,12 +1808,16 @@ export default {
                     }
                 }
             }
-            window.addEventListener("keydown", registerKeys, true)
+            // Store references for cleanup in beforeUnmount
+            this.amrKeydownHandler = registerKeys
+            window.addEventListener("keydown", this.amrKeydownHandler, true)
 
             //disable default websites shortcuts
             const stopProp = e => e.stopImmediatePropagation()
-            window.addEventListener("keyup", stopProp, true)
-            window.addEventListener("keypress", stopProp, true)
+            this.amrKeyupHandler = stopProp
+            this.amrKeypressHandler = stopProp
+            window.addEventListener("keyup", this.amrKeyupHandler, true)
+            window.addEventListener("keypress", this.amrKeypressHandler, true)
         },
         /** Open shortcuts popup */
         openShortcuts() {
@@ -1650,23 +1825,23 @@ export default {
         },
         /** Handle bookmark button click - separate method for event handling */
         handleBookmarkButtonClick(event) {
-            console.log("[DEBUG] handleBookmarkButtonClick() called", event)
+            debug.reader.debug("handleBookmarkButtonClick() called", event)
             event.stopPropagation()
             event.preventDefault()
             this.bookmarkChapter()
         },
         /** Open popup to bookmark chapter with note */
         bookmarkChapter() {
-            console.log("[DEBUG] bookmarkChapter() called")
+            debug.reader.debug("bookmarkChapter() called")
             // Close the menu first
             this.bookmarkMenuOpen = false
             // Use nextTick to ensure menu is closed before opening dialog
             this.$nextTick(() => {
-                console.log("[DEBUG] this.$refs.book:", this.$refs.book)
+                debug.reader.debug("this.$refs.book:", this.$refs.book)
                 if (this.$refs.book) {
                     this.$refs.book.open()
                 } else {
-                    console.error("[DEBUG] BookmarkPopup ref not found!")
+                    debug.reader.error("BookmarkPopup ref not found!")
                 }
             })
         },
@@ -1861,7 +2036,7 @@ export default {
                         clearTimeout(timeoutId)
 
                         if (!resp.ok) {
-                            console.warn(`Failed to fetch image ${i + 1}: ${resp.status}`)
+                            debug.reader.warn(`Failed to fetch image ${i + 1}: ${resp.status}`)
                             continue
                         }
 
@@ -1882,9 +2057,9 @@ export default {
                     } catch (fetchError) {
                         clearTimeout(timeoutId)
                         if (fetchError.name === "AbortError") {
-                            console.warn(`Timeout fetching image ${i + 1}: ${url}`)
+                            debug.reader.warn(`Timeout fetching image ${i + 1}: ${url}`)
                         } else {
-                            console.warn(`Error fetching image ${i + 1}: ${fetchError.message}`)
+                            debug.reader.warn(`Error fetching image ${i + 1}: ${fetchError.message}`)
                         }
                         // Continue with next image instead of failing completely
                     }
@@ -1902,7 +2077,7 @@ export default {
                     this.$refs.wizdialog.temporary(this.i18n("action_done") || "Download complete", 2000)
                 }
             } catch (error) {
-                console.error("Download failed:", error)
+                debug.reader.error("Download failed:", error)
                 this.$refs.wizdialog.temporary(
                     this.i18n("reader_download_error") || `Download error: ${error.message}`,
                     3000
@@ -1938,37 +2113,18 @@ export default {
     vertical-align: middle;
 }
 
-/** Manga title link */
+/** Manga title link - using CSS custom properties for theming */
 .amr-manga-title a {
-    color: #424242;
+    color: var(--amr-text-primary, #424242);
     text-decoration: none;
     vertical-align: middle;
     word-break: break-word;
     font-weight: bold;
 }
 
-.theme--dark .amr-manga-title a {
-    color: white;
-}
-
-/** Break work in chapter title */
-.amr-drawer .v-select {
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-/** To prevent select to be too small due to large padding */
-.v-toolbar.pa-0 .v-toolbar__content {
-    padding: 0px 5px;
-}
-
 /** So the dropdown can hover the rest... */
 .amr-chapters-toolbar {
     z-index: 8;
-    height: auto !important;
-}
-
-.amr-chapters-toolbar .v-toolbar__content {
     height: auto !important;
 }
 
@@ -1988,27 +2144,17 @@ export default {
     z-index: 10;
 }
 
-/** Progress bars for next chapter loading */
-.amr-floting-progress .v-btn {
-    width: 36px;
-    height: 36px;
-}
-
-.amr-chapter-progress-cont .v-progress-linear {
-    margin: 0px;
-}
-
 /** Scrollbars style (only works for chrome, firefox does not support that */
 ::-webkit-scrollbar {
     width: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ddd;
+    background: var(--amr-scrollbar-thumb, #ddd);
 }
 
 ::-webkit-scrollbar-track {
-    background: #666;
+    background: var(--amr-scrollbar-track, #666);
 }
 
 /** Loading cover */
@@ -2025,28 +2171,18 @@ export default {
     display: block;
 }
 
-.amr-transition-cover .v-progress-circular {
+/* Large spinner for transition cover */
+.amr-transition-cover .amr-spinner-large {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 128px;
     height: 128px;
     margin-top: -64px;
-    /* Half the height */
     margin-left: -64px;
-    /* Half the width */
 }
 
-.v-select__selection--comma {
-    white-space: normal;
-}
-
-label.v-label,
-span {
-    word-break: break-word !important;
-}
-
-/* truncate chapter text in v-select */
+/* truncate chapter text in select */
 .truncate {
     width: 180px;
     white-space: nowrap !important;
@@ -2054,18 +2190,8 @@ span {
     text-overflow: ellipsis !important;
 }
 
-.v-select__selection--comma {
-    white-space: nowrap !important;
-}
-
 /* disable hover effect for select buttons */
 .select-btn::before {
     display: none !important;
-}
-
-/** reduce switches margin and padding */
-.v-input--selection-controls {
-    margin-top: 8px;
-    padding-top: 8px;
 }
 </style>

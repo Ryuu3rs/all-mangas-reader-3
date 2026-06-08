@@ -10,6 +10,7 @@ export class MangaPark extends BaseMirror implements MirrorImplementation {
 
     mirrorName = "MangaPark"
     canListFullMangas = false
+    disabledForSearch = true // API endpoint currently returning HTTP errors
     mirrorIcon = MangaParkIcon
     languages = "en"
     domains = ["mangapark.com", "mangapark.net"]

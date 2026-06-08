@@ -1,13 +1,56 @@
-/node_modules
-/*.log
-/dist
-/dist-zip
-/.vscode
-/.idea
-/test
+# Dependencies
+node_modules/
+**/node_modules/
+.yarn/
+**/.yarn/
 
+# Build output and packages
+dist/
+dist-*/
+**/dist/
+coverage/
+**/coverage/
+*.zip
+*.xpi
+*.crx
+
+# Generated backups and test artifacts
+artifacts/
+test-results/
+playwright-report/
+blob-report/
+screenshots/
+traces/
+videos/
+*.har
+
+# Runtime data and logs
+*.log
+*.log.*
+pageconsole.txt
+firefoxlogs.txt
+memory-report*.json
+memory-report*.json.gz
+mirror-status-report.txt
+**/.smoke-logs/
+**/.smoke-logs*/
+**/data/store.json
+
+# Editors and operating systems
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+*.code-workspace
 
-/src/mirrors/register_implementations.js
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 
-/distfinal
+# Legacy generated files
+test/
+distfinal/
+src/mirrors/register_implementations.js

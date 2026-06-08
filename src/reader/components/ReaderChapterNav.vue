@@ -1,82 +1,62 @@
 <template>
-    <v-row no-gutters>
-        <v-col cols="12">
-            <v-toolbar class="pa-0 amr-chapters-toolbar">
-                <div class="d-flex align-center py-1">
-                    <!-- Previous chapter button -->
-                    <v-tooltip location="bottom">
-                        <template v-slot:activator="{ props }">
-                            <v-btn
-                                class="select-btn"
-                                v-bind="props"
-                                variant="text"
-                                size="small"
-                                tile
-                                v-show="shouldInvertKeys ? !lastChapter : !firstChapter"
-                                @click.stop="onPrevClick">
-                                <v-icon>{{ icons.mdiChevronLeft }}</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>{{ prevTooltip }}</span>
-                    </v-tooltip>
-                    <!-- List of chapters -->
-                    <v-select
-                        :model-value="selchap"
-                        :items="chapters"
-                        item-title="title"
-                        item-value="url"
-                        variant="solo"
-                        density="compact"
-                        single-line
-                        hide-details
-                        class="amr-chapter-select truncate"
-                        :loading="chapters.length === 0 ? 'primary' : false"
-                        @update:model-value="$emit('go-to-chapter', $event)"></v-select>
-                    <v-spacer></v-spacer>
-                    <v-tooltip location="bottom">
-                        <template v-slot:activator="{ props }">
-                            <!-- Next chapter button -->
-                            <v-btn
-                                class="select-btn"
-                                v-bind="props"
-                                variant="text"
-                                size="small"
-                                tile
-                                v-show="shouldInvertKeys ? !firstChapter : !lastChapter"
-                                @click.stop="onNextClick">
-                                <v-icon>{{ icons.mdiChevronRight }}</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>{{ nextTooltip }}</span>
-                    </v-tooltip>
-                </div>
-            </v-toolbar>
-        </v-col>
+    <div class="amr-chapter-nav-row">
+        <div class="amr-chapters-toolbar">
+            <div class="amr-chapter-nav-content">
+                <!-- Previous chapter button -->
+                <AmrTooltip :text="prevTooltip" location="bottom">
+                    <AmrButton
+                        class="select-btn"
+                        size="small"
+                        v-show="shouldInvertKeys ? !lastChapter : !firstChapter"
+                        @click.stop="onPrevClick">
+                        <AmrIcon :icon="icons.mdiChevronLeft" />
+                    </AmrButton>
+                </AmrTooltip>
+                <!-- List of chapters -->
+                <AmrSelect
+                    :modelValue="selchap"
+                    :items="chapters"
+                    itemTitle="title"
+                    itemValue="url"
+                    class="amr-chapter-select truncate"
+                    @update:modelValue="$emit('go-to-chapter', $event)" />
+                <div class="amr-spacer"></div>
+                <!-- Next chapter button -->
+                <AmrTooltip :text="nextTooltip" location="bottom">
+                    <AmrButton
+                        class="select-btn"
+                        size="small"
+                        v-show="shouldInvertKeys ? !firstChapter : !lastChapter"
+                        @click.stop="onNextClick">
+                        <AmrIcon :icon="icons.mdiChevronRight" />
+                    </AmrButton>
+                </AmrTooltip>
+            </div>
+        </div>
         <!-- Next chapter preloading progression bar -->
-        <v-col cols="12" class="amr-chapter-progress-cont">
-            <v-tooltip location="bottom">
-                <template v-slot:activator="{ props }">
-                    <v-progress-linear
-                        v-show="nextchapLoading"
-                        v-bind="props"
-                        class="amr-floting-progress"
-                        :height="3"
-                        :model-value="nextchapProgress"
-                        color="red-darken-2"></v-progress-linear>
-                </template>
-                <span>{{ i18n("reader_loading", Math.floor(nextchapProgress)) }}</span>
-            </v-tooltip>
-        </v-col>
-    </v-row>
+        <div class="amr-chapter-progress-cont">
+            <AmrTooltip :text="i18n('reader_loading', Math.floor(nextchapProgress))" location="bottom">
+                <div
+                    v-show="nextchapLoading"
+                    class="amr-progress-linear"
+                    :style="{ width: nextchapProgress + '%' }"></div>
+            </AmrTooltip>
+        </div>
+    </div>
 </template>
 
 <script>
 import i18nmixin from "../../mixins/i18n-mixin"
 import { mdiChevronLeft, mdiChevronRight } from "@mdi/js"
+import AmrTooltip from "./AmrTooltip"
+import AmrButton from "./AmrButton"
+import AmrIcon from "./AmrIcon"
+import AmrSelect from "./AmrSelect"
 
 export default {
     name: "ReaderChapterNav",
     mixins: [i18nmixin],
+    components: { AmrTooltip, AmrButton, AmrIcon, AmrSelect },
     props: {
         chapters: { type: Array, required: true },
         selchap: { type: String, default: null },
@@ -130,18 +110,42 @@ export default {
 }
 </script>
 
-<style scoped>
+<style data-amr="true">
+.amr-chapter-nav-row {
+    width: 100%;
+}
+
 .amr-chapters-toolbar {
     z-index: 8;
-    height: auto !important;
+    background-color: var(--amr-surface);
+    padding: 4px 8px;
 }
 
-.amr-chapters-toolbar .v-toolbar__content {
-    height: auto !important;
+.amr-chapter-nav-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.amr-chapter-progress-cont .v-progress-linear {
-    margin: 0px;
+.amr-spacer {
+    flex: 1;
+}
+
+.amr-chapter-progress-cont {
+    width: 100%;
+    height: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.amr-progress-linear {
+    height: 3px;
+    background-color: #c62828;
+    transition: width 0.3s ease;
+}
+
+.amr-chapter-select {
+    flex: 1;
+    max-width: 200px;
 }
 
 .truncate {

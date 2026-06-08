@@ -1,6 +1,7 @@
 import { BaseMirror } from "../abstract/BaseMirror"
 import { JsonOptions, MirrorHelper } from "../../MirrorHelper"
 import { MirrorImplementation, MirrorObject } from "../../../types/common"
+import { debug } from "../../../core/debug"
 
 export const defaultOptions = {
     search_url: "",
@@ -100,10 +101,10 @@ export class Madara extends BaseMirror implements MirrorImplementation {
         // Otherwise, make a request (may fail on protected sites)
         let doc: string
         if (htmlContent) {
-            console.log("[Madara] getListChaps using provided htmlContent, length:", htmlContent.length)
+            debug.mirrors.debug("Madara getListChaps using provided htmlContent, length:", htmlContent.length)
             doc = htmlContent
         } else {
-            console.log("[Madara] getListChaps fetching page:", urlManga)
+            debug.mirrors.debug("Madara getListChaps fetching page:", urlManga)
             doc = await this.mirrorHelper.loadPage(urlManga, { nocache: true, preventimages: true })
         }
         const _self = this
@@ -138,7 +139,7 @@ export class Madara extends BaseMirror implements MirrorImplementation {
 
         $ = this.parseHtml(doc)
 
-        var res = []
+        const res = []
         $(this.options.chapters_a_sel).each(function () {
             let chapterName = $(this).text()
             const stringsToStrip = [
@@ -237,7 +238,8 @@ export class Madara extends BaseMirror implements MirrorImplementation {
             if (_self.options.hasOwnProperty("secondary_img_src") && img === undefined) {
                 img = $(this).attr(_self.options.secondary_img_src)
             }
-            if (img) res.push(img)
+            // Trim whitespace from image URLs (tabs/newlines from HTML formatting)
+            if (img) res.push(img.trim())
         })
 
         // If no images found, try alternative selectors common in Madara-based sites
@@ -255,12 +257,14 @@ export class Madara extends BaseMirror implements MirrorImplementation {
             for (const selector of alternativeSelectors) {
                 $(selector).each(function () {
                     let img = $(this).attr("src") || $(this).attr("data-src") || $(this).attr("data-lazy-src")
-                    if (img) res.push(img)
+                    // Trim whitespace from image URLs
+                    if (img) res.push(img.trim())
                 })
                 if (res.length > 0) break
             }
         }
 
+        debug.mirrors.debug("Madara getListImages returning " + res.length + " images")
         return res
     }
 
@@ -318,15 +322,15 @@ export class Madara extends BaseMirror implements MirrorImplementation {
     }
 
     isCurrentPageAChapterPage(doc, curUrl) {
-        console.log("[Madara] isCurrentPageAChapterPage called for:", curUrl)
-        console.log("[Madara] doc length:", doc?.length || 0)
-        console.log("[Madara] page_container_sel:", this.options.page_container_sel)
+        debug.mirrors.trace("Madara isCurrentPageAChapterPage called for:", curUrl)
+        debug.mirrors.trace("Madara doc length:", doc?.length || 0)
+        debug.mirrors.trace("Madara page_container_sel:", this.options.page_container_sel)
 
         // Check for configured selector first
         const configuredResult = this.queryHtml(doc, this.options.page_container_sel)
-        console.log("[Madara] configured selector result:", configuredResult.length)
+        debug.mirrors.trace("Madara configured selector result:", configuredResult.length)
         if (configuredResult.length > 0) {
-            console.log("[Madara] Found page container with configured selector")
+            debug.mirrors.debug("Madara Found page container with configured selector")
             return true
         }
         // Also check for common alternative selectors used by Madara-based sites
@@ -343,15 +347,15 @@ export class Madara extends BaseMirror implements MirrorImplementation {
         ]
         for (const selector of alternativeSelectors) {
             const result = this.queryHtml(doc, selector)
-            console.log(`[Madara] selector "${selector}" result:`, result.length)
+            debug.mirrors.trace(`Madara selector "${selector}" result:`, result.length)
             if (result.length > 0) {
-                console.log("[Madara] Found page container with alternative selector:", selector)
+                debug.mirrors.debug("Madara Found page container with alternative selector:", selector)
                 return true
             }
         }
-        console.log("[Madara] No page container found, returning false")
+        debug.mirrors.debug("Madara No page container found, returning false")
         // Log a snippet of the doc to help debug
-        console.log("[Madara] doc snippet (first 500 chars):", doc?.substring(0, 500))
+        debug.mirrors.trace("Madara doc snippet (first 500 chars):", doc?.substring(0, 500))
         return false
     }
 

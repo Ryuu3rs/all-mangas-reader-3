@@ -51,7 +51,7 @@ export class LikeManga extends BaseMirror implements MirrorImplementation {
 
     async getCurrentPageInfo(doc, curUrl) {
         const $ = this.parseHtml(doc)
-        var mgtitle = $("h1#title-detail-manga a")
+        const mgtitle = $("h1#title-detail-manga a")
 
         return {
             name: mgtitle.text(),

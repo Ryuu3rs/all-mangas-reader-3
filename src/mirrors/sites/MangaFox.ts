@@ -89,83 +89,140 @@ export class MangaFox extends BaseMirror implements MirrorImplementation {
         // Relative schema url, pass it back.
         if (urlImage.startsWith("//") || urlImage.startsWith("https://zjcdn")) {
             // "//zjcdn.{somedomain.com}/store/manga/39145/001.0/compressed/m000.jpg",
-            return urlImage
+            return urlImage.startsWith("//") ? `https:${urlImage}` : urlImage
         }
 
-        // loads the page containing the current scan
-        const doc = await this.mirrorHelper.loadPage(urlImage, { crossdomain: true, redirect: "follow" })
-        const mkey = this.extractRequestKeyFromPage(doc)
-
-        const curl = urlImage.substr(0, urlImage.lastIndexOf("/") + 1),
-            cid = this.getVariable({ doc, variableName: "chapterid" }),
-            chapfunurl = curl + "chapterfun.ashx", // url to retrieve scan url
-            curpage = this.getVariable({ doc, variableName: "imagepage" })
-
-        const queryParams = new URLSearchParams({
-            cid: cid,
-            page: curpage,
-            key: mkey
+        // CRITICAL FIX: Wrap entire method in timeout to prevent indefinite hanging
+        // This was causing 5 out of 6 concurrent requests to hang, freezing the page
+        const TIMEOUT_MS = 20000 // 20 seconds per image URL extraction
+        const timeoutPromise = new Promise<string>((_, reject) => {
+            setTimeout(() => reject(new Error(`getImageUrlFromPage timeout for ${urlImage}`)), TIMEOUT_MS)
         })
 
-        // get scan url (this function seems to work only within DM5, perhaps a control on Referer)
-        const url = `${chapfunurl}?${queryParams}`
-        const data = await this.mirrorHelper.loadPage(url, {
-            nocontenttype: true,
-            credentials: "include", // Include cookies for authentication
-            headers: {
-                // Note: Referer is set by declarativeNetRequest rules
-            }
-        })
+        const extractImageUrl = async (): Promise<string> => {
+            // loads the page containing the current scan
+            const doc = await this.mirrorHelper.loadPage(urlImage, {
+                crossdomain: true,
+                redirect: "follow",
+                timeoutInMs: 15000 // 15 second timeout for page load
+            })
+            const mkey = this.extractRequestKeyFromPage(doc)
 
-        if (!data) {
-            throw new Error(`Failed to load unpack data from ${url}`)
-        }
+            const curl = urlImage.substr(0, urlImage.lastIndexOf("/") + 1),
+                cid = this.getVariable({ doc, variableName: "chapterid" }),
+                chapfunurl = curl + "chapterfun.ashx", // url to retrieve scan url
+                curpage = this.getVariable({ doc, variableName: "imagepage" })
 
-        // the retrieved data is packed through an obfuscator
-        // dm5 is unpacking the images url through an eval, we can't do that in AMR due to CSP
-        // we do it manually (below is the unpack function shipped with the data to decode)
-        const unpack = function (p, a, c, k, e, d) {
-            e = function (c) {
-                return (
-                    // @ts-ignore
-                    (c < a ? "" : e(parseInt(c / a))) +
-                    ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
-                )
+            if (!cid || !curpage) {
+                throw new Error(`Failed to extract chapterid or imagepage from ${urlImage}`)
             }
-            if (!"".replace(/^/, String)) {
-                while (c--) d[e(c)] = k[c] || e(c)
-                k = [
-                    function (e) {
-                        return d[e]
-                    }
-                ]
-                e = function () {
-                    return "\\w+"
+
+            const queryParams = new URLSearchParams({
+                cid: cid,
+                page: curpage,
+                key: mkey
+            })
+
+            // get scan url (this function seems to work only within DM5, perhaps a control on Referer)
+            const url = `${chapfunurl}?${queryParams}`
+            const data = await this.mirrorHelper.loadPage(url, {
+                nocontenttype: true,
+                credentials: "include", // Include cookies for authentication
+                referrer: urlImage,
+                timeoutInMs: 10000, // 10 second timeout for chapterfun.ashx
+                headers: {
+                    // Note: Referer is set by declarativeNetRequest rules
                 }
-                c = 1
+            })
+
+            if (!data) {
+                throw new Error(`Failed to load unpack data from ${url}`)
             }
-            while (c--) if (k[c]) p = p.replace(new RegExp("\\b" + e(c) + "\\b", "g"), k[c])
-            return p
+
+            // the retrieved data is packed through an obfuscator
+            // dm5 is unpacking the images url through an eval, we can't do that in AMR due to CSP
+            // we do it manually (below is the unpack function shipped with the data to decode)
+            const unpack = function (p, a, c, k, e, d) {
+                e = function (c) {
+                    return (
+                        // @ts-ignore
+                        (c < a ? "" : e(parseInt(c / a))) +
+                        ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
+                    )
+                }
+                if (!"".replace(/^/, String)) {
+                    while (c--) d[e(c)] = k[c] || e(c)
+                    k = [
+                        function (e) {
+                            return d[e]
+                        }
+                    ]
+                    e = function () {
+                        return "\\w+"
+                    }
+                    c = 1
+                }
+                while (c--) if (k[c]) p = p.replace(new RegExp("\\b" + e(c) + "\\b", "g"), k[c])
+                return p
+            }
+
+            // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
+            const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g
+            const match = regexpargs.exec(data)
+            if (match) {
+                const args = [match[1], match[3], match[4], match[5].split("|"), 0, {}]
+                // @ts-ignore
+                let sc = unpack(...args) // call the unpack function
+                sc = sc.replace(/\\'/g, "'") // unquote the result
+                // the result is another js function containing the data, we mimic here what it does
+                // retrieve the variables
+                const extractedCid = this.mirrorHelper.getVariableFromScript("cid", sc),
+                    key = this.mirrorHelper.getVariableFromScript("key", sc),
+                    pix = this.mirrorHelper.getVariableFromScript("pix", sc)
+                let pvalue = this.mirrorHelper.getVariableFromScript("pvalue", sc) // array of scan urls (contains current one and next one)
+
+                if (!pvalue || !Array.isArray(pvalue) || pvalue.length === 0) {
+                    throw new Error(`Failed to extract pvalue array from unpacked script`)
+                }
+
+                pvalue = pvalue
+                    .map((img: string) => {
+                        if (typeof img !== "string" || !img.length) {
+                            return null
+                        }
+
+                        if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("//")) {
+                            return img.startsWith("//") ? `https:${img}` : img
+                        }
+
+                        if (typeof pix !== "string" || !pix.length) {
+                            return img
+                        }
+
+                        // Older payloads require cid/key query params, newer payloads already include token/ttl.
+                        if (
+                            extractedCid !== undefined &&
+                            key !== undefined &&
+                            !img.includes("token=") &&
+                            !img.includes("ttl=")
+                        ) {
+                            const joiner = img.includes("?") ? "&" : "?"
+                            return `${pix}${img}${joiner}cid=${extractedCid}&key=${key}`
+                        }
+
+                        return `${pix}${img}`
+                    })
+                    .filter(Boolean)
+
+                if (pvalue.length === 0) {
+                    throw new Error(`No resolved image URLs extracted from unpacked script`)
+                }
+                return pvalue[0]
+            }
+            throw new Error(`Failed to find matching arguments for unpack function`)
         }
 
-        // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
-        const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g
-        const match = regexpargs.exec(data)
-        if (match) {
-            const args = [match[1], match[3], match[4], match[5].split("|"), 0, {}]
-            // @ts-ignore
-            let sc = unpack(...args) // call the unpack function
-            sc = sc.replace(/\\'/g, "'") // unquote the result
-            // the result is another js function containing the data, we mimic here what it does
-            // retrieve the variables
-            const cid = this.mirrorHelper.getVariableFromScript("cid", sc),
-                key = this.mirrorHelper.getVariableFromScript("key", sc),
-                pix = this.mirrorHelper.getVariableFromScript("pix", sc)
-            let pvalue = this.mirrorHelper.getVariableFromScript("pvalue", sc) // array of scan urls (contains current one and next one)
-            pvalue = pvalue.map(img => pix + img + "?cid=" + cid + "&key=" + key) // mimic the returned function which rebuilds the url depending on its parts
-            return pvalue[0]
-        }
-        throw new Error(`Failed to find matching arguments for unpack function`)
+        return Promise.race([extractImageUrl(), timeoutPromise])
     }
 
     async getListChaps(urlManga: string) {
@@ -212,7 +269,7 @@ export class MangaFox extends BaseMirror implements MirrorImplementation {
             const result = await extractListOfImages(doc)
             // Only use extracted images if we got valid URLs, not garbage
             if (result && result.length > 0 && result[0].includes("//")) {
-                return result
+                return result.map(url => (url.startsWith("//") ? `https:${url}` : url))
             }
         }
 

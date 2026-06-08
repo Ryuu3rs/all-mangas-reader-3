@@ -48,7 +48,7 @@ export class MangaBuddy extends BaseMirror implements MirrorImplementation {
 
     async getCurrentPageInfo(doc, curUrl) {
         const $ = this.parseHtml(doc)
-        var mgtitle = $($("#breadcrumbs-container .breadcrumbs-item")[1]).find("a")
+        const mgtitle = $($("#breadcrumbs-container .breadcrumbs-item")[1]).find("a")
 
         return {
             name: mgtitle.text(),

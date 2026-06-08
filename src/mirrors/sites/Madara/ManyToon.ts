@@ -29,7 +29,7 @@ export class ManyToon extends Madara {
 
         $ = this.parseHtml(doc)
 
-        var res = []
+        const res = []
         $(this.options.chapters_a_sel).each(function () {
             let chapterName = $(this).text()
             const stringsToStrip = [

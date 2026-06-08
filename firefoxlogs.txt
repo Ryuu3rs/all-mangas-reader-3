@@ -1,0 +1,221 @@
+19:27:9 292: Initialize message handler background-worker.js:2:357211
+19:27:9 321: Initialize mirrors background-worker.js:2:357211
+19:27:9 354: Initialize mangas background-worker.js:2:357211
+19:27:9 355: Checking for permissions background-worker.js:2:357211
+19:27:9 357: Initialize bookmarks background-worker.js:2:357211
+19:27:9 358: Initialize statistics background-worker.js:2:357211
+19:27:9 358: Initialize achievements background-worker.js:2:357211
+19:27:9 697: Running mangadex converter background-worker.js:2:357211
+completed background init background-worker.js:2:878378
+GET
+https://fonts.googleapis.com/css?family=Roboto:300,400,500,700
+[HTTP/3 200  0ms]
+
+GET
+https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.8.55/css/materialdesignicons.min.css
+[HTTP/3 200  0ms]
+
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. materialdesignicons.min.css:1:682
+Expected ‘none’, URL, or filter function but found ‘FlipH’.  Error in parsing value for ‘filter’.  Declaration dropped. materialdesignicons.min.css:1:268801
+Expected ‘none’, URL, or filter function but found ‘FlipV’.  Error in parsing value for ‘filter’.  Declaration dropped. materialdesignicons.min.css:1:268902
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:31:26
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:26:26
+Error in parsing value for ‘scrollbar-color’.  Declaration dropped. dashboard.html:39:36
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:490:26
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:82:26
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:199:26
+Unexpected token ‘style(’ in media list. dashboard.html:62:18
+Error in parsing value for ‘max-height’.  Declaration dropped. dashboard.html:18:15
+Error in parsing value for ‘forced-color-adjust’.  Declaration dropped. dashboard.html:256:26
+Unrecognized at-rule or error parsing at-rule ‘@-o-keyframes’. dashboard.html:211:14
+Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped. dashboard.html:2883:29
+Unknown pseudo-class or pseudo-element ‘-moz-focus-inner’.  Ruleset ignored due to bad selector. dashboard.html:3045:8
+Unknown pseudo-class or pseudo-element ‘-moz-focus-inner’.  Ruleset ignored due to bad selector. dashboard.html:3055:15
+Unknown pseudo-class or pseudo-element ‘-ms-expand’.  Ruleset ignored due to bad selector. dashboard.html:3083:8
+Unknown pseudo-class or pseudo-element ‘-ms-value’.  Ruleset ignored due to bad selector. dashboard.html:3087:8
+Unknown pseudo-class or pseudo-element ‘-ms-clear’.  Ruleset ignored due to bad selector. dashboard.html:3107:2
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. dashboard.html:3628:27
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:4311:8
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:4383:12
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:4455:15
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:7956:10
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:8010:14
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:8064:17
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:10015:10
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:10069:14
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:10123:17
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:12074:10
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:12128:14
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:12182:17
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:14133:10
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:14187:14
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:14241:17
+Error in parsing value for ‘gap’.  Declaration dropped. dashboard.html:16192:10
+Error in parsing value for ‘row-gap’.  Declaration dropped. dashboard.html:16246:14
+Error in parsing value for ‘column-gap’.  Declaration dropped. dashboard.html:16300:17
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+GET
+https://fonts.gstatic.com/s/roboto/v50/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2
+[HTTP/3 200  0ms]
+
+GET
+https://fonts.gstatic.com/s/roboto/v50/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2
+[HTTP/3 200  0ms]
+
+GET
+https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.8.55/fonts/materialdesignicons-webfont.woff2?v=5.8.55
+[HTTP/3 200  0ms]
+
+19:27:14 653 
+Object { action: "vuex_initstate", module: "mirrors", key: "all" }
+background-worker.js:2:357180
+19:27:14 678 
+Object { action: "vuex_initstate", module: "mangas", key: "all" }
+background-worker.js:2:357180
+19:27:14 709 
+Object { action: "vuex_initstate", module: "bookmarks", key: "all" }
+background-worker.js:2:357180
+GET
+https://fonts.gstatic.com/s/roboto/v50/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2
+[HTTP/3 200  0ms]
+
+19:27:15 346: Running Alarm checkChaptersUpdates callback background-worker.js:2:357211
+19:27:15 349: Running Alarm checkMirrorsUpdates callback background-worker.js:2:357211
+19:27:15 749 
+Object { action: "importSamples" }
+background-worker.js:2:357180
+Importing samples manga in AMR (4 mangas to import) background-worker.js:2:380909
+XHRGET
+https://fanfox.net/manga/one_piece/
+[HTTP/3 200  1162ms]
+
+XHRGET
+https://fanfox.net/manga/naruto/
+[HTTP/3 200  837ms]
+
+XHRGET
+https://fanfox.net/manga/bleach/
+[HTTP/3 200  817ms]
+
+XHRGET
+https://mangakatana.com/manga/dragon-ball-super.2080
+[HTTP/1.1 200 OK 353ms]
+
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+GET
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAIVBMVEVMaXGk1BGVzhSGxg/m8rry+dvS6o3///653j6s2FrC4nbemBkaAAAAAXRSTlMAQObYZgAAAAlwSFlzAAALEwAACxMBAJqcGAAAAHVJREFUGNNtz0EOBEEIAkBFUNv/P3hjz+xtOFaMAbPv5MhMkzLLdjSAOCcigta+WQEi4lxIAYDNBbo7bU8sL4gX/ALiWIm94P6HEusFAMdYVeS+trmgWsnNfh7TCru7b50tTJXGn3B3MKWnb/NZJjEnk/oc/gOblQMVgG4vCgAAAABJRU5ErkJggg==
+
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+GET
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAGFBMVEUDoN8XpukAneEcqOIor+VKu+mc2fNyye3bwTFwAAAABHRSTlP/CyIs9KmlSQAAAAlwSFlzAAALEwAACxMBAJqcGAAAAFlJREFUGNNljFEOg1AQArEd4P43blxrn1qS/ZgJrJj4myJYqkZ6Xwvope3SQNokMLgHa+cEGgeyROIoZ6NzzW/iOlbqU5Ad1qS0WJXKCJjx8WGEbnmynvyXD+78AtMv3r3pAAAAAElFTkSuQmCC
+
+GET
+https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.8.55/css/materialdesignicons.min.css
+[HTTP/3 200 OK 0ms]
+
+GET
+https://fonts.googleapis.com/css?family=Roboto:300,400,500,700
+[HTTP/3 200 OK 0ms]
+
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+Error in parsing value for ‘opacity’.  Declaration dropped. dashboard.html:1:1
+19:27:17 261 
+Object { action: "vuex_initstate", module: "mirrors", key: "all" }
+background-worker.js:2:357180
+19:27:17 267 
+Object { action: "vuex_initstate", module: "mangas", key: "all" }
+background-worker.js:2:357180
+Error in parsing value for ‘opacity’.  Declaration dropped. 2 dashboard.html:1:1
+19:27:17 331 
+Object { action: "vuex_initstate", module: "bookmarks", key: "all" }
+background-worker.js:2:357180
+Error in parsing value for ‘opacity’.  Declaration dropped. 16 dashboard.html:1:1
+19:27:19 747 
+Object { action: "opentab", url: "https://fanfox.net/manga/bleach/v00/c000/" }
+background-worker.js:2:357180
+19:27:19 942 
+Object { url: "https://fanfox.net/manga/bleach/v00/c000/", tab: 7, mir: (2) […], chapter: /\/manga\/.*\/.+\/.*/ }
+background-worker.js:2:357180
+19:27:20 250 
+Object { libResult: {…} }
+background-worker.js:2:357180
+19:27:20 328 
+Object { action: "getoptions" }
+background-worker.js:2:357180
+19:27:20 366 
+Object { action: "getChapterData", url: "https://fanfox.net/manga/bleach/v00/c000/", htmlContent: '<html lang="en"><head>    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">    <meta name="keywords" content="Bleach 0: One shot - Pilot,Bleach chapter 0: One shot - Pilot,Bleach,Bleach manga,Bleach chapter 0: One shot - Pilot page 1">    <meta name="description" content="Bleach 0: One shot - Pilot  - Read Bleach 0: One shot - Pilot Manga Scans Page 1 Free and No Registration required for Bleach 0: One shot - Pilot v00: One shot - Pilot">    <meta name="og:title" content="Bleach 0: One shot - Pilot Page 1">    <meta name="og:site_name" content="Manga Fox">    <meta name="og:type" content="website">    <meta name="og:url" content="http://mangafox.me/manga/bleach/v00/c000/">    <meta name="og:image" content="https://fmcdn.mfcdn.net/store/manga/9/cover.jpg?token=50e503990f1fc117c0c9463636801c5646f0194f&amp;ttl=1770058800&amp;v=1769963246">    <meta name="og:description" content="Read Bleach manga online, read hot free manga in mangafox.">    <meta name="fb:admins" content…', mirrorName: "Manga-Fox", language: undefined }
+background-worker.js:2:357180
+19:27:20 437 
+Object { action: "getBookmarksForChapter", mirror: "Manga-Fox", url: "https://fanfox.net/manga/bleach/", chapUrl: "https://fanfox.net/manga/bleach/v00/c000/", scanUrls: (46) […] }
+background-worker.js:2:357180
+19:27:24 188 
+Object { action: "mangaExists", url: "https://fanfox.net/manga/bleach/", mirror: "Manga-Fox", language: undefined }
+background-worker.js:2:357180
+19:27:24 190 
+Object { action: "mangaInfos", url: "https://fanfox.net/manga/bleach/", mirror: "Manga-Fox", language: undefined }
+background-worker.js:2:357180
+19:27:24 190 
+Object { action: "barState" }
+background-worker.js:2:357180
+19:27:24 260 
+Object { action: "getListChaps", url: "https://fanfox.net/manga/bleach/", mirror: "Manga-Fox", language: undefined }
+background-worker.js:2:357180
+19:27:24 267 
+Object { action: "mirrorInfos", name: "Manga-Fox" }
+background-worker.js:2:357180
+19:27:24 267 
+Object { action: "get_storage", key: "reader_firsttime" }
+background-worker.js:2:357180
+19:27:24 268 
+Object { action: "get_storage", key: "reader_tips_ts" }
+background-worker.js:2:357180
+19:27:24 268 
+Object { action: "get_storage", key: "nb_read" }
+background-worker.js:2:357180
+19:27:24 269 
+Object { action: "readManga", url: "https://fanfox.net/manga/bleach/", mirror: "Manga-Fox", lastChapterReadName: undefined, lastChapterReadURL: "https://fanfox.net/manga/bleach/v00/c000/", name: "Bleach", language: undefined }
+background-worker.js:2:357180
+19:27:24 270 
+Object { frameId: 0, result: undefined }
+background-worker.js:2:357180
+19:27:24 273: Read manga https://fanfox.net/manga/bleach/ background-worker.js:2:357211
+19:27:24 279 
+Object { action: "setBarState", barstate: 1 }
+background-worker.js:2:357180
+19:27:24 313 
+Object { action: "get_storage", key: "reader_tips_stop" }
+background-worker.js:2:357180
+19:27:24 314 
+Object { action: "exportReadStatus", mirror: "Manga-Fox", url: "https://fanfox.net/manga/bleach/v00/c000/" }
+background-worker.js:2:357180
+19:27:24 314 
+Object { action: "mangaInfos", url: "https://fanfox.net/manga/bleach/", mirror: "Manga-Fox", language: undefined }
+background-worker.js:2:357180
+19:27:24 326 
+Object { action: "get_storage", key: "reader_tips_last" }
+background-worker.js:2:357180

@@ -2066,5 +2066,130 @@
     "manga_update_error_code_2": {
         "message": "Erreur - La page Série n'a pas pu être chargée depuis Mirror $1",
         "description": "Error code for failed to fetch list"
+    },
+    "nav_health_check": {
+        "message": "Vérification des mangas",
+        "description": "Menu item to open manga health check dialog"
+    },
+    "nav_library": {
+        "message": "Bibliothèque",
+        "description": "Navigation tab for manga library"
+    },
+    "nav_statistics": {
+        "message": "Statistiques",
+        "description": "Navigation tab for reading statistics"
+    },
+    "nav_achievements": {
+        "message": "Succès",
+        "description": "Navigation tab for achievements"
+    },
+    "nav_bookmarks": {
+        "message": "Signets",
+        "description": "Navigation menu item for bookmarks page"
+    },
+    "nav_lab": {
+        "message": "Laboratoire",
+        "description": "Navigation menu item for lab/debug page"
+    },
+    "nav_help": {
+        "message": "Aide / Wiki",
+        "description": "Navigation menu item for help wiki"
+    },
+    "nav_refresh": {
+        "message": "Actualiser",
+        "description": "Tooltip for refresh button"
+    },
+    "nav_search": {
+        "message": "Rechercher",
+        "description": "Tooltip for search button"
+    },
+    "nav_more": {
+        "message": "Plus",
+        "description": "Tooltip for more options menu"
+    },
+    "nav_timers": {
+        "message": "Minuteries",
+        "description": "Menu item for refresh timers dialog"
+    },
+    "nav_export_manga": {
+        "message": "Exporter la liste",
+        "description": "Menu item to export manga list"
+    },
+    "nav_export_stats": {
+        "message": "Exporter Stats & Succès",
+        "description": "Menu item to export statistics and achievements"
+    },
+    "nav_settings": {
+        "message": "Paramètres",
+        "description": "Tooltip for settings button"
+    },
+    "nav_import": {
+        "message": "Importer",
+        "description": "Tooltip for import button"
+    },
+    "nav_compact_view": {
+        "message": "Vue compacte",
+        "description": "Tooltip for compact view toggle"
+    },
+    "nav_normal_view": {
+        "message": "Vue normale",
+        "description": "Tooltip for normal view toggle"
+    },
+    "nav_dark_mode": {
+        "message": "Mode sombre",
+        "description": "Tooltip for dark mode toggle"
+    },
+    "list_manga_count": {
+        "message": "$1 manga",
+        "description": "Label showing total manga count, $1 is the number"
+    },
+    "list_with_updates": {
+        "message": "$1 avec mises à jour",
+        "description": "Label showing manga with updates, $1 is the number"
+    },
+    "list_scroll_hint": {
+        "message": "Défiler pour plus",
+        "description": "Hint to scroll for more manga"
+    },
+    "list_manga_orphaned_title": {
+        "message": "Manga orphelin",
+        "description": "Title for orphaned manga section"
+    },
+    "list_manga_orphaned_action": {
+        "message": "Supprimer",
+        "description": "Action button to remove orphaned manga"
+    },
+    "list_manga_orphaned_default_reason": {
+        "message": "Mirror n'est plus disponible",
+        "description": "Default reason for orphaned manga"
+    },
+
+    "sidebar_quick_stats": {
+        "message": "Aperçu rapide",
+        "description": "Sidebar section header for quick statistics"
+    },
+    "sidebar_total_manga": {
+        "message": "Total Manga",
+        "description": "Label for total manga count in sidebar"
+    },
+    "sidebar_unread": {
+        "message": "Non lu",
+        "description": "Label for unread manga count in sidebar"
+    },
+    "sidebar_reading": {
+        "message": "En cours",
+        "description": "Label for currently reading manga count in sidebar"
+    },
+    "sidebar_categories": {
+        "message": "Catégories",
+        "description": "Sidebar section header for categories filter"
+    },
+    "sidebar_no_categories": {
+        "message": "Aucune catégorie",
+        "description": "Message when no categories exist"
+    },
+    "sidebar_mirrors": {
+        "message": "Sources",
+        "description": "Sidebar section header for mirror filter"
     }
 }

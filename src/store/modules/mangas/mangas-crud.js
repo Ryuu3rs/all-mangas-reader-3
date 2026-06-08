@@ -9,6 +9,7 @@ import { getSyncManager, getSyncManagerInstance, setSyncManagerInstance } from "
 import { getIconHelper } from "../../../amr/icon-helper"
 import samples from "../../../amr/samples"
 import { ABSTRACT_MANGA_MSG } from "./mangas-constants"
+import { debug } from "../../../core/debug"
 
 /**
  * CRUD-related actions
@@ -18,14 +19,14 @@ export const crudActions = {
      * Add a manga in the store
      */
     async addManga({ dispatch, getters, rootState, state }, { manga, fromSync }) {
-        console.log("[DEBUG] addManga called, saving to database:", manga?.key, manga?.name)
+        debug.storage.debug("addManga called, saving to database:", { key: manga?.key, name: manga?.name })
         try {
             // Convert reactive Proxy to plain object for IndexedDB storage
             const plainManga = JSON.parse(JSON.stringify(manga))
             await storedb.storeManga(plainManga)
-            console.log("[DEBUG] storedb.storeManga completed successfully for:", manga?.key)
+            debug.storage.debug("storedb.storeManga completed successfully for:", manga?.key)
         } catch (e) {
-            console.error("[DEBUG] storedb.storeManga FAILED:", e)
+            debug.storage.error("storedb.storeManga FAILED:", e)
         }
         await dispatch("exportManga", manga, { root: true })
         if (!fromSync) {
@@ -40,24 +41,28 @@ export const crudActions = {
             dispatch("setOption", { key: "updated", value: Date.now() })
             dispatch("setOption", { key: "changesSinceSync", value: 1 })
         } catch (e) {
-            console.error("Error while updating sync timestamp")
-            console.error(e)
+            debug.storage.error("Error while updating sync timestamp:", e)
         }
     },
 
     /**
-     * Update a manga in the store
+     * Update a manga in the store (or create if it doesn't exist)
+     * Uses upsert pattern to avoid errors when manga is not yet in IndexedDB
      */
     async findAndUpdateManga({ dispatch, commit }, manga) {
+        if (!manga?.key) {
+            debug.storage.warn("findAndUpdateManga Called with invalid manga (no key)")
+            return
+        }
         try {
             // Convert reactive Proxy to plain object for IndexedDB storage
             const plainManga = JSON.parse(JSON.stringify(manga))
-            await storedb.findAndUpdate(plainManga)
+            // Use storeManga which does upsert (put) instead of findAndUpdate which requires existing entry
+            await storedb.storeManga(plainManga)
             dispatch("setOption", { key: "updated", value: Date.now() })
             dispatch("setOption", { key: "changesSinceSync", value: 1 })
         } catch (e) {
-            console.error("Error while running findAndUpdateManga", manga)
-            console.error(e)
+            debug.storage.error("findAndUpdateManga Error saving manga: " + manga?.key, e)
         }
     },
 
@@ -83,7 +88,7 @@ export const crudActions = {
     async createUnlistedManga({ dispatch, commit, rootState, state }, message) {
         // Validate required fields before creating
         if (!message.url || !message.mirror) {
-            console.error("[DEBUG] createUnlistedManga FAILED - missing required fields:", {
+            debug.storage.error("createUnlistedManga FAILED - missing required fields:", {
                 url: message.url,
                 mirror: message.mirror,
                 name: message.name
@@ -101,11 +106,11 @@ export const crudActions = {
             language: message.language,
             rootState: { state: rootState }
         })
-        console.log("[DEBUG] createUnlistedManga called for key:", key)
+        debug.storage.debug("createUnlistedManga called for key:", key)
 
         // Prevent _no_key_ entries
         if (key === "_no_key_") {
-            console.error("[DEBUG] createUnlistedManga FAILED - would create _no_key_ entry:", message)
+            debug.storage.error("createUnlistedManga FAILED - would create _no_key_ entry:", message)
             return {
                 success: false,
                 error: "INVALID_KEY",
@@ -119,18 +124,18 @@ export const crudActions = {
             ...message
         })
         const mg = state.all.find(manga => manga.key === key)
-        console.log("[DEBUG] After createManga commit, found manga in state:", mg?.name || "NOT FOUND")
+        debug.storage.debug("After createManga commit, found manga in state:", mg?.name || "NOT FOUND")
         try {
             await dispatch("refreshLastChapters", message)
         } catch (e) {
             if (e === ABSTRACT_MANGA_MSG) {
-                console.log("[DEBUG] Skipping abstract manga")
+                debug.storage.debug("Skipping abstract manga")
                 return
             }
-            console.error("[DEBUG] refreshLastChapters error:", e)
+            debug.storage.error("refreshLastChapters error:", e)
         }
 
-        console.log("[DEBUG] Calling addManga to save to database:", mg?.key)
+        debug.storage.debug("Calling addManga to save to database:", mg?.key)
         await dispatch("addManga", { manga: mg, fromSync: message.isSync })
         dispatch("updateLanguageCategories")
     },

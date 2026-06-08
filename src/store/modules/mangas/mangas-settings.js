@@ -7,6 +7,7 @@ import storedb from "../../../amr/storedb"
 import { mangaKey } from "../../../shared/utils"
 import { getIconHelper } from "../../../amr/icon-helper"
 import { getSyncManager, getSyncManagerInstance, setSyncManagerInstance } from "./mangas-sync-manager"
+import { debug } from "../../../core/debug"
 
 /**
  * Settings-related actions
@@ -244,7 +245,7 @@ export const settingsActions = {
             await dispatch("refreshLastChapters", manga)
             await storedb.storeManga(manga)
         } catch (e) {
-            console.error(e)
+            debug.storage.error("Error in forceRefreshList:", e)
         }
         iconHelper.stopSpinning()
     }

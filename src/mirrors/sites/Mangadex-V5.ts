@@ -3,6 +3,7 @@ import { CurrentPageInfo, InfoResult, MirrorImplementation } from "../../types/c
 import { mdFixLang } from "../../shared/mangaDexUtil"
 import MangaDexIcon from "../icons/mangadex-optimized.png"
 import { MirrorHelper } from "../MirrorHelper"
+import { debug } from "../../core/debug"
 
 /**
  *  Urls with volume issues
@@ -256,7 +257,7 @@ export class MangadexV5 extends BaseMirror implements MirrorImplementation {
         const url = `${this.api}/chapter/${chapterId}`
         const chapterJson = await this.mirrorHelper.loadJson(url)
         if (chapterJson.result !== "ok") {
-            console.log(chapterJson)
+            debug.mirrors.error("MangaDex getCurrentPageInfo failed:", chapterJson)
             throw new Error(`Failed to get MangaDex current page info: url: "${url}"`)
         }
 
@@ -285,8 +286,7 @@ export class MangadexV5 extends BaseMirror implements MirrorImplementation {
         const serverInfo = await this.mirrorHelper.loadJson(`${this.api}/at-home/server/${chapterId}`)
 
         if (serverInfo.result !== "ok") {
-            console.error("error during call url", curUrl)
-            console.log(serverInfo)
+            debug.mirrors.error("MangaDex getListImages error during call url:", { curUrl, serverInfo })
             return []
         }
 

@@ -1,5 +1,6 @@
 import browser, { Cookies } from "webextension-polyfill"
 import CryptoJS from "crypto-js"
+import { debug } from "../core/debug"
 
 export interface LoadOptions {
     /** @deprecated Do not sent content type **/
@@ -87,13 +88,13 @@ export class MirrorHelper {
         try {
             return JSON.parse(data)
         } catch (e) {
-            console.error(e)
+            debug.mirrors.error("Failed to parse JSON response:", e)
             return data
         }
     }
 
     private logError(fn: string, message: string, url: string, config: RequestInit) {
-        console.error({
+        debug.mirrors.error("MirrorHelper error:", {
             fn,
             message,
             url,
@@ -114,6 +115,7 @@ export class MirrorHelper {
             // mode is intentionally not set - extensions have host_permissions for cross-origin
             headers: this.getDefaultHeaders(options, defaultHeaders),
             body: this.getData(options),
+            referrer: options.referrer,
             redirect: options.redirect,
             signal: AbortSignal.timeout(options.timeoutInMs ?? 60000)
         }
@@ -231,7 +233,7 @@ export class MirrorHelper {
                 }
             } catch (error) {
                 // Log parsing error but don't throw - return undefined instead
-                console.warn(`[MirrorHelper] Failed to parse variable '${varname}':`, error)
+                debug.mirrors.warn(`MirrorHelper Failed to parse variable '${varname}':`, error)
                 return undefined
             }
         }

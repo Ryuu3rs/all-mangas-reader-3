@@ -8,6 +8,7 @@ import importexport from "./modules/importexport"
 import statistics from "./modules/statistics"
 import achievements from "./modules/achievements"
 import VuexMutationSharer from "./sharer/VuexMutationSharer"
+import { debug } from "../core/debug"
 
 /**
  * This store exposes the object to vue (both in popup and background)
@@ -48,7 +49,7 @@ export default createStore({
                         resolve()
                     })
                     .catch(e => {
-                        console.error(e, "getStateFromReference")
+                        debug.storage.error("getStateFromReference:", e)
                         reject(e)
                     })
             })

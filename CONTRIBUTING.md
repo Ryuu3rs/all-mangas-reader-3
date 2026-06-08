@@ -1,5 +1,7 @@
 # Contributing
 
+> NOTE (2026-03-03): Active extension rewrite work is in `svelte-rewrite/` with `stable-v3.1.0/` as reference. Legacy `src/` is maintained for parity reference only.
+
 When contributing to this repository, please first discuss the change you wish to make via issue,
 email, or any other method with the owners of this repository before making a change.
 

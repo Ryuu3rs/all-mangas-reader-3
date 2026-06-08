@@ -4,81 +4,61 @@
         class="scanContainer"
         :colspan="full ? 2 : 1">
         <!-- Progress while loading -->
-        <v-container class="fill-height text-center" v-show="loading">
-            <v-row>
-                <v-col cols="12">
-                    <v-progress-circular indeterminate color="red"></v-progress-circular>
-                </v-col>
-            </v-row>
-        </v-container>
-        <v-dialog v-model="copyImageToClipboardWarning">
-            <v-card>
-                <v-card-text class="pt-6"> {{ i18n("reader_context_menu_copy_img_warning_dialog") }} </v-card-text>
-                <v-divider></v-divider>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" variant="text" @click="copyImageToClipboardWarning = false">
-                        {{ i18n("button_close") }}
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
+        <div class="amr-scan-loading" v-show="loading">
+            <div class="amr-spinner"></div>
+        </div>
+        <!-- Copy image warning dialog -->
+        <AmrDialog v-model="copyImageToClipboardWarning" :width="400">
+            <div class="amr-scan-warning-text">{{ i18n("reader_context_menu_copy_img_warning_dialog") }}</div>
+            <template #actions>
+                <AmrButton variant="primary" @click="copyImageToClipboardWarning = false">
+                    {{ i18n("button_close") }}
+                </AmrButton>
+            </template>
+        </AmrDialog>
         <!-- The Scan container ! -->
         <div ref="scanDiv" class="amr-scan" v-show="!loading && !error" @contextmenu="show"></div>
-
-        <v-menu v-model="showMenu" :target="[x, y]" location="bottom start">
-            <v-list>
-                <v-list-item link @click="bookmarkScan">
-                    <v-list-item-title>
-                        {{
-                            scanbooked
-                                ? i18n("reader_context_menu_manage_bookmark")
-                                : i18n("reader_context_menu_add_bookmark")
-                        }}
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item link v-clipboard="src" v-clipboard:success="copySuccess" v-clipboard:error="copyError">
-                    <v-list-item-title>
-                        {{ i18n("reader_context_menu_copy_url") }}
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item link @click="copyIMG">
-                    <v-list-item-title>
-                        {{ i18n("reader_context_menu_copy_img") }}
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item link>
-                    <v-list-item-title @click="reloadScan(true)">
-                        {{ i18n("reader_context_menu_reload_image") }}
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item link>
-                    <v-list-item-title @click="downloadImage">
-                        {{ i18n("reader_context_menu_download_image") }}
-                    </v-list-item-title>
-                </v-list-item>
-            </v-list>
-        </v-menu>
-
+        <!-- Context menu -->
+        <div
+            v-if="showMenu"
+            class="amr-context-menu"
+            :style="{ left: x + 'px', top: y + 'px' }"
+            @click="showMenu = false">
+            <div class="amr-context-menu-item" @click="bookmarkScan">
+                {{
+                    scanbooked ? i18n("reader_context_menu_manage_bookmark") : i18n("reader_context_menu_add_bookmark")
+                }}
+            </div>
+            <div
+                class="amr-context-menu-item"
+                v-clipboard="src"
+                v-clipboard:success="copySuccess"
+                v-clipboard:error="copyError">
+                {{ i18n("reader_context_menu_copy_url") }}
+            </div>
+            <div class="amr-context-menu-item" @click="copyIMG">
+                {{ i18n("reader_context_menu_copy_img") }}
+            </div>
+            <div class="amr-context-menu-item" @click="reloadScan(true)">
+                {{ i18n("reader_context_menu_reload_image") }}
+            </div>
+            <div class="amr-context-menu-item" @click="downloadImage">
+                {{ i18n("reader_context_menu_download_image") }}
+            </div>
+        </div>
+        <div v-if="showMenu" class="amr-context-menu-backdrop" @click="showMenu = false"></div>
         <!-- Error try to reload button -->
-        <v-container class="fill-height text-center" v-if="error && !loading">
-            <v-row>
-                <v-col cols="12">
-                    <v-tooltip location="bottom">
-                        <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" icon size="large" @click="reloadScan" color="primary">
-                                <v-icon v-bind:data-src="src">{{ icons.mdiImageBroken }}</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>Click to try reloading scan</span>
-                    </v-tooltip>
-                </v-col>
-            </v-row>
-        </v-container>
-
-        <v-snackbar v-model="snackbarShow" :timeout="snackbarTimeout" :color="snackbarColor">
+        <div class="amr-scan-error" v-if="error && !loading">
+            <AmrTooltip text="Click to try reloading scan" location="bottom">
+                <AmrButton icon size="large" variant="primary" @click="reloadScan" :data-src="src">
+                    <AmrIcon :icon="icons.mdiImageBroken" />
+                </AmrButton>
+            </AmrTooltip>
+        </div>
+        <!-- Snackbar -->
+        <div v-if="snackbarShow" :class="['amr-snackbar', 'amr-snackbar-' + snackbarColor]">
             {{ snackbarText }}
-        </v-snackbar>
+        </div>
     </td>
 </template>
 
@@ -92,9 +72,15 @@ import { i18nmixin } from "../../mixins/i18n-mixin"
 import { mdiImageBroken } from "@mdi/js"
 import { isFirefox } from "../../shared/utils"
 import { saveAs } from "../helpers/util"
+import { debug } from "../../core/debug"
+import AmrDialog from "./AmrDialog"
+import AmrButton from "./AmrButton"
+import AmrIcon from "./AmrIcon"
+import AmrTooltip from "./AmrTooltip"
 
 export default {
     mixins: [i18nmixin],
+    components: { AmrDialog, AmrButton, AmrIcon, AmrTooltip },
     data() {
         return {
             bookstate: bookmarks.state /* bookmarks state */,
@@ -132,9 +118,13 @@ export default {
         }
     },
     computed: {
-        /* the scan (loaded through scansProvider) - O(1) lookup via Map (Performance Fix A) */
+        /* the scan (loaded through scansProvider) - O(1) lookup via Map (Performance Fix A)
+         * CRITICAL FIX: Access scansProvider.state.scansMap directly so Vue can track reactivity.
+         * Previously called scansProvider.getScanByUrl() which didn't establish proper dependency.
+         */
         scan() {
-            return scansProvider.getScanByUrl(this.src)
+            // Access the reactive Map directly to establish Vue dependency tracking
+            return this.scansProvider.scansMap.get(this.src) || null
         },
         /* is currently loading */
         loading() {
@@ -151,11 +141,17 @@ export default {
             return (this.loading ? "1" : "0") + (this.error ? "1" : "0") + this.src
         },
         /**
-         * Combined bookmark data lookup (Performance Fix G)
-         * Single find() instead of two separate lookups for scanbooked and note
+         * Combined bookmark data lookup (Performance Fix G + Critical Fix)
+         *
+         * CRITICAL PERFORMANCE FIX: Use Map for O(1) lookup instead of find()
+         * Old code: this.bookstate.scans.find(sc => sc.url === this.src)
+         * This was O(n) for each Scan component, accessed multiple times per render
+         * For 100 scans × 3 accesses (bookmarkData, scanbooked, note) = 300 linear searches
+         *
+         * New code: Use scansMap.get() for O(1) lookup
          */
         bookmarkData() {
-            return this.bookstate.scans.find(sc => sc.url === this.src) || null
+            return this.bookstate.scansMap.get(this.src) || null
         },
         /* is the scan bookmarked ? */
         scanbooked() {
@@ -177,10 +173,12 @@ export default {
         if (!this.loading) this.$nextTick(() => this.insertScanInDOM())
     },
     created() {
+        debug.reader.trace("Scan.created src:", this.src?.substring(0, 50))
         /* Event from side bar to reload all errored scans */
         EventBus.$on("reload-all-errors", this.reloadScan)
     },
     beforeUnmount() {
+        debug.reader.trace("Scan.beforeUnmount src:", this.src?.substring(0, 50))
         EventBus.$off("reload-all-errors", this.reloadScan)
     },
     methods: {
@@ -221,7 +219,7 @@ export default {
                     const name = url.split("/").pop().split("#")[0].split("?")[0]
                     saveAs(blob, name)
                 })
-                .catch(e => console.error(e))
+                .catch(e => debug.reader.error("Download image failed:", e))
         },
         /* check if we need to fit width */
         resizeW() {
@@ -247,30 +245,34 @@ export default {
             if (!scanDiv) return
 
             const existingImg = scanDiv.querySelector("img")
-            const newSrc = this.scan?.scan?.src
+            const image = this.scan?.scan
 
-            // If there's an error, just remove existing image if any
-            if (this.error) {
+            // If there's an error or no underlying image yet, just remove any existing image
+            if (this.error || !image) {
                 if (existingImg) {
                     scanDiv.removeChild(existingImg)
                 }
                 return
             }
 
-            // Skip if same image is already displayed (Performance Fix F)
-            if (existingImg && existingImg.src === newSrc) {
+            // If the correct image is already in this container, nothing to do
+            if (existingImg === image) {
                 return
             }
 
-            // Remove existing image if different
-            if (existingImg) {
+            // Detach the image from any previous parent before reusing it
+            if (image.parentNode && image.parentNode !== scanDiv) {
+                image.parentNode.removeChild(image)
+            }
+
+            // Remove any existing different image in this container
+            if (existingImg && existingImg !== image) {
                 scanDiv.removeChild(existingImg)
             }
 
-            // Clone and append the new image
-            if (this.scan?.scan) {
-                const img = this.scan.scan.cloneNode(true)
-                scanDiv.appendChild(img)
+            // Append the scan image if it's not already attached to this container
+            if (image.parentNode !== scanDiv) {
+                scanDiv.appendChild(image)
             }
         },
         /** Open bookmarks dialog */
@@ -343,5 +345,103 @@ td.scanContainer.xs12 {
 
 .amr-right-page.scale-up img {
     object-position: left;
+}
+
+/* Loading spinner */
+.amr-scan-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.amr-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(244, 67, 54, 0.3);
+    border-top-color: #f44336;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error state */
+.amr-scan-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+/* Context menu */
+.amr-context-menu {
+    position: fixed;
+    z-index: 1000;
+    background-color: var(--amr-surface);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    min-width: 180px;
+}
+
+.amr-context-menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--amr-text-primary);
+}
+
+.amr-context-menu-item:hover {
+    background-color: var(--amr-hover);
+}
+
+.amr-context-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+}
+
+/* Snackbar */
+.amr-snackbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1001;
+    animation: fadeIn 0.3s ease;
+}
+
+.amr-snackbar-success {
+    background-color: #4caf50;
+}
+
+.amr-snackbar-error {
+    background-color: #f44336;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.amr-scan-warning-text {
+    padding: 16px 0;
+    color: var(--amr-text-primary);
 }
 </style>

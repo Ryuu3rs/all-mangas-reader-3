@@ -1,3 +1,5 @@
+import { debug } from "../core/debug"
+
 /**
  * This class is used to update periodically manga chapters lists and mirrors list
  */
@@ -77,8 +79,7 @@ export class AmrUpdater {
         })
             .then(r => r.text())
             .catch(e => {
-                console.error("Failed to load " + url)
-                console.error(e)
+                debug.background.error("Failed to load " + url, e)
             })
 
         const regex = /codebase\=\'(.[^\']*)\'(\s+)version\=\'(.[^\']*)\'/gm
