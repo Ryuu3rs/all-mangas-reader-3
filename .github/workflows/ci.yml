@@ -2,79 +2,51 @@ name: CI
 
 on:
     push:
-        branches: [master, main]
+        branches:
+            - main
+            - master
+            - "rewrite/**"
     pull_request:
-        branches: [master, main]
+
+permissions:
+    contents: read
 
 jobs:
-    build:
+    validate:
         runs-on: ubuntu-latest
+        timeout-minutes: 20
 
         steps:
-            - name: Checkout repository
+            - name: Checkout
               uses: actions/checkout@v4
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: "20.x"
-                  cache: "npm"
+                  node-version: 22
+                  cache: npm
 
-            - name: Install dependencies
-              run: npm install
+            - name: Install
+              run: npm ci
 
-            - name: Run linting
-              run: npm run lint
-              continue-on-error: true # ESLint version conflicts being resolved
+            - name: Formatting
+              run: npm run format:check
 
-            - name: Build extension
+            - name: Typecheck
+              run: npm run typecheck
+
+            - name: Test
+              run: npm run test
+
+            - name: Build Chromium
               run: npm run build
 
-            - name: Upload build artifacts
+            - name: Build Firefox
+              run: npm run build:firefox
+
+            - name: Upload builds
               uses: actions/upload-artifact@v4
               with:
-                  name: extension-build
-                  path: dist/
-                  retention-days: 7
-
-    test:
-        runs-on: ubuntu-latest
-        needs: build
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
-                  cache: "npm"
-
-            - name: Install dependencies
-              run: npm install
-
-            - name: Run tests
-              run: npm test
-              continue-on-error: true # Tests are being set up, don't fail CI yet
-
-    type-check:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20.x"
-                  cache: "npm"
-
-            - name: Install dependencies
-              run: npm install
-
-            - name: Run TypeScript type checking
-              run: npx tsc --noEmit --skipLibCheck
-              continue-on-error: true # TypeScript migration is ongoing
-
+                  name: extension-builds
+                  path: apps/extension/.output/
+                  retention-days: 14

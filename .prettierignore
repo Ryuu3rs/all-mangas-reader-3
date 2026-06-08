@@ -1,4 +1,6 @@
-dist
 node_modules
-src/pages/flags.css
-changelog.json
+.output
+.wxt
+coverage
+archive
+package-lock.json

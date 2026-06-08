@@ -1,42 +1,50 @@
-name: Release
+name: GitHub Release
 
 on:
     push:
         tags:
             - "v*"
 
+permissions:
+    contents: write
+
 jobs:
-    build-and-release:
+    release:
         runs-on: ubuntu-latest
+        timeout-minutes: 20
 
         steps:
-            - name: Checkout repository
+            - name: Checkout
               uses: actions/checkout@v4
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: "20.x"
-                  cache: "npm"
+                  node-version: 22
+                  cache: npm
 
-            - name: Install dependencies
+            - name: Install
               run: npm ci
 
-            - name: Run linting
-              run: npm run lint
+            - name: Validate
+              run: npm run check
 
-            - name: Build extension
-              run: npm run build
+            - name: Package Chromium
+              run: npm run zip
 
-            - name: Create ZIP archive
+            - name: Package Firefox
+              run: npm run zip:firefox
+
+            - name: Generate checksums
+              shell: bash
               run: |
-                  cd dist
-                  zip -r ../all-mangas-reader-${{ github.ref_name }}.zip .
+                  cd apps/extension/.output
+                  sha256sum *.zip > SHA256SUMS.txt
 
             - name: Create GitHub Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2
               with:
-                  files: all-mangas-reader-${{ github.ref_name }}.zip
+                  files: |
+                      apps/extension/.output/*.zip
+                      apps/extension/.output/SHA256SUMS.txt
                   generate_release_notes: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

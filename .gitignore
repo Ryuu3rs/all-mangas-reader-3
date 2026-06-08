@@ -8,6 +8,10 @@ node_modules/
 dist/
 dist-*/
 **/dist/
+.output/
+**/.output/
+.wxt/
+**/.wxt/
 coverage/
 **/coverage/
 *.zip
