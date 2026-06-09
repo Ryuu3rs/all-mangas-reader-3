@@ -211,12 +211,14 @@
                     <div class="poster-grid">
                         {#each library.slice(1, 7) as manga}
                             <article>
-                                <button type="button" class="poster" onclick={() => read(manga)}>
-                                    {#if manga.coverUrl}<img src={manga.coverUrl} alt={manga.title} />{:else}<span
-                                            class="cover-initial">{manga.title[0]}</span
-                                        >{/if}
+                                <div class="poster-wrap">
+                                    <button type="button" class="poster" onclick={() => read(manga)}>
+                                        {#if manga.coverUrl}<img src={manga.coverUrl} alt={manga.title} />{:else}<span
+                                                class="cover-initial">{manga.title[0]}</span
+                                            >{/if}
+                                    </button>
                                     <div class="poster-hover"><span>Continue</span></div>
-                                </button>
+                                </div>
                                 <p class="poster-title">{manga.title}</p>
                             </article>
                         {/each}
