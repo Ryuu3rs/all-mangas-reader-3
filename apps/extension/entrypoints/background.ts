@@ -10,7 +10,14 @@ import {
 } from "../src/database"
 import { runtimeRequestSchema, type RuntimeResponse } from "../src/runtime"
 import { getSettings, updateSettings } from "../src/settings"
-import { findSource, listMangaChapters, resolveChapterUrl } from "../src/sources"
+import {
+    findSource,
+    listMangaChapters,
+    resolveChapterUrl,
+    searchManga,
+    getMangaChapters,
+    checkSourcePermission
+} from "../src/sources"
 
 const updateAlarmName = "check-manga-updates"
 
@@ -156,6 +163,12 @@ export default defineBackground(() => {
                         return success(await importDatabase(request.envelope))
                     case "data:seed":
                         return success(await seedDatabase())
+                    case "manga:search":
+                        return success(await searchManga(request.query))
+                    case "manga:chapters":
+                        return success(await getMangaChapters(request.mangaId))
+                    case "source:permission:check":
+                        return success(await checkSourcePermission())
                     case "updates:check":
                         return success(await checkUpdates())
                     case "updates:get": {

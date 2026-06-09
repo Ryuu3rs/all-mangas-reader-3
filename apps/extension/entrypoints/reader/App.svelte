@@ -9,6 +9,8 @@
     let currentPage = $state(0)
     let mode = $state<"continuous" | "single">("continuous")
 
+    const progressPct = $derived(chapter ? Math.round(((currentPage + 1) / chapter.pages.length) * 100) : 0)
+
     onMount(async () => {
         const url = new URL(location.href).searchParams.get("url")
         if (!url) {
@@ -23,6 +25,14 @@
                 chapterId: chapter.chapter.id
             })
             currentPage = progress?.pageIndex ?? 0
+            try {
+                const settings = await sendRuntimeMessage<{ readingMode: "continuous" | "single" }>({
+                    type: "settings:get"
+                })
+                mode = settings.readingMode
+            } catch {
+                // keep default
+            }
         } catch (cause) {
             error = cause instanceof Error ? cause.message : "The chapter could not be loaded"
         }
@@ -41,17 +51,18 @@
         })
     }
 
-    async function closeTab() {
+    async function goToApp() {
+        const appUrl = browser.runtime.getURL("/app.html")
         try {
             const tab = await browser.tabs.getCurrent()
             if (tab?.id !== undefined) {
-                await browser.tabs.remove(tab.id)
+                await browser.tabs.update(tab.id, { url: appUrl })
                 return
             }
         } catch {
             // fallthrough
         }
-        window.close()
+        window.location.href = appUrl
     }
 </script>
 
@@ -67,7 +78,7 @@
     }} />
 
 <header>
-    <button type="button" onclick={() => void closeTab()} aria-label="Close reader">Close</button>
+    <button type="button" onclick={() => void goToApp()} aria-label="Close reader">Close</button>
     <div>
         <strong>{chapter?.manga.manga.title ?? "Loading chapter"}</strong>
         <span>{chapter?.chapter.title ?? ""}</span>
@@ -79,6 +90,12 @@
         </button>
     </div>
 </header>
+
+{#if chapter}
+    <div class="progress-bar" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100}>
+        <div class="progress-fill" style="width:{progressPct}%"></div>
+    </div>
+{/if}
 
 <main class:single={mode === "single"}>
     {#if error}

@@ -35,12 +35,22 @@
     } | null>(null)
     let checkingUpdates = $state(false)
     let confirmingRemove = $state<string | null>(null)
+    let hasPermission = $state(false)
+    let browseQuery = $state("")
+    let searchResults = $state<Array<{ id: string; title: string; coverUrl?: string; status: string }>>([])
+    let searchLoading = $state(false)
+    let selectedManga = $state<{ id: string; title: string; coverUrl?: string } | null>(null)
+    let mangaChapters = $state<Array<{ id: string; title: string; chapter?: string; url: string }>>([])
+    let chaptersLoading = $state(false)
 
     function isSeedData(manga: LibraryManga): boolean {
         return manga.sourceUrl.includes("/seed-c")
     }
 
-    onMount(load)
+    onMount(async () => {
+        await load()
+        hasPermission = await sendRuntimeMessage<boolean>({ type: "source:permission:check" })
+    })
 
     async function load() {
         loading = true
@@ -154,6 +164,55 @@
         await load()
     }
 
+    async function checkPermission() {
+        hasPermission = await sendRuntimeMessage<boolean>({ type: "source:permission:check" })
+    }
+
+    async function grantPermission() {
+        hasPermission = await browser.permissions.request({
+            origins: ["https://mangadex.org/*", "https://api.mangadex.org/*", "https://uploads.mangadex.org/*"]
+        })
+    }
+
+    async function doSearch() {
+        if (!browseQuery.trim()) return
+        searchLoading = true
+        searchResults = []
+        selectedManga = null
+        try {
+            searchResults = await sendRuntimeMessage<typeof searchResults>({
+                type: "manga:search",
+                query: browseQuery.trim()
+            })
+        } catch {
+            searchResults = []
+        } finally {
+            searchLoading = false
+        }
+    }
+
+    async function browseChapters(manga: { id: string; title: string; coverUrl?: string }) {
+        selectedManga = manga
+        chaptersLoading = true
+        mangaChapters = []
+        try {
+            mangaChapters = await sendRuntimeMessage<typeof mangaChapters>({
+                type: "manga:chapters",
+                mangaId: manga.id
+            })
+        } catch {
+            mangaChapters = []
+        } finally {
+            chaptersLoading = false
+        }
+    }
+
+    async function readChapter(chapterUrl: string) {
+        void browser.tabs.create({
+            url: browser.runtime.getURL(`/reader.html?url=${encodeURIComponent(chapterUrl)}`)
+        })
+    }
+
     const visibleLibrary = $derived(library.filter(m => m.title.toLowerCase().includes(query.trim().toLowerCase())))
 </script>
 
@@ -264,6 +323,9 @@
                                             class="cover-initial">{manga.title[0]}</span
                                         >{/if}
                                     {#if isSeedData(manga)}<span class="sample-chip">Sample</span>{/if}
+                                    {#if !isSeedData(manga) && manga.latestChapterId && manga.lastReadChapterId && manga.latestChapterId !== manga.lastReadChapterId}
+                                        <span class="new-chip">New</span>
+                                    {/if}
                                 </button>
                                 <button
                                     type="button"
@@ -366,14 +428,81 @@
                 {/each}
             </div>
         {:else if activeSection === "Sources"}
-            <h1>Sources</h1>
-            <div class="source-row">
-                <div>
+            <h1>Browse</h1>
+
+            <div class="source-header">
+                <div class="source-identity">
                     <p class="source-name">MangaDex</p>
-                    <p class="muted">API-backed — metadata, chapters, and reader pages</p>
+                    <span class="badge-active">Active</span>
                 </div>
-                <span class="badge-active">Active</span>
+                {#if !hasPermission}
+                    <div class="permission-prompt">
+                        <p class="muted">Grant site access to search and browse MangaDex manga.</p>
+                        <button type="button" onclick={grantPermission}>Grant access</button>
+                    </div>
+                {:else}
+                    <form
+                        class="search-bar"
+                        onsubmit={e => {
+                            e.preventDefault()
+                            void doSearch()
+                        }}>
+                        <input
+                            bind:value={browseQuery}
+                            placeholder="Search manga titles..."
+                            aria-label="Search manga" />
+                        <button type="submit" disabled={searchLoading}>
+                            {searchLoading ? "Searching..." : "Search"}
+                        </button>
+                    </form>
+                {/if}
             </div>
+
+            {#if selectedManga}
+                <div class="chapters-panel">
+                    <button
+                        type="button"
+                        class="btn-back"
+                        onclick={() => {
+                            selectedManga = null
+                            mangaChapters = []
+                        }}>← Back</button>
+                    <h2 class="chapters-title">{selectedManga.title}</h2>
+                    {#if chaptersLoading}
+                        <p class="muted">Loading chapters...</p>
+                    {:else if mangaChapters.length === 0}
+                        <p class="muted">No English chapters found.</p>
+                    {:else}
+                        <div class="chapter-list">
+                            {#each mangaChapters as ch}
+                                <div class="chapter-row">
+                                    <p class="chapter-title">{ch.title}</p>
+                                    <button type="button" onclick={() => void readChapter(ch.url)}>Read</button>
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
+                </div>
+            {:else if searchResults.length > 0}
+                <div class="search-results">
+                    {#each searchResults as result}
+                        <div class="search-result">
+                            <div class="result-cover">
+                                {#if result.coverUrl}<img src={result.coverUrl} alt={result.title} />{:else}<span
+                                        >{result.title[0]}</span
+                                    >{/if}
+                            </div>
+                            <div class="result-info">
+                                <p class="result-title">{result.title}</p>
+                                <p class="muted">{result.status}</p>
+                            </div>
+                            <button type="button" onclick={() => void browseChapters(result)}>Chapters</button>
+                        </div>
+                    {/each}
+                </div>
+            {:else if hasPermission && !searchLoading}
+                <p class="muted" style="margin-top:24px">Search for a manga title to browse chapters.</p>
+            {/if}
         {:else if activeSection === "Data"}
             <h1>Import & Export</h1>
             <div class="data-list">

@@ -36,6 +36,73 @@ export async function resolveChapterUrl(url: string) {
     return source.resolveChapter({ url: parsedUrl }, createSourceContext())
 }
 
+export async function searchManga(query: string) {
+    const params = new URLSearchParams({
+        title: query,
+        limit: "12",
+        "includes[]": "cover_art"
+    })
+    const res = await fetch(`https://api.mangadex.org/manga?${params}`)
+    if (!res.ok) throw new Error(`MangaDex search failed: ${res.status}`)
+    const json = (await res.json()) as {
+        data: Array<{
+            id: string
+            attributes: { title: Record<string, string>; status: string }
+            relationships: Array<{ type: string; attributes?: { fileName?: string } }>
+        }>
+    }
+    return json.data.map(m => {
+        const cover = m.relationships.find(r => r.type === "cover_art")
+        const fileName = cover?.attributes?.fileName
+        return {
+            id: m.id,
+            title: m.attributes.title["en"] ?? Object.values(m.attributes.title)[0] ?? "Unknown",
+            coverUrl: fileName ? `https://uploads.mangadex.org/covers/${m.id}/${fileName}.256.jpg` : undefined,
+            status: m.attributes.status
+        }
+    })
+}
+
+export type MangaSearchResult = Awaited<ReturnType<typeof searchManga>>[number]
+
+export async function getMangaChapters(mangaId: string) {
+    const params = new URLSearchParams({
+        limit: "100",
+        "translatedLanguage[]": "en",
+        "order[chapter]": "desc"
+    })
+    const res = await fetch(`https://api.mangadex.org/manga/${mangaId}/feed?${params}`)
+    if (!res.ok) throw new Error(`MangaDex chapters failed: ${res.status}`)
+    const json = (await res.json()) as {
+        data: Array<{
+            id: string
+            attributes: { title: string | null; chapter: string | null; volume: string | null }
+        }>
+    }
+    return json.data.map(ch => ({
+        id: ch.id,
+        title:
+            ch.attributes.title && ch.attributes.title.trim()
+                ? ch.attributes.title
+                : `Chapter ${ch.attributes.chapter ?? "?"}`,
+        chapter: ch.attributes.chapter ?? undefined,
+        volume: ch.attributes.volume ?? undefined,
+        url: `https://mangadex.org/chapter/${ch.id}`
+    }))
+}
+
+export type MangaChapter = Awaited<ReturnType<typeof getMangaChapters>>[number]
+
+export async function checkSourcePermission(): Promise<boolean> {
+    return browser.permissions.contains({ origins: ["https://api.mangadex.org/*"] })
+}
+
+export async function requestSourcePermission(): Promise<boolean> {
+    return browser.permissions.request({
+        origins: ["https://mangadex.org/*", "https://api.mangadex.org/*", "https://uploads.mangadex.org/*"]
+    })
+}
+
 export async function listMangaChapters(manga: LibraryManga, link: SourceLinkRecord) {
     const source = sourceAdapters.find(adapter => adapter.manifest.id === link.sourceId)
     if (!source || !link.sourceMangaId) throw new Error("The source link cannot be refreshed")
