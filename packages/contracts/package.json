@@ -8,6 +8,9 @@
         "typecheck": "tsc -p tsconfig.json",
         "test": "vitest run --passWithNoTests"
     },
+    "dependencies": {
+        "zod": "^4.4.3"
+    },
     "devDependencies": {
         "typescript": "^6.0.3",
         "vitest": "^4.1.8"

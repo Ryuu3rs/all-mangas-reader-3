@@ -1,3 +1,7 @@
-import type { SourceAdapter } from "@amr/source-sdk"
+import { SourceRegistry, type SourceAdapter } from "@amr/source-sdk"
+import { mangadexAdapter } from "./mangadex"
 
-export const sourceAdapters: readonly SourceAdapter[] = []
+export { mangadexAdapter } from "./mangadex"
+
+export const sourceAdapters: readonly SourceAdapter[] = [mangadexAdapter]
+export const sourceRegistry = new SourceRegistry(sourceAdapters)

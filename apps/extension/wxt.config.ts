@@ -6,8 +6,12 @@ export default defineConfig({
     manifest: ({ browser }) => ({
         name: "All Mangas Reader",
         description: "Read and track manga from supported websites.",
-        permissions: ["alarms", "scripting", "storage"],
-        optional_host_permissions: ["http://*/*", "https://*/*"],
+        permissions: ["alarms", "scripting", "storage", "tabs"],
+        optional_host_permissions: [
+            "https://mangadex.org/*",
+            "https://api.mangadex.org/*",
+            "https://uploads.mangadex.org/*"
+        ],
         icons: {
             32: "/icons/icon_32.png",
             48: "/icons/icon_48.png",
