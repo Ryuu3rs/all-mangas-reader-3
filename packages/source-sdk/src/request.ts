@@ -29,6 +29,58 @@ export function createBoundedRequestClient(options: BoundedRequestClientOptions)
     const allowedOrigins = new Set(options.allowedOrigins.map(origin => new URL(origin).origin))
     let requestCount = 0
 
+    async function fetchText(url: URL, requestOptions?: SourceRequestOptions): Promise<string> {
+        if (!allowedOrigins.has(url.origin)) {
+            throw new SourceError("invalid-input", `Request origin is not allowed: ${url.origin}`)
+        }
+        if (requestCount >= options.maxRequests) {
+            throw new SourceError("request-limit", `Request limit of ${options.maxRequests} exceeded`)
+        }
+        requestCount += 1
+
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), options.timeoutMs)
+
+        try {
+            const response = await options.fetch(url.toString(), {
+                method: "GET",
+                signal: controller.signal,
+                ...(requestOptions?.headers === undefined ? {} : { headers: requestOptions.headers })
+            })
+            const body = await response.text()
+            const bodySize = new TextEncoder().encode(body).byteLength
+
+            if (bodySize > options.maxResponseBytes) {
+                throw new SourceError("request-limit", `Response exceeded ${options.maxResponseBytes} bytes`, {
+                    url: url.toString(),
+                    bodySize
+                })
+            }
+            if (!response.ok) {
+                throw new SourceRequestError(`Request failed with status ${response.status}`, response.status, {
+                    url: url.toString()
+                })
+            }
+
+            return body
+        } catch (error) {
+            if (error instanceof SourceError) {
+                throw error
+            }
+            if (controller.signal.aborted) {
+                throw new SourceRequestError(`Request timed out after ${options.timeoutMs}ms`, undefined, {
+                    url: url.toString()
+                })
+            }
+            throw new SourceRequestError("Request failed", undefined, {
+                url: url.toString(),
+                cause: String(error)
+            })
+        } finally {
+            clearTimeout(timeout)
+        }
+    }
+
     return {
         async getJson<T>(url: URL, schema: ZodType<T>, requestOptions?: SourceRequestOptions): Promise<T> {
             if (!allowedOrigins.has(url.origin)) {
@@ -97,6 +149,8 @@ export function createBoundedRequestClient(options: BoundedRequestClientOptions)
             } finally {
                 clearTimeout(timeout)
             }
-        }
+        },
+
+        getText: fetchText
     }
 }

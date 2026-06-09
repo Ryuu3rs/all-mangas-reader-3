@@ -140,85 +140,105 @@ export async function importDatabase(value: unknown): Promise<{ manga: number; c
 
 export async function seedDatabase(): Promise<void> {
     const now = Date.now()
-    const seedManga: LibraryManga[] = [
+    const seedEntries: Array<{
+        manga: LibraryManga
+        chapterUrl: string
+        sourceId: string
+        chapterTitle: string
+        sortKey: number
+    }> = [
         {
-            id: "seed-md-001",
-            title: "Chainsaw Man",
-            normalizedTitle: "chainsaw man",
-            authors: [],
-            status: "ongoing",
+            manga: {
+                id: "seed-md-001",
+                title: "Buried Injustice",
+                normalizedTitle: "buried injustice",
+                authors: [],
+                status: "ongoing",
+                sourceId: "mangadex",
+                sourceUrl: "https://mangadex.org/chapter/3dff8b5f-844e-4964-abd7-641c34f1f091",
+                addedAt: now - 86400000 * 7,
+                updatedAt: now - 3600000 * 2,
+                latestChapterId: "seed-md-001-ch"
+            },
+            chapterUrl: "https://mangadex.org/chapter/3dff8b5f-844e-4964-abd7-641c34f1f091",
             sourceId: "mangadex",
-            sourceUrl: "https://mangadex.org/chapter/seed-c1",
-            addedAt: now - 86400000 * 7,
-            updatedAt: now - 3600000 * 2,
-            latestChapterId: "seed-c1"
+            chapterTitle: "Chapter 1",
+            sortKey: 1
         },
         {
-            id: "seed-md-002",
-            title: "Jujutsu Kaisen",
-            normalizedTitle: "jujutsu kaisen",
-            authors: [],
-            status: "ongoing",
-            sourceId: "mangadex",
-            sourceUrl: "https://mangadex.org/chapter/seed-c2",
-            addedAt: now - 86400000 * 5,
-            updatedAt: now - 3600000 * 5,
-            latestChapterId: "seed-c2"
+            manga: {
+                id: "seed-mr-001",
+                title: "Entomologist In Sichuan Tang Clan",
+                normalizedTitle: "entomologist in sichuan tang clan",
+                authors: [],
+                status: "ongoing",
+                sourceId: "mangaread",
+                sourceUrl: "https://www.mangaread.org/manga/entomologist-in-sichuan-tang-clan/chapter-79/?style=list",
+                addedAt: now - 86400000 * 5,
+                updatedAt: now - 3600000 * 5,
+                latestChapterId: "seed-mr-001-ch"
+            },
+            chapterUrl: "https://www.mangaread.org/manga/entomologist-in-sichuan-tang-clan/chapter-79/?style=list",
+            sourceId: "mangaread",
+            chapterTitle: "Chapter 79",
+            sortKey: 79
         },
         {
-            id: "seed-md-003",
-            title: "Blue Lock",
-            normalizedTitle: "blue lock",
-            authors: [],
-            status: "ongoing",
-            sourceId: "mangadex",
-            sourceUrl: "https://mangadex.org/chapter/seed-c3",
-            addedAt: now - 86400000 * 3,
-            updatedAt: now - 3600000 * 8,
-            latestChapterId: "seed-c3"
+            manga: {
+                id: "seed-mr-002",
+                title: "Legendary Youngest Son Of The Marquis House",
+                normalizedTitle: "legendary youngest son of the marquis house",
+                authors: [],
+                status: "ongoing",
+                sourceId: "mangaread",
+                sourceUrl:
+                    "https://www.mangaread.org/manga/legendary-youngest-son-of-the-marquis-house/chapter-161/?style=list",
+                addedAt: now - 86400000 * 3,
+                updatedAt: now - 3600000 * 8,
+                latestChapterId: "seed-mr-002-ch"
+            },
+            chapterUrl:
+                "https://www.mangaread.org/manga/legendary-youngest-son-of-the-marquis-house/chapter-161/?style=list",
+            sourceId: "mangaread",
+            chapterTitle: "Chapter 161",
+            sortKey: 161
         },
         {
-            id: "seed-md-004",
-            title: "Spy x Family",
-            normalizedTitle: "spy x family",
-            authors: [],
-            status: "ongoing",
-            sourceId: "mangadex",
-            sourceUrl: "https://mangadex.org/chapter/seed-c4",
-            addedAt: now - 86400000 * 2,
-            updatedAt: now - 3600000 * 12,
-            latestChapterId: "seed-c4"
-        },
-        {
-            id: "seed-md-005",
-            title: "Dungeon Meshi",
-            normalizedTitle: "dungeon meshi",
-            authors: [],
-            status: "completed",
-            sourceId: "mangadex",
-            sourceUrl: "https://mangadex.org/chapter/seed-c5",
-            addedAt: now - 86400000 * 1,
-            updatedAt: now - 3600000 * 1,
-            latestChapterId: "seed-c5"
+            manga: {
+                id: "seed-mgk-001",
+                title: "Barbarian's Adventure In A Fantasy World",
+                normalizedTitle: "barbarian's adventure in a fantasy world",
+                authors: [],
+                status: "ongoing",
+                sourceId: "mgeko",
+                sourceUrl: "https://www.mgeko.cc/reader/en/barbarians-adventure-in-a-fantasy-world-chapter-52-eng-li/",
+                addedAt: now - 86400000 * 2,
+                updatedAt: now - 3600000 * 12,
+                latestChapterId: "seed-mgk-001-ch"
+            },
+            chapterUrl: "https://www.mgeko.cc/reader/en/barbarians-adventure-in-a-fantasy-world-chapter-52-eng-li/",
+            sourceId: "mgeko",
+            chapterTitle: "Chapter 52",
+            sortKey: 52
         }
     ]
-    const seedChapters: import("@amr/contracts").ChapterRecord[] = seedManga.map(m => ({
-        id: m.latestChapterId!,
-        mangaId: m.id,
-        sourceId: "mangadex",
-        title: "Chapter 1",
-        sortKey: 1,
-        url: m.sourceUrl,
-        addedAt: m.addedAt
+
+    const seedManga = seedEntries.map(e => e.manga)
+    const seedChapters: import("@amr/contracts").ChapterRecord[] = seedEntries.map(e => ({
+        id: e.manga.latestChapterId!,
+        mangaId: e.manga.id,
+        sourceId: e.sourceId,
+        title: e.chapterTitle,
+        sortKey: e.sortKey,
+        url: e.chapterUrl
     }))
-    const seedLinks: import("@amr/contracts").SourceLinkRecord[] = seedManga.map(m => ({
-        mangaId: m.id,
-        sourceId: "mangadex",
-        sourceMangaId: m.id,
-        url: m.sourceUrl,
-        title: m.title,
-        addedAt: m.addedAt,
-        updatedAt: m.updatedAt
+    const seedLinks: import("@amr/contracts").SourceLinkRecord[] = seedEntries.map(e => ({
+        mangaId: e.manga.id,
+        sourceId: e.sourceId,
+        url: e.chapterUrl,
+        title: e.manga.title,
+        addedAt: e.manga.addedAt,
+        updatedAt: e.manga.updatedAt
     }))
     await db.transaction("rw", db.manga, db.sourceLinks, db.chapters, async () => {
         await db.manga.bulkPut(seedManga)

@@ -44,7 +44,7 @@
     let chaptersLoading = $state(false)
 
     function isSeedData(manga: LibraryManga): boolean {
-        return manga.sourceUrl.includes("/seed-c")
+        return manga.id.startsWith("seed-")
     }
 
     onMount(async () => {
@@ -90,7 +90,15 @@
         try {
             const parsed = new URL(addUrl)
             const granted = await browser.permissions.request({
-                origins: ["https://mangadex.org/*", "https://api.mangadex.org/*", "https://uploads.mangadex.org/*"]
+                origins: [
+                    "https://mangadex.org/*",
+                    "https://api.mangadex.org/*",
+                    "https://uploads.mangadex.org/*",
+                    "*://*.mangadex.network/*",
+                    "https://www.mangaread.org/*",
+                    "https://www.mgeko.cc/*",
+                    "*://*.imgsrv4.com/*"
+                ]
             })
             if (!granted) {
                 addMessage = "Site access was not granted."
@@ -170,7 +178,15 @@
 
     async function grantPermission() {
         hasPermission = await browser.permissions.request({
-            origins: ["https://mangadex.org/*", "https://api.mangadex.org/*", "https://uploads.mangadex.org/*"]
+            origins: [
+                "https://mangadex.org/*",
+                "https://api.mangadex.org/*",
+                "https://uploads.mangadex.org/*",
+                "*://*.mangadex.network/*",
+                "https://www.mangaread.org/*",
+                "https://www.mgeko.cc/*",
+                "*://*.imgsrv4.com/*"
+            ]
         })
     }
 

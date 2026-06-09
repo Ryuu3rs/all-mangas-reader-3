@@ -10,8 +10,8 @@ export function findSource(url: URL) {
 function createSourceContext(): SourceContext {
     const request = createBoundedRequestClient({
         fetch: (requestUrl, init) => fetch(requestUrl, init),
-        allowedOrigins: ["https://api.mangadex.org"],
-        maxRequests: 10,
+        allowedOrigins: ["https://api.mangadex.org", "https://www.mangaread.org", "https://www.mgeko.cc"],
+        maxRequests: 15,
         maxResponseBytes: 10 * 1024 * 1024,
         timeoutMs: 20_000
     })
@@ -99,7 +99,15 @@ export async function checkSourcePermission(): Promise<boolean> {
 
 export async function requestSourcePermission(): Promise<boolean> {
     return browser.permissions.request({
-        origins: ["https://mangadex.org/*", "https://api.mangadex.org/*", "https://uploads.mangadex.org/*"]
+        origins: [
+            "https://mangadex.org/*",
+            "https://api.mangadex.org/*",
+            "https://uploads.mangadex.org/*",
+            "*://*.mangadex.network/*",
+            "https://www.mangaread.org/*",
+            "https://www.mgeko.cc/*",
+            "*://*.imgsrv4.com/*"
+        ]
     })
 }
 

@@ -10,7 +10,11 @@ export default defineConfig({
         optional_host_permissions: [
             "https://mangadex.org/*",
             "https://api.mangadex.org/*",
-            "https://uploads.mangadex.org/*"
+            "https://uploads.mangadex.org/*",
+            "*://*.mangadex.network/*",
+            "https://www.mangaread.org/*",
+            "https://www.mgeko.cc/*",
+            "*://*.imgsrv4.com/*"
         ],
         icons: {
             32: "/icons/icon_32.png",

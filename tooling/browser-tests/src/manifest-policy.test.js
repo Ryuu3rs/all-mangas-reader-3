@@ -5,7 +5,15 @@ import test from "node:test"
 import { chromiumExtension, firefoxExtension } from "./paths.js"
 
 const allowedPermissions = ["alarms", "scripting", "storage", "tabs"]
-const allowedOptionalHosts = ["https://api.mangadex.org/*", "https://mangadex.org/*", "https://uploads.mangadex.org/*"]
+const allowedOptionalHosts = [
+    "*://*.imgsrv4.com/*",
+    "*://*.mangadex.network/*",
+    "https://api.mangadex.org/*",
+    "https://mangadex.org/*",
+    "https://uploads.mangadex.org/*",
+    "https://www.mangaread.org/*",
+    "https://www.mgeko.cc/*"
+]
 
 async function readManifest(extensionDirectory) {
     const manifestPath = path.join(extensionDirectory, "manifest.json")
