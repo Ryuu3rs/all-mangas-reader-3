@@ -168,8 +168,13 @@
     }
 
     async function seedData() {
-        await sendRuntimeMessage({ type: "data:seed" })
-        await load()
+        try {
+            await sendRuntimeMessage({ type: "data:seed" })
+            await load()
+            dataMessage = "Sample data loaded."
+        } catch (cause) {
+            dataMessage = cause instanceof Error ? cause.message : "Failed to load samples."
+        }
     }
 
     async function checkPermission() {

@@ -1,4 +1,5 @@
 import type { ReadingProgress } from "@amr/contracts"
+import { SourceError } from "@amr/source-sdk"
 import {
     db,
     exportDatabase,
@@ -74,12 +75,16 @@ function success<T>(data: T): RuntimeResponse<T> {
 }
 
 function failure(error: unknown): RuntimeResponse {
+    let message = error instanceof Error ? error.message : "The request failed"
+    if (error instanceof SourceError && error.details) {
+        const cause = error.details["cause"]
+        const url = error.details["url"]
+        const extra = [url ? String(url) : null, cause ? String(cause) : null].filter(Boolean).join(" — ")
+        if (extra) message += ` [${extra}]`
+    }
     return {
         ok: false,
-        error: {
-            code: "REQUEST_FAILED",
-            message: error instanceof Error ? error.message : "The request failed"
-        }
+        error: { code: "REQUEST_FAILED", message }
     }
 }
 
@@ -189,8 +194,19 @@ export default defineBackground(() => {
                     }
                     case "page:capture":
                         return success(await captureChapter(request.url))
-                    case "reader:resolve":
-                        return success(await resolveChapterUrl(request.url))
+                    case "reader:resolve": {
+                        const resolved = await resolveChapterUrl(request.url)
+                        // Backfill coverUrl into library entry if missing
+                        if (resolved.manga.manga.coverUrl) {
+                            const existing = await db.manga.get(resolved.manga.manga.id)
+                            if (existing && !existing.coverUrl) {
+                                await db.manga.update(resolved.manga.manga.id, {
+                                    coverUrl: resolved.manga.manga.coverUrl
+                                })
+                            }
+                        }
+                        return success(resolved)
+                    }
                     case "reader:progress:get":
                         return success((await db.progress.get(request.chapterId)) ?? null)
                     case "reader:progress": {

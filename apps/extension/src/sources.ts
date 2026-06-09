@@ -11,7 +11,7 @@ function createSourceContext(): SourceContext {
     const request = createBoundedRequestClient({
         fetch: (requestUrl, init) => fetch(requestUrl, init),
         allowedOrigins: ["https://api.mangadex.org", "https://www.mangaread.org", "https://www.mgeko.cc"],
-        maxRequests: 15,
+        maxRequests: 20,
         maxResponseBytes: 10 * 1024 * 1024,
         timeoutMs: 20_000
     })
@@ -95,7 +95,15 @@ export type MangaChapter = Awaited<ReturnType<typeof getMangaChapters>>[number]
 
 export async function checkSourcePermission(): Promise<boolean> {
     return browser.permissions.contains({
-        origins: ["https://api.mangadex.org/*", "*://*.mangadex.network/*"]
+        origins: [
+            "https://mangadex.org/*",
+            "https://api.mangadex.org/*",
+            "https://uploads.mangadex.org/*",
+            "*://*.mangadex.network/*",
+            "https://www.mangaread.org/*",
+            "https://www.mgeko.cc/*",
+            "*://*.imgsrv4.com/*"
+        ]
     })
 }
 

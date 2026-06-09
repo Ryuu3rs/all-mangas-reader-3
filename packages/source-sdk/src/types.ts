@@ -64,6 +64,7 @@ export type SourceRequestOptions = {
 export interface SourceRequestClient {
     getJson<T>(url: URL, schema: ZodType<T>, options?: SourceRequestOptions): Promise<T>
     getText(url: URL, options?: SourceRequestOptions): Promise<string>
+    postForm(url: URL, params: Record<string, string>, options?: SourceRequestOptions): Promise<string>
 }
 
 export type SourceLogger = {

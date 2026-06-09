@@ -49,7 +49,13 @@ function parseChapterSlug(slug: string): { mangaSlug: string; chapterNumber: str
     return { mangaSlug: slug, chapterNumber: "1", mangaTitle: slug.replace(/-/g, " ") }
 }
 
+function captureGroup(match: RegExpMatchArray, index: number): string | undefined {
+    const v = match[index]
+    return typeof v === "string" ? v : undefined
+}
+
 function tryParseJsonArray(raw: string): string[] {
+    // Handle JS arrays with single-quoted strings
     try {
         const urls = JSON.parse(raw.replace(/'/g, '"')) as unknown[]
         return urls.filter((u): u is string => typeof u === "string" && u.startsWith("http"))
@@ -58,46 +64,94 @@ function tryParseJsonArray(raw: string): string[] {
     }
 }
 
-function extractImages(html: string): string[] {
-    // JS variable: var chapImages = [...]
-    const chapImagesMatch = html.match(/var\s+chapImages\s*=\s*(\[[\s\S]*?\]);/)
-    if (chapImagesMatch) {
-        const raw = chapImagesMatch[1]
-        if (raw) {
-            const images = tryParseJsonArray(raw)
-            if (images.length > 0) return images
+function extractJsArrayVar(html: string, ...varNames: string[]): string[] {
+    for (const name of varNames) {
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        const m = html.match(new RegExp(`(?:var\\s+|window\\.)?${escaped}\\s*=\\s*(\\[[\\s\\S]*?\\])[;,]?\\s*(?:\\n|$)`))
+        if (m) {
+            const raw = captureGroup(m, 1)
+            if (raw) {
+                const urls = tryParseJsonArray(raw)
+                if (urls.length > 0) return urls
+            }
         }
     }
+    return []
+}
 
-    // JS variable: var chapterImages = [...]
-    const chapterImagesMatch = html.match(/var\s+chapterImages\s*=\s*(\[[\s\S]*?\]);/)
-    if (chapterImagesMatch) {
-        const raw = chapterImagesMatch[1]
-        if (raw) {
-            const images = tryParseJsonArray(raw)
-            if (images.length > 0) return images
-        }
-    }
-
-    // img tags from imgsrv CDN
-    const imgsrvMatches = [...html.matchAll(/src="(https?:\/\/[^"]*imgsrv[^"]+)"/g)]
-        .map(m => m[1])
-        .filter((s): s is string => s !== undefined)
-    if (imgsrvMatches.length > 0) return imgsrvMatches
-
-    // Gallery blocks
-    const galleryMatches = [
-        ...html.matchAll(/<li[^>]*class="[^"]*blocks-gallery-item[^"]*"[\s\S]*?<img[^>]+src="(https?:\/\/[^"]+)"/g)
+function extractCoverUrl(html: string): string | undefined {
+    const patterns = [
+        /<meta\s[^>]*\bproperty="og:image"\s[^>]*\bcontent="(https?:\/\/[^"]+)"/i,
+        /<meta\s[^>]*\bcontent="(https?:\/\/[^"]+)"\s[^>]*\bproperty="og:image"/i,
+        /<meta\s[^>]*\bname="twitter:image"\s[^>]*\bcontent="(https?:\/\/[^"]+)"/i,
+        /<meta\s[^>]*\bcontent="(https?:\/\/[^"]+)"\s[^>]*\bname="twitter:image"/i
     ]
-        .map(m => m[1])
-        .filter((s): s is string => s !== undefined)
-    if (galleryMatches.length > 0) return galleryMatches
+    for (const p of patterns) {
+        const m = html.match(p)
+        const v = m ? captureGroup(m, 1) : undefined
+        if (v) return v
+    }
+    return undefined
+}
 
-    // Any img with CDN-like pattern
-    const cdnMatches = [...html.matchAll(/src="(https?:\/\/(?:s\d+\.)?img[^"]+\.(?:jpg|png|webp))"/gi)]
-        .map(m => m[1])
-        .filter((s): s is string => s !== undefined)
-    if (cdnMatches.length > 0) return cdnMatches
+function extractImages(html: string): string[] {
+    // Strategy 1: JS array variables (chapImages, chapterImages, imageList, images, pages)
+    const jsArrayUrls = extractJsArrayVar(html, "chapImages", "chapterImages", "imageList", "images", "pages", "page_images")
+    if (jsArrayUrls.length > 0) return jsArrayUrls
+
+    // Strategy 2: JSON object with images/pages key
+    const jsonObjMatch = html.match(/["']?images["']?\s*:\s*(\[[\s\S]*?\])/)
+    if (jsonObjMatch) {
+        const raw = captureGroup(jsonObjMatch, 1)
+        if (raw) {
+            const urls = tryParseJsonArray(raw)
+            if (urls.length > 0) return urls
+        }
+    }
+
+    // Collect all img tags for attribute-order-safe extraction
+    const imgTags = [...html.matchAll(/<img\b[^>]*>/gi)]
+        .map(m => captureGroup(m, 0) ?? "")
+        .filter(Boolean)
+
+    function getImgUrl(tag: string): string | undefined {
+        for (const attr of ["src", "data-src", "data-lazy-src"]) {
+            const m = tag.match(new RegExp(`\\b${attr}="(https?://[^"]+)"`, "i"))
+            const url = m ? captureGroup(m, 1) : undefined
+            if (url && !url.startsWith("data:")) return url
+        }
+        return undefined
+    }
+
+    // Strategy 3: imgsrv CDN images
+    const imgsrvTags = imgTags.filter(t => /imgsrv/i.test(t))
+    if (imgsrvTags.length > 0) {
+        const urls = imgsrvTags.map(getImgUrl).filter((u): u is string => u !== undefined)
+        if (urls.length > 0) return urls
+    }
+
+    // Strategy 4: gallery block images
+    const galleryMatches = [
+        ...html.matchAll(/<li[^>]*blocks-gallery-item[^>]*>[\s\S]*?<img\b[^>]*>/gi)
+    ].map(m => captureGroup(m, 0) ?? "").filter(Boolean)
+    if (galleryMatches.length > 0) {
+        const tagMatches = galleryMatches.flatMap(block => [...block.matchAll(/<img\b[^>]*>/gi)].map(m => captureGroup(m, 0) ?? "").filter(Boolean))
+        const urls = tagMatches.map(getImgUrl).filter((u): u is string => u !== undefined)
+        if (urls.length > 0) return urls
+    }
+
+    // Strategy 5: any image-like src from chapter content area
+    const contentIdx = Math.max(html.indexOf("chapter-content"), html.indexOf("reading-content"), html.indexOf("chapter_content"))
+    if (contentIdx !== -1) {
+        const section = html.slice(contentIdx, contentIdx + 200_000)
+        const sectionTags = [...section.matchAll(/<img\b[^>]*>/gi)]
+            .map(m => captureGroup(m, 0) ?? "")
+            .filter(Boolean)
+        const urls = sectionTags
+            .map(getImgUrl)
+            .filter((u): u is string => u !== undefined && /\.(jpe?g|png|webp|gif)/i.test(u))
+        if (urls.length > 0) return urls
+    }
 
     return []
 }
@@ -157,6 +211,7 @@ export const mgekoAdapter: SourceAdapter = {
         }
 
         const { mangaSlug, chapterNumber, mangaTitle } = parseChapterSlug(chapterSlug)
+        const coverUrl = extractCoverUrl(html)
         const now = context.now()
         const mangaId = `${SOURCE_ID}:manga:${mangaSlug}`
         const chapterId = `${SOURCE_ID}:chapter:${chapterSlug}`
@@ -166,6 +221,7 @@ export const mgekoAdapter: SourceAdapter = {
                 id: mangaId,
                 title: mangaTitle,
                 normalizedTitle: mangaTitle.toLocaleLowerCase("en"),
+                ...(coverUrl ? { coverUrl } : {}),
                 authors: [],
                 status: "unknown",
                 addedAt: now,

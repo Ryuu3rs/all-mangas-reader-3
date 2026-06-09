@@ -12,8 +12,10 @@ export type FetchFunction = (
     url: string,
     init: {
         headers?: Readonly<Record<string, string>>
-        method: "GET"
+        method: "GET" | "POST"
+        body?: string
         signal: AbortSignal
+        credentials?: "include" | "same-origin" | "omit"
     }
 ) => Promise<FetchResponse>
 
@@ -45,6 +47,7 @@ export function createBoundedRequestClient(options: BoundedRequestClientOptions)
             const response = await options.fetch(url.toString(), {
                 method: "GET",
                 signal: controller.signal,
+                credentials: "include",
                 ...(requestOptions?.headers === undefined ? {} : { headers: requestOptions.headers })
             })
             const body = await response.text()
@@ -151,6 +154,60 @@ export function createBoundedRequestClient(options: BoundedRequestClientOptions)
             }
         },
 
-        getText: fetchText
+        getText: fetchText,
+
+        async postForm(url: URL, params: Record<string, string>, requestOptions?: SourceRequestOptions): Promise<string> {
+            if (!allowedOrigins.has(url.origin)) {
+                throw new SourceError("invalid-input", `Request origin is not allowed: ${url.origin}`)
+            }
+            if (requestCount >= options.maxRequests) {
+                throw new SourceError("request-limit", `Request limit of ${options.maxRequests} exceeded`)
+            }
+            requestCount += 1
+
+            const body = new URLSearchParams(params).toString()
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), options.timeoutMs)
+
+            try {
+                const response = await options.fetch(url.toString(), {
+                    method: "POST",
+                    body,
+                    signal: controller.signal,
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        ...(requestOptions?.headers ?? {})
+                    }
+                })
+                const text = await response.text()
+                const bodySize = new TextEncoder().encode(text).byteLength
+                if (bodySize > options.maxResponseBytes) {
+                    throw new SourceError("request-limit", `Response exceeded ${options.maxResponseBytes} bytes`, {
+                        url: url.toString(),
+                        bodySize
+                    })
+                }
+                if (!response.ok) {
+                    throw new SourceRequestError(`Request failed with status ${response.status}`, response.status, {
+                        url: url.toString()
+                    })
+                }
+                return text
+            } catch (error) {
+                if (error instanceof SourceError) throw error
+                if (controller.signal.aborted) {
+                    throw new SourceRequestError(`Request timed out after ${options.timeoutMs}ms`, undefined, {
+                        url: url.toString()
+                    })
+                }
+                throw new SourceRequestError("Request failed", undefined, {
+                    url: url.toString(),
+                    cause: String(error)
+                })
+            } finally {
+                clearTimeout(timeout)
+            }
+        }
     }
 }

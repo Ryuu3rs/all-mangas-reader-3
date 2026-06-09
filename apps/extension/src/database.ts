@@ -241,6 +241,12 @@ export async function seedDatabase(): Promise<void> {
         updatedAt: e.manga.updatedAt
     }))
     await db.transaction("rw", db.manga, db.sourceLinks, db.chapters, async () => {
+        const staleIds = (await db.manga.where("id").startsWith("seed-").primaryKeys()) as string[]
+        if (staleIds.length > 0) {
+            await db.manga.bulkDelete(staleIds)
+            await db.sourceLinks.bulkDelete(staleIds)
+            await db.chapters.where("mangaId").anyOf(staleIds).delete()
+        }
         await db.manga.bulkPut(seedManga)
         await db.sourceLinks.bulkPut(seedLinks)
         await db.chapters.bulkPut(seedChapters)
