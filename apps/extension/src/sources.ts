@@ -94,7 +94,9 @@ export async function getMangaChapters(mangaId: string) {
 export type MangaChapter = Awaited<ReturnType<typeof getMangaChapters>>[number]
 
 export async function checkSourcePermission(): Promise<boolean> {
-    return browser.permissions.contains({ origins: ["https://api.mangadex.org/*"] })
+    return browser.permissions.contains({
+        origins: ["https://api.mangadex.org/*", "*://*.mangadex.network/*"]
+    })
 }
 
 export async function requestSourcePermission(): Promise<boolean> {

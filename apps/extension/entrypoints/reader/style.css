@@ -23,20 +23,64 @@ header {
     backdrop-filter: blur(12px);
 }
 
-header div {
-    display: grid;
-}
-
-header span {
-    color: #9faab7;
-    font-size: 12px;
-}
-
-.controls {
+.header-left {
     display: flex;
-    grid-auto-flow: column;
     align-items: center;
-    gap: 12px;
+}
+
+.header-title {
+    display: grid;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.header-title strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.header-title span {
+    color: #9faab7;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-count {
+    font-size: 12px;
+    color: #9faab7;
+    white-space: nowrap;
+}
+
+.btn-back {
+    background: transparent;
+    border: none;
+    color: #9faab7;
+    padding: 0 8px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 6px;
+    min-height: 36px;
+}
+
+.btn-back:hover {
+    color: #f5f7fa;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.btn-sm {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
 }
 
 button {
@@ -81,10 +125,11 @@ main.single img {
     text-align: center;
 }
 
-.hint {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #4a5568;
+.message button {
+    margin-top: 16px;
+    background: #8b5cf6;
+    border-color: #7c3aed;
+    color: #fff;
 }
 
 .progress-bar {

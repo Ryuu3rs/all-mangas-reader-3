@@ -321,8 +321,18 @@
                 <h1>Library</h1>
                 <input bind:value={query} aria-label="Search library" placeholder="Search titles..." />
             </div>
+            <form
+                class="url-form"
+                onsubmit={e => {
+                    e.preventDefault()
+                    void addByUrl()
+                }}>
+                <input bind:value={addUrl} type="url" required placeholder="Add chapter by URL..." />
+                <button type="submit" disabled={adding}>{adding ? "Adding..." : "Add"}</button>
+            </form>
+            {#if addMessage}<p class="notice">{addMessage}</p>{/if}
             {#if visibleLibrary.length === 0}
-                <p class="muted">{query ? "No titles match." : "Your library is empty."}</p>
+                <p class="muted" style="margin-top:16px">{query ? "No titles match." : "Your library is empty."}</p>
             {:else}
                 <div class="poster-grid">
                     {#each visibleLibrary as manga}
@@ -332,9 +342,7 @@
                                     type="button"
                                     class="poster"
                                     class:sample={isSeedData(manga)}
-                                    onclick={() => {
-                                        if (!isSeedData(manga)) read(manga)
-                                    }}>
+                                    onclick={() => read(manga)}>
                                     {#if manga.coverUrl}<img src={manga.coverUrl} alt={manga.title} />{:else}<span
                                             class="cover-initial">{manga.title[0]}</span
                                         >{/if}
@@ -444,34 +452,58 @@
                 {/each}
             </div>
         {:else if activeSection === "Sources"}
-            <h1>Browse</h1>
+            <h1>Sources</h1>
 
-            <div class="source-header">
-                <div class="source-identity">
-                    <p class="source-name">MangaDex</p>
-                    <span class="badge-active">Active</span>
-                </div>
-                {#if !hasPermission}
-                    <div class="permission-prompt">
-                        <p class="muted">Grant site access to search and browse MangaDex manga.</p>
-                        <button type="button" onclick={grantPermission}>Grant access</button>
+            {#if !hasPermission}
+                <div class="permission-banner">
+                    <div>
+                        <p class="row-label">Site access required</p>
+                        <p class="muted">
+                            Grant permissions to browse MangaDex and read chapters from all supported sites.
+                        </p>
                     </div>
-                {:else}
-                    <form
-                        class="search-bar"
-                        onsubmit={e => {
-                            e.preventDefault()
-                            void doSearch()
-                        }}>
-                        <input
-                            bind:value={browseQuery}
-                            placeholder="Search manga titles..."
-                            aria-label="Search manga" />
-                        <button type="submit" disabled={searchLoading}>
-                            {searchLoading ? "Searching..." : "Search"}
-                        </button>
-                    </form>
-                {/if}
+                    <button type="button" onclick={grantPermission}>Grant access</button>
+                </div>
+            {/if}
+
+            <div class="source-list">
+                <div class="source-item">
+                    <div class="source-identity">
+                        <p class="source-name">MangaDex</p>
+                        <span class="badge-active">Browse + Read</span>
+                    </div>
+                    <p class="muted">Search manga, browse chapters, read directly. Full support.</p>
+                    {#if hasPermission}
+                        <form
+                            class="search-bar"
+                            onsubmit={e => {
+                                e.preventDefault()
+                                void doSearch()
+                            }}>
+                            <input
+                                bind:value={browseQuery}
+                                placeholder="Search manga titles..."
+                                aria-label="Search manga" />
+                            <button type="submit" disabled={searchLoading}>
+                                {searchLoading ? "Searching..." : "Search"}
+                            </button>
+                        </form>
+                    {/if}
+                </div>
+                <div class="source-item">
+                    <div class="source-identity">
+                        <p class="source-name">MangaRead.org</p>
+                        <span class="badge-active">Read</span>
+                    </div>
+                    <p class="muted">Paste a chapter URL to read. Supports Madara-theme manga sites.</p>
+                </div>
+                <div class="source-item">
+                    <div class="source-identity">
+                        <p class="source-name">Mgeko.cc</p>
+                        <span class="badge-active">Read</span>
+                    </div>
+                    <p class="muted">Paste a chapter URL to read from Mgeko.</p>
+                </div>
             </div>
 
             {#if selectedManga}
@@ -482,7 +514,7 @@
                         onclick={() => {
                             selectedManga = null
                             mangaChapters = []
-                        }}>← Back</button>
+                        }}>← Back to search</button>
                     <h2 class="chapters-title">{selectedManga.title}</h2>
                     {#if chaptersLoading}
                         <p class="muted">Loading chapters...</p>
@@ -516,8 +548,6 @@
                         </div>
                     {/each}
                 </div>
-            {:else if hasPermission && !searchLoading}
-                <p class="muted" style="margin-top:24px">Search for a manga title to browse chapters.</p>
             {/if}
         {:else if activeSection === "Data"}
             <h1>Import & Export</h1>
@@ -545,15 +575,15 @@
                             }} />
                     </label>
                 </div>
-                {#if library.length === 0}
-                    <div class="data-row">
-                        <div>
-                            <p class="row-label">Sample data</p>
-                            <p class="muted">Load 5 placeholder titles to explore the interface.</p>
-                        </div>
-                        <button type="button" class="btn-outline" onclick={seedData}>Load samples</button>
+                <div class="data-row">
+                    <div>
+                        <p class="row-label">Sample data</p>
+                        <p class="muted">
+                            Load test chapters from MangaDex, MangaRead, and Mgeko to explore the reader.
+                        </p>
                     </div>
-                {/if}
+                    <button type="button" class="btn-outline" onclick={seedData}>Load samples</button>
+                </div>
             </div>
             {#if dataMessage}<p class="notice">{dataMessage}</p>{/if}
         {:else}

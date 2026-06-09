@@ -6,18 +6,17 @@
 
     let chapter = $state<ResolvedChapter | undefined>()
     let error = $state("")
+    let resolving = $state(false)
     let currentPage = $state(0)
     let mode = $state<"continuous" | "single">("continuous")
+    let chapterUrl = $state("")
 
     const progressPct = $derived(chapter ? Math.round(((currentPage + 1) / chapter.pages.length) * 100) : 0)
 
-    onMount(async () => {
-        const url = new URL(location.href).searchParams.get("url")
-        if (!url) {
-            error = "No chapter URL was provided"
-            return
-        }
-
+    async function loadChapter(url: string) {
+        resolving = true
+        error = ""
+        chapter = undefined
         try {
             chapter = await sendRuntimeMessage<ResolvedChapter>({ type: "reader:resolve", url })
             const progress = await sendRuntimeMessage<ReadingProgress | null>({
@@ -35,7 +34,19 @@
             }
         } catch (cause) {
             error = cause instanceof Error ? cause.message : "The chapter could not be loaded"
+        } finally {
+            resolving = false
         }
+    }
+
+    onMount(async () => {
+        const url = new URL(location.href).searchParams.get("url")
+        if (!url) {
+            error = "No chapter URL was provided"
+            return
+        }
+        chapterUrl = url
+        await loadChapter(url)
     })
 
     function recordProgress(pageIndex: number) {
@@ -49,6 +60,16 @@
             pageCount: chapter.pages.length,
             completed: pageIndex === chapter.pages.length - 1
         })
+    }
+
+    function handleImageError(e: Event) {
+        const img = e.currentTarget as HTMLImageElement
+        if (img.dataset.didFallback) return
+        const match = img.src.match(/\/data\/([a-f0-9]+)\/(.+)$/)
+        if (match && match[1] && match[2]) {
+            img.dataset.didFallback = "1"
+            img.src = `https://uploads.mangadex.org/data/${match[1]}/${match[2]}`
+        }
     }
 
     async function goToApp() {
@@ -78,15 +99,29 @@
     }} />
 
 <header>
-    <button type="button" onclick={() => void goToApp()} aria-label="Close reader">Close</button>
-    <div>
-        <strong>{chapter?.manga.manga.title ?? "Loading chapter"}</strong>
-        <span>{chapter?.chapter.title ?? ""}</span>
+    <div class="header-left">
+        <button type="button" class="btn-back" onclick={() => void goToApp()}>← Dashboard</button>
     </div>
-    <div class="controls">
-        <span>{chapter ? `${currentPage + 1} / ${chapter.pages.length}` : ""}</span>
-        <button type="button" onclick={() => (mode = mode === "continuous" ? "single" : "continuous")}>
-            {mode === "continuous" ? "Single page" : "Continuous"}
+    <div class="header-title">
+        <strong>{chapter?.manga.manga.title ?? (resolving ? "Loading…" : "Reader")}</strong>
+        {#if chapter}<span>{chapter.chapter.title}</span>{/if}
+    </div>
+    <div class="header-right">
+        {#if chapter}
+            <span class="page-count">{currentPage + 1} / {chapter.pages.length}</span>
+            <button
+                type="button"
+                class="btn-sm"
+                onclick={() => (mode = mode === "continuous" ? "single" : "continuous")}>
+                {mode === "continuous" ? "Single" : "Scroll"}
+            </button>
+        {/if}
+        <button
+            type="button"
+            class="btn-sm"
+            disabled={resolving || !chapterUrl}
+            onclick={() => void loadChapter(chapterUrl)}>
+            {resolving ? "…" : "↺"}
         </button>
     </div>
 </header>
@@ -102,14 +137,19 @@
         <section class="message">
             <h1>Chapter could not be loaded</h1>
             <p>{error}</p>
-            <p class="hint">If this is sample data, paste a real MangaDex chapter URL in the Home tab instead.</p>
+            {#if chapterUrl}
+                <button type="button" onclick={() => void loadChapter(chapterUrl)}>Try again</button>
+            {/if}
         </section>
+    {:else if resolving}
+        <section class="message"><p>Loading chapter…</p></section>
     {:else if !chapter}
-        <section class="message"><p>Resolving chapter pages...</p></section>
+        <section class="message"><p>No chapter loaded.</p></section>
     {:else if mode === "single"}
         <img
             src={chapter.pages[currentPage]?.url}
             alt={`Page ${currentPage + 1}`}
+            onerror={handleImageError}
             onload={() => recordProgress(currentPage)} />
     {:else}
         {#each chapter.pages as page, index}
@@ -117,6 +157,7 @@
                 src={page.url}
                 alt={`Page ${index + 1}`}
                 loading={index < 3 ? "eager" : "lazy"}
+                onerror={handleImageError}
                 onload={() => recordProgress(index)} />
         {/each}
     {/if}
