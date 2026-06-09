@@ -3,6 +3,11 @@ import { z } from "zod"
 export const runtimeRequestSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("library:list") }),
     z.object({ type: z.literal("library:remove"), mangaId: z.string().min(1) }),
+    z.object({ type: z.literal("stats:get") }),
+    z.object({ type: z.literal("data:export") }),
+    z.object({ type: z.literal("data:import"), envelope: z.unknown() }),
+    z.object({ type: z.literal("updates:check") }),
+    z.object({ type: z.literal("updates:get") }),
     z.object({ type: z.literal("page:current") }),
     z.object({ type: z.literal("page:capture"), url: z.url() }),
     z.object({ type: z.literal("reader:resolve"), url: z.url() }),
@@ -21,7 +26,8 @@ export const runtimeRequestSchema = z.discriminatedUnion("type", [
         settings: z.object({
             autoAdd: z.boolean().optional(),
             readingMode: z.enum(["continuous", "single"]).optional(),
-            theme: z.enum(["dark", "light"]).optional()
+            theme: z.enum(["dark", "light"]).optional(),
+            updateIntervalHours: z.union([z.literal(0), z.literal(6), z.literal(12), z.literal(24)]).optional()
         })
     })
 ])

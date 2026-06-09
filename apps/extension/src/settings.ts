@@ -2,6 +2,7 @@ export type AppSettings = {
     autoAdd: boolean
     readingMode: "continuous" | "single"
     theme: "dark" | "light"
+    updateIntervalHours: 0 | 6 | 12 | 24
 }
 
 const settingsKey = "settings"
@@ -9,7 +10,8 @@ const settingsKey = "settings"
 export const defaultSettings: AppSettings = {
     autoAdd: true,
     readingMode: "continuous",
-    theme: "dark"
+    theme: "dark",
+    updateIntervalHours: 12
 }
 
 export async function getSettings(): Promise<AppSettings> {

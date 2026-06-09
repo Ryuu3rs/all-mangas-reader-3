@@ -4,7 +4,7 @@
     import { onMount } from "svelte"
     import { sendRuntimeMessage } from "../../src/runtime"
 
-    const sections = ["Home", "Library", "Sources", "Settings"] as const
+    const sections = ["Home", "Library", "Updates", "Achievements", "Sources", "Data", "Settings"] as const
     let activeSection = $state<(typeof sections)[number]>("Home")
     let library = $state<LibraryManga[]>([])
     let settings = $state<AppSettings | undefined>()
@@ -13,15 +13,38 @@
     let addUrl = $state("")
     let addMessage = $state("")
     let adding = $state(false)
+    let stats = $state<{
+        mangaCount: number
+        completedChapters: number
+        readingDays: number
+        achievements: Array<{
+            id: string
+            title: string
+            description: string
+            unlocked: boolean
+            progress: number
+            target: number
+        }>
+    }>()
+    let dataMessage = $state("")
+    let updateStatus = $state<{
+        checked: number
+        updated: number
+        failed: number
+        checkedAt: number
+    } | null>(null)
+    let checkingUpdates = $state(false)
 
     onMount(load)
 
     async function load() {
         loading = true
         try {
-            ;[library, settings] = await Promise.all([
+            ;[library, settings, stats, updateStatus] = await Promise.all([
                 sendRuntimeMessage<LibraryManga[]>({ type: "library:list" }),
-                sendRuntimeMessage<AppSettings>({ type: "settings:get" })
+                sendRuntimeMessage<AppSettings>({ type: "settings:get" }),
+                sendRuntimeMessage<typeof stats>({ type: "stats:get" }),
+                sendRuntimeMessage<typeof updateStatus>({ type: "updates:get" })
             ])
         } finally {
             loading = false
@@ -74,6 +97,51 @@
         } finally {
             adding = false
         }
+    }
+
+    async function exportData() {
+        const envelope = await sendRuntimeMessage<unknown>({ type: "data:export" })
+        const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: "application/json" })
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement("a")
+        anchor.href = url
+        anchor.download = `amr-backup-${new Date().toISOString().slice(0, 10)}.json`
+        anchor.click()
+        URL.revokeObjectURL(url)
+        dataMessage = "Backup exported."
+    }
+
+    async function importData(file: File) {
+        try {
+            const envelope: unknown = JSON.parse(await file.text())
+            const result = await sendRuntimeMessage<{ manga: number; chapters: number }>({
+                type: "data:import",
+                envelope
+            })
+            dataMessage = `Imported ${result.manga} manga and ${result.chapters} chapters.`
+            await load()
+        } catch (cause) {
+            dataMessage = cause instanceof Error ? cause.message : "The backup could not be imported."
+        }
+    }
+
+    async function checkForUpdates() {
+        checkingUpdates = true
+        try {
+            updateStatus = await sendRuntimeMessage<NonNullable<typeof updateStatus>>({
+                type: "updates:check"
+            })
+            await load()
+        } finally {
+            checkingUpdates = false
+        }
+    }
+
+    async function changeUpdateInterval(value: string) {
+        settings = await sendRuntimeMessage<AppSettings>({
+            type: "settings:update",
+            settings: { updateIntervalHours: Number(value) as 0 | 6 | 12 | 24 }
+        })
     }
 
     const visibleLibrary = $derived(
@@ -158,6 +226,47 @@
                     <p>No titles match this search.</p>
                 {/each}
             </section>
+        {:else if activeSection === "Updates"}
+            <p class="eyebrow">Background chapter checks</p>
+            <div class="title-row">
+                <h1>Updates</h1>
+                <button type="button" onclick={checkForUpdates} disabled={checkingUpdates}>
+                    {checkingUpdates ? "Checking..." : "Check now"}
+                </button>
+            </div>
+            <section class="stat-grid">
+                <article><strong>{updateStatus?.updated ?? 0}</strong><span>Titles updated</span></article>
+                <article><strong>{updateStatus?.checked ?? 0}</strong><span>Titles checked</span></article>
+                <article><strong>{updateStatus?.failed ?? 0}</strong><span>Checks needing attention</span></article>
+            </section>
+            <section class="panel update-summary">
+                <h2>Latest run</h2>
+                <p>
+                    {updateStatus
+                        ? `Checked ${new Date(updateStatus.checkedAt).toLocaleString()}`
+                        : "No update check has run yet."}
+                </p>
+            </section>
+        {:else if activeSection === "Achievements"}
+            <p class="eyebrow">Stored on this device</p>
+            <h1>Achievements</h1>
+            <section class="stat-grid">
+                <article><strong>{stats?.completedChapters ?? 0}</strong><span>Chapters completed</span></article>
+                <article><strong>{stats?.mangaCount ?? 0}</strong><span>Manga saved</span></article>
+                <article><strong>{stats?.readingDays ?? 0}</strong><span>Active days</span></article>
+            </section>
+            <section class="achievements">
+                {#each stats?.achievements ?? [] as achievement}
+                    <article class:unlocked={achievement.unlocked}>
+                        <span
+                            >{achievement.unlocked
+                                ? "Unlocked"
+                                : `${achievement.progress} / ${achievement.target}`}</span>
+                        <h2>{achievement.title}</h2>
+                        <p>{achievement.description}</p>
+                    </article>
+                {/each}
+            </section>
         {:else if activeSection === "Sources"}
             <p class="eyebrow">Site access</p>
             <h1>Sources</h1>
@@ -165,6 +274,27 @@
                 <h2>MangaDex</h2>
                 <p>API source for manga metadata, chapters, and reader pages.</p>
                 <span class="status">Available</span>
+            </section>
+        {:else if activeSection === "Data"}
+            <p class="eyebrow">Portable local data</p>
+            <h1>Import and Export</h1>
+            <section class="panel data-actions">
+                <div>
+                    <h2>Backup your library</h2>
+                    <p>Export manga, chapters, progress, and history as a versioned JSON file.</p>
+                </div>
+                <button type="button" onclick={exportData}>Export backup</button>
+                <label class="import-button">
+                    Import backup
+                    <input
+                        type="file"
+                        accept="application/json,.json"
+                        onchange={event => {
+                            const file = event.currentTarget.files?.[0]
+                            if (file) void importData(file)
+                        }} />
+                </label>
+                {#if dataMessage}<p>{dataMessage}</p>{/if}
             </section>
         {:else}
             <p class="eyebrow">Preferences</p>
@@ -179,6 +309,21 @@
                     aria-label="Automatically add manga"
                     checked={settings?.autoAdd ?? true}
                     onchange={event => changeAutoAdd(event.currentTarget.checked)} />
+            </section>
+            <section class="panel setting">
+                <div>
+                    <h2>Chapter update schedule</h2>
+                    <p>Browser alarms run periodic checks without keeping a background loop alive.</p>
+                </div>
+                <select
+                    aria-label="Chapter update schedule"
+                    value={settings?.updateIntervalHours ?? 12}
+                    onchange={event => changeUpdateInterval(event.currentTarget.value)}>
+                    <option value="0">Manual only</option>
+                    <option value="6">Every 6 hours</option>
+                    <option value="12">Every 12 hours</option>
+                    <option value="24">Daily</option>
+                </select>
             </section>
         {/if}
     </main>

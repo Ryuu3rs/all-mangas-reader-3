@@ -1,8 +1,58 @@
 import type { ReadingProgress } from "@amr/contracts"
-import { db, saveProgress, saveResolvedChapter } from "../src/database"
+import { db, exportDatabase, getLocalStats, importDatabase, saveProgress, saveResolvedChapter } from "../src/database"
 import { runtimeRequestSchema, type RuntimeResponse } from "../src/runtime"
 import { getSettings, updateSettings } from "../src/settings"
-import { findSource, resolveChapterUrl } from "../src/sources"
+import { findSource, listMangaChapters, resolveChapterUrl } from "../src/sources"
+
+const updateAlarmName = "check-manga-updates"
+
+async function configureUpdateAlarm() {
+    const settings = await getSettings()
+    await browser.alarms.clear(updateAlarmName)
+    if (settings.updateIntervalHours > 0) {
+        await browser.alarms.create(updateAlarmName, {
+            periodInMinutes: settings.updateIntervalHours * 60
+        })
+    }
+}
+
+async function checkUpdates() {
+    const manga = await db.manga.toArray()
+    let checked = 0
+    let updated = 0
+    let failed = 0
+
+    for (const item of manga) {
+        const link = await db.sourceLinks.get(item.id)
+        if (!link) continue
+        try {
+            const chapters = await listMangaChapters(item, link)
+            const latest = chapters.reduce(
+                (current, chapter) => (chapter.sortKey > (current?.sortKey ?? -1) ? chapter : current),
+                chapters[0]
+            )
+            await db.transaction("rw", db.chapters, db.manga, async () => {
+                await db.chapters.bulkPut(chapters)
+                if (latest && latest.id !== item.latestChapterId) {
+                    updated += 1
+                    await db.manga.update(item.id, {
+                        latestChapterId: latest.id,
+                        sourceUrl: latest.url,
+                        updatedAt: Date.now()
+                    })
+                }
+            })
+            checked += 1
+        } catch (error) {
+            failed += 1
+            console.warn("[AMR] Update check failed", { mangaId: item.id, error })
+        }
+    }
+
+    const status = { checked, updated, failed, checkedAt: Date.now() }
+    await browser.storage.local.set({ updateStatus: status })
+    return status
+}
 
 function success<T>(data: T): RuntimeResponse<T> {
     return { ok: true, data }
@@ -35,7 +85,15 @@ async function captureChapter(url: string) {
     await saveResolvedChapter({
         manga: resolved.manga.manga,
         chapter: resolved.chapter,
-        sourceUrl: resolved.chapter.url
+        sourceLink: {
+            mangaId: resolved.manga.manga.id,
+            sourceId: resolved.manga.sourceId,
+            sourceMangaId: resolved.manga.sourceMangaId,
+            url: resolved.manga.url,
+            title: resolved.manga.manga.title,
+            addedAt: Date.now(),
+            updatedAt: Date.now()
+        }
     })
 
     await browser.action.setBadgeBackgroundColor({ color: "#2d8a61" })
@@ -47,7 +105,11 @@ async function captureChapter(url: string) {
 
 export default defineBackground(() => {
     browser.runtime.onInstalled.addListener(() => {
-        void getSettings()
+        void configureUpdateAlarm()
+    })
+
+    browser.alarms.onAlarm.addListener(alarm => {
+        if (alarm.name === updateAlarmName) void checkUpdates()
     })
 
     browser.tabs.onUpdated.addListener((_tabId, changeInfo) => {
@@ -66,12 +128,30 @@ export default defineBackground(() => {
                     case "library:list":
                         return success(await db.manga.orderBy("updatedAt").reverse().toArray())
                     case "library:remove":
-                        await db.transaction("rw", db.manga, db.chapters, db.progress, async () => {
-                            await db.manga.delete(request.mangaId)
-                            await db.chapters.where("mangaId").equals(request.mangaId).delete()
-                            await db.progress.where("mangaId").equals(request.mangaId).delete()
-                        })
+                        await db.transaction(
+                            "rw",
+                            [db.manga, db.sourceLinks, db.chapters, db.progress, db.historyEvents],
+                            async () => {
+                                await db.manga.delete(request.mangaId)
+                                await db.sourceLinks.delete(request.mangaId)
+                                await db.chapters.where("mangaId").equals(request.mangaId).delete()
+                                await db.progress.where("mangaId").equals(request.mangaId).delete()
+                                await db.historyEvents.where("mangaId").equals(request.mangaId).delete()
+                            }
+                        )
                         return success(null)
+                    case "stats:get":
+                        return success(await getLocalStats())
+                    case "data:export":
+                        return success(await exportDatabase())
+                    case "data:import":
+                        return success(await importDatabase(request.envelope))
+                    case "updates:check":
+                        return success(await checkUpdates())
+                    case "updates:get": {
+                        const stored = await browser.storage.local.get("updateStatus")
+                        return success(stored["updateStatus"] ?? null)
+                    }
                     case "page:current": {
                         const tab = sender.tab ?? (await browser.tabs.query({ active: true, currentWindow: true }))[0]
                         const url = tab?.url
@@ -104,14 +184,15 @@ export default defineBackground(() => {
                     }
                     case "settings:get":
                         return success(await getSettings())
-                    case "settings:update":
-                        return success(
-                            await updateSettings(
-                                Object.fromEntries(
-                                    Object.entries(request.settings).filter(([, value]) => value !== undefined)
-                                ) as Partial<Awaited<ReturnType<typeof getSettings>>>
-                            )
+                    case "settings:update": {
+                        const settings = await updateSettings(
+                            Object.fromEntries(
+                                Object.entries(request.settings).filter(([, value]) => value !== undefined)
+                            ) as Partial<Awaited<ReturnType<typeof getSettings>>>
                         )
+                        await configureUpdateAlarm()
+                        return success(settings)
+                    }
                 }
             } catch (error) {
                 return failure(error)

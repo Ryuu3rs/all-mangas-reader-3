@@ -226,6 +226,80 @@ button {
     color: #77d6a8;
 }
 
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stat-grid article,
+.achievements article {
+    display: grid;
+    gap: 5px;
+    padding: 18px;
+    border: 1px solid #293542;
+    border-radius: 12px;
+    background: #141c25;
+}
+
+.stat-grid strong {
+    font-size: 30px;
+}
+
+.stat-grid span,
+.achievements span {
+    color: #8e9aa8;
+    font-size: 12px;
+}
+
+.achievements {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.achievements article.unlocked {
+    border-color: #397a60;
+    background: #14241f;
+}
+
+.update-summary {
+    margin-top: 16px;
+}
+
+.setting select {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid #415064;
+    border-radius: 8px;
+    color: inherit;
+    background: #111821;
+}
+
+.data-actions {
+    display: grid;
+    justify-content: stretch;
+}
+
+.import-button {
+    display: grid;
+    min-height: 40px;
+    padding: 0 16px;
+    place-items: center;
+    border: 1px solid #415064;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.import-button input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+}
+
 @media (max-width: 720px) {
     .shell {
         grid-template-columns: 1fr;
@@ -248,5 +322,9 @@ button {
 
     .library article {
         grid-template-columns: 52px 1fr;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
     }
 }
