@@ -59,7 +59,7 @@
 
     async function remove(mangaId: string) {
         await sendRuntimeMessage({ type: "library:remove", mangaId })
-        library = library.filter(manga => manga.id !== mangaId)
+        library = library.filter(m => m.id !== mangaId)
     }
 
     async function changeAutoAdd(enabled: boolean) {
@@ -103,10 +103,10 @@
         const envelope = await sendRuntimeMessage<unknown>({ type: "data:export" })
         const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: "application/json" })
         const url = URL.createObjectURL(blob)
-        const anchor = document.createElement("a")
-        anchor.href = url
-        anchor.download = `amr-backup-${new Date().toISOString().slice(0, 10)}.json`
-        anchor.click()
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `amr-backup-${new Date().toISOString().slice(0, 10)}.json`
+        a.click()
         URL.revokeObjectURL(url)
         dataMessage = "Backup exported."
     }
@@ -123,11 +123,6 @@
         } catch (cause) {
             dataMessage = cause instanceof Error ? cause.message : "The backup could not be imported."
         }
-    }
-
-    async function seedData() {
-        await sendRuntimeMessage({ type: "data:seed" })
-        await load()
     }
 
     async function checkForUpdates() {
@@ -149,18 +144,20 @@
         })
     }
 
-    const visibleLibrary = $derived(
-        library.filter(manga => manga.title.toLowerCase().includes(query.trim().toLowerCase()))
-    )
+    async function seedData() {
+        await sendRuntimeMessage({ type: "data:seed" })
+        await load()
+    }
+
+    const visibleLibrary = $derived(library.filter(m => m.title.toLowerCase().includes(query.trim().toLowerCase())))
 </script>
 
 <div class="shell">
     <aside>
         <div class="brand">
             <img src="/icons/icon_48.png" alt="" />
-            <div><strong>AMR Next</strong><span>Local-first manga</span></div>
+            <span>AMR <strong>Next</strong></span>
         </div>
-
         <nav aria-label="Main navigation">
             {#each sections as section}
                 <button
@@ -175,202 +172,216 @@
 
     <main>
         {#if activeSection === "Home"}
-            <p class="eyebrow">Your reading shelf</p>
             <h1>Home</h1>
             {#if loading}
-                <p>Loading your library...</p>
+                <p class="muted">Loading...</p>
             {:else if library.length === 0}
-                <section class="empty">
-                    <h2>Your reading shelf is empty</h2>
-                    <p>Open a MangaDex chapter and choose Read in AMR to begin.</p>
-                </section>
-            {:else}
-                <section class="hero">
-                    <div>
-                        <span>Continue reading</span>
-                        <h2>{library[0]?.title}</h2>
-                    </div>
-                    <button type="button" onclick={() => library[0] && read(library[0])}>Continue</button>
-                </section>
-                <section class="library recent-grid">
-                    {#each library.slice(0, 6) as manga}
-                        <article onclick={() => read(manga)}>
-                            <div class="cover">
-                                {#if manga.coverUrl}<img src={manga.coverUrl} alt="" />{:else}<span
-                                        >{manga.title[0]}</span
-                                    >{/if}
-                            </div>
-                            <div class="manga-title">{manga.title}</div>
-                            <div class="manga-overlay">
-                                <button
-                                    type="button"
-                                    onclick={e => {
-                                        e.stopPropagation()
-                                        read(manga)
-                                    }}>Continue</button>
-                                <button
-                                    class="quiet"
-                                    type="button"
-                                    onclick={e => {
-                                        e.stopPropagation()
-                                        void remove(manga.id)
-                                    }}>Remove</button>
-                            </div>
-                        </article>
-                    {/each}
-                </section>
-            {/if}
-            <section class="add-url">
-                <div>
-                    <h2>Add by URL</h2>
-                    <p>Paste a supported chapter URL to resolve and save it locally.</p>
+                <div class="empty-state">
+                    <div class="empty-icon">📖</div>
+                    <h2>Your shelf is empty</h2>
+                    <p>Open a MangaDex chapter and click "Read in AMR", or paste a chapter URL below.</p>
+                    <form
+                        class="url-form"
+                        onsubmit={e => {
+                            e.preventDefault()
+                            void addByUrl()
+                        }}>
+                        <input bind:value={addUrl} type="url" required placeholder="https://mangadex.org/chapter/..." />
+                        <button type="submit" disabled={adding}>{adding ? "Adding..." : "Add chapter"}</button>
+                    </form>
+                    {#if addMessage}<p class="notice">{addMessage}</p>{/if}
                 </div>
+            {:else}
+                <div class="home-feature">
+                    <div class="home-feature-cover">
+                        {#if library[0]?.coverUrl}<img src={library[0].coverUrl} alt="" />{:else}<span
+                                class="cover-initial">{library[0]?.title[0]}</span
+                            >{/if}
+                    </div>
+                    <div class="home-feature-body">
+                        <p class="eyebrow">Continue reading</p>
+                        <h2 class="feature-title">{library[0]?.title}</h2>
+                        <p class="muted">{library[0]?.sourceId}</p>
+                        <button type="button" onclick={() => library[0] && read(library[0])}>Open reader</button>
+                    </div>
+                </div>
+
+                {#if library.length > 1}
+                    <p class="shelf-label">Recently added</p>
+                    <div class="poster-grid">
+                        {#each library.slice(1, 7) as manga}
+                            <article>
+                                <button type="button" class="poster" onclick={() => read(manga)}>
+                                    {#if manga.coverUrl}<img src={manga.coverUrl} alt={manga.title} />{:else}<span
+                                            class="cover-initial">{manga.title[0]}</span
+                                        >{/if}
+                                    <div class="poster-hover"><span>Continue</span></div>
+                                </button>
+                                <p class="poster-title">{manga.title}</p>
+                            </article>
+                        {/each}
+                    </div>
+                {/if}
+
                 <form
-                    onsubmit={event => {
-                        event.preventDefault()
+                    class="url-form"
+                    onsubmit={e => {
+                        e.preventDefault()
                         void addByUrl()
                     }}>
-                    <input bind:value={addUrl} type="url" required placeholder="https://mangadex.org/chapter/..." />
-                    <button type="submit" disabled={adding}>{adding ? "Detecting..." : "Add"}</button>
+                    <input bind:value={addUrl} type="url" required placeholder="Add chapter by URL..." />
+                    <button type="submit" disabled={adding}>{adding ? "Adding..." : "Add"}</button>
                 </form>
-                {#if addMessage}<p>{addMessage}</p>{/if}
-            </section>
+                {#if addMessage}<p class="notice">{addMessage}</p>{/if}
+            {/if}
         {:else if activeSection === "Library"}
-            <p class="eyebrow">Saved locally</p>
-            <div class="title-row">
+            <div class="page-head">
                 <h1>Library</h1>
-                <input bind:value={query} aria-label="Search library" placeholder="Search title" />
+                <input bind:value={query} aria-label="Search library" placeholder="Search titles..." />
             </div>
-            <section class="library">
-                {#each visibleLibrary as manga}
-                    <article onclick={() => read(manga)}>
-                        <div class="cover">
-                            {#if manga.coverUrl}<img src={manga.coverUrl} alt="" />{:else}<span>{manga.title[0]}</span
-                                >{/if}
-                        </div>
-                        <div class="manga-title">{manga.title}</div>
-                        <div class="manga-overlay">
-                            <button
-                                type="button"
-                                onclick={e => {
-                                    e.stopPropagation()
-                                    read(manga)
-                                }}>Continue</button>
-                            <button
-                                class="quiet"
-                                type="button"
-                                onclick={e => {
-                                    e.stopPropagation()
-                                    void remove(manga.id)
-                                }}>Remove</button>
-                        </div>
-                    </article>
-                {:else}
-                    <p>No titles match this search.</p>
-                {/each}
-            </section>
+            {#if visibleLibrary.length === 0}
+                <p class="muted">{query ? "No titles match." : "Your library is empty."}</p>
+            {:else}
+                <div class="poster-grid">
+                    {#each visibleLibrary as manga}
+                        <article>
+                            <div class="poster-wrap">
+                                <button type="button" class="poster" onclick={() => read(manga)}>
+                                    {#if manga.coverUrl}<img src={manga.coverUrl} alt={manga.title} />{:else}<span
+                                            class="cover-initial">{manga.title[0]}</span
+                                        >{/if}
+                                </button>
+                                <div class="poster-hover">
+                                    <span>Continue</span>
+                                    <button type="button" class="remove-btn" onclick={() => void remove(manga.id)}>
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="poster-title">{manga.title}</p>
+                            <p class="poster-sub">{manga.sourceId}</p>
+                        </article>
+                    {/each}
+                </div>
+            {/if}
         {:else if activeSection === "Updates"}
-            <p class="eyebrow">Background chapter checks</p>
-            <div class="title-row">
+            <div class="page-head">
                 <h1>Updates</h1>
                 <button type="button" onclick={checkForUpdates} disabled={checkingUpdates}>
                     {checkingUpdates ? "Checking..." : "Check now"}
                 </button>
             </div>
-            <section class="stat-grid">
-                <article><strong>{updateStatus?.updated ?? 0}</strong><span>Titles updated</span></article>
-                <article><strong>{updateStatus?.checked ?? 0}</strong><span>Titles checked</span></article>
-                <article><strong>{updateStatus?.failed ?? 0}</strong><span>Checks needing attention</span></article>
-            </section>
-            <section class="panel update-summary">
-                <h2>Latest run</h2>
-                <p>
-                    {updateStatus
-                        ? `Checked ${new Date(updateStatus.checkedAt).toLocaleString()}`
-                        : "No update check has run yet."}
-                </p>
-            </section>
+            <div class="stat-row">
+                <div class="stat-box"><strong>{updateStatus?.updated ?? 0}</strong><span>Updated</span></div>
+                <div class="stat-box"><strong>{updateStatus?.checked ?? 0}</strong><span>Checked</span></div>
+                <div class="stat-box"><strong>{updateStatus?.failed ?? 0}</strong><span>Failed</span></div>
+            </div>
+            <p class="muted" style="margin-top:20px">
+                {updateStatus
+                    ? `Last checked ${new Date(updateStatus.checkedAt).toLocaleString()}`
+                    : "No update check has run yet."}
+            </p>
         {:else if activeSection === "Achievements"}
-            <p class="eyebrow">Stored on this device</p>
             <h1>Achievements</h1>
-            <section class="stat-grid">
-                <article><strong>{stats?.completedChapters ?? 0}</strong><span>Chapters completed</span></article>
-                <article><strong>{stats?.mangaCount ?? 0}</strong><span>Manga saved</span></article>
-                <article><strong>{stats?.readingDays ?? 0}</strong><span>Active days</span></article>
-            </section>
-            <section class="achievements">
-                {#each stats?.achievements ?? [] as achievement}
-                    <article class:unlocked={achievement.unlocked}>
-                        <span
-                            >{achievement.unlocked
-                                ? "Unlocked"
-                                : `${achievement.progress} / ${achievement.target}`}</span>
-                        <h2>{achievement.title}</h2>
-                        <p>{achievement.description}</p>
-                    </article>
+            <div class="stat-row">
+                <div class="stat-box"><strong>{stats?.completedChapters ?? 0}</strong><span>Completed</span></div>
+                <div class="stat-box"><strong>{stats?.mangaCount ?? 0}</strong><span>Saved</span></div>
+                <div class="stat-box"><strong>{stats?.readingDays ?? 0}</strong><span>Active days</span></div>
+            </div>
+            <div class="achievement-list">
+                {#each stats?.achievements ?? [] as a}
+                    <div class="achievement" class:unlocked={a.unlocked}>
+                        <span class="ach-icon">{a.unlocked ? "★" : "☆"}</span>
+                        <div class="ach-body">
+                            <p class="ach-title">{a.title}</p>
+                            <p class="muted">{a.description}</p>
+                            {#if !a.unlocked}
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width:{(a.progress / a.target) * 100}%"></div>
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
                 {/each}
-            </section>
+            </div>
         {:else if activeSection === "Sources"}
-            <p class="eyebrow">Site access</p>
             <h1>Sources</h1>
-            <section class="panel">
-                <h2>MangaDex</h2>
-                <p>API source for manga metadata, chapters, and reader pages.</p>
-                <span class="status">Available</span>
-            </section>
+            <div class="source-row">
+                <div>
+                    <p class="source-name">MangaDex</p>
+                    <p class="muted">API-backed — metadata, chapters, and reader pages</p>
+                </div>
+                <span class="badge-active">Active</span>
+            </div>
         {:else if activeSection === "Data"}
-            <p class="eyebrow">Portable local data</p>
-            <h1>Import and Export</h1>
-            <section class="panel data-actions">
-                <div>
-                    <h2>Backup your library</h2>
-                    <p>Export manga, chapters, progress, and history as a versioned JSON file.</p>
+            <h1>Import & Export</h1>
+            <div class="data-list">
+                <div class="data-row">
+                    <div>
+                        <p class="row-label">Backup library</p>
+                        <p class="muted">Export manga, chapters, progress, and history as JSON.</p>
+                    </div>
+                    <button type="button" onclick={exportData}>Export</button>
                 </div>
-                <button type="button" onclick={exportData}>Export backup</button>
-                <label class="import-button">
-                    Import backup
-                    <input
-                        type="file"
-                        accept="application/json,.json"
-                        onchange={event => {
-                            const file = event.currentTarget.files?.[0]
-                            if (file) void importData(file)
-                        }} />
-                </label>
+                <div class="data-row">
+                    <div>
+                        <p class="row-label">Restore backup</p>
+                        <p class="muted">Import a previously exported AMR backup file.</p>
+                    </div>
+                    <label class="file-label">
+                        Import
+                        <input
+                            type="file"
+                            accept="application/json,.json"
+                            onchange={e => {
+                                const f = e.currentTarget.files?.[0]
+                                if (f) void importData(f)
+                            }} />
+                    </label>
+                </div>
                 {#if library.length === 0}
-                    <button type="button" onclick={seedData}>Load sample data</button>
+                    <div class="data-row">
+                        <div>
+                            <p class="row-label">Sample data</p>
+                            <p class="muted">Load 5 placeholder titles to explore the interface.</p>
+                        </div>
+                        <button type="button" class="btn-outline" onclick={seedData}>Load samples</button>
+                    </div>
                 {/if}
-                {#if dataMessage}<p>{dataMessage}</p>{/if}
-            </section>
+            </div>
+            {#if dataMessage}<p class="notice">{dataMessage}</p>{/if}
         {:else}
-            <p class="eyebrow">Preferences</p>
             <h1>Settings</h1>
-            <section class="panel setting">
-                <div>
-                    <h2>Automatically add manga</h2>
-                    <p>Add a title to the local library when a supported chapter is opened.</p>
+            <div class="settings-list">
+                <div class="settings-row">
+                    <div>
+                        <p class="row-label">Auto-add manga</p>
+                        <p class="muted">Save titles automatically when a supported chapter is opened.</p>
+                    </div>
+                    <label class="toggle">
+                        <input
+                            type="checkbox"
+                            checked={settings?.autoAdd ?? true}
+                            onchange={e => changeAutoAdd(e.currentTarget.checked)} />
+                        <span class="track"></span>
+                    </label>
                 </div>
-                <input
-                    type="checkbox"
-                    aria-label="Automatically add manga"
-                    checked={settings?.autoAdd ?? true}
-                    onchange={event => changeAutoAdd(event.currentTarget.checked)} />
-            </section>
-            <section class="panel setting">
-                <div>
-                    <h2>Chapter update schedule</h2>
-                    <p>Browser alarms run periodic checks without keeping a background loop alive.</p>
+                <div class="settings-row">
+                    <div>
+                        <p class="row-label">Update schedule</p>
+                        <p class="muted">How often background checks run for new chapters.</p>
+                    </div>
+                    <select
+                        aria-label="Update schedule"
+                        value={settings?.updateIntervalHours ?? 12}
+                        onchange={e => changeUpdateInterval(e.currentTarget.value)}>
+                        <option value="0">Manual only</option>
+                        <option value="6">Every 6 h</option>
+                        <option value="12">Every 12 h</option>
+                        <option value="24">Daily</option>
+                    </select>
                 </div>
-                <select
-                    aria-label="Chapter update schedule"
-                    value={settings?.updateIntervalHours ?? 12}
-                    onchange={event => changeUpdateInterval(event.currentTarget.value)}>
-                    <option value="0">Manual only</option>
-                    <option value="6">Every 6 hours</option>
-                    <option value="12">Every 12 hours</option>
-                    <option value="24">Daily</option>
-                </select>
-            </section>
+            </div>
         {/if}
     </main>
 </div>

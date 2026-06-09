@@ -70,8 +70,9 @@
 <main class:single={mode === "single"}>
     {#if error}
         <section class="message">
-            <h1>AMR could not resolve this chapter</h1>
+            <h1>Chapter could not be loaded</h1>
             <p>{error}</p>
+            <p class="hint">If this is sample data, paste a real MangaDex chapter URL in the Home tab instead.</p>
         </section>
     {:else if !chapter}
         <section class="message"><p>Resolving chapter pages...</p></section>
