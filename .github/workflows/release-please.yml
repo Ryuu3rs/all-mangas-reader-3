@@ -42,6 +42,10 @@ jobs:
                   node-version: 22
                   cache: npm
 
+            - name: Use npm 11
+              if: ${{ steps.release.outputs.release_created }}
+              run: npm install -g npm@11
+
             - name: Install
               if: ${{ steps.release.outputs.release_created }}
               run: npm ci
