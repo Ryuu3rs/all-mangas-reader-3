@@ -3,6 +3,7 @@
     "bracketSameLine": true,
     "bracketSpacing": true,
     "htmlWhitespaceSensitivity": "css",
+    "plugins": ["prettier-plugin-svelte"],
     "printWidth": 120,
     "quoteProps": "as-needed",
     "semi": false,

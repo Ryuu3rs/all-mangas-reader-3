@@ -1,89 +1,53 @@
 # Contributing
 
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change.
+## Setup
 
-Please note we have a code of conduct, please follow it in all your interactions with the project.
+```powershell
+npm install
+npm run check
+```
 
-## Pull Request Process
+## Project Rules
 
-1. Ensure any install or build dependencies are removed before the end of the layer when doing a
-   build.
-2. Update the README.md with details of changes to the interface.
-3. You may merge the Pull Request in once you have the sign-off of two other developers, or if you
-   do not have permission to do that, you may request the second reviewer to merge it for you.
+- New product code belongs in `apps/`, `packages/`, or `tooling/`.
+- Do not modify archived implementations except to document them.
+- Source adapters require fixtures and normalized output tests.
+- Firefox and Chromium builds must both pass.
+- Do not add global host permissions.
+- Do not add remote executable code, `eval`, or user-supplied JavaScript.
+- Keep changes scoped and update the roadmap when completing a tracked item.
 
-## Code of Conduct
+## Commit & PR titles
 
-### Our Pledge
+This repo uses [Conventional Commits](https://www.conventionalcommits.org/). Because
+PRs are squash-merged, the **PR title** becomes the commit message and must follow the
+format `type(scope): summary`, e.g. `fix(reader): restore progress on resume`.
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, or sexual identity and
-orientation.
+Allowed types: `feat`, `fix`, `chore`, `docs`, `refactor`, `perf`, `test`, `ci`,
+`build`, `revert`. Use `feat!:` or a `BREAKING CHANGE:` footer for breaking changes.
+A CI check validates the PR title.
 
-### Our Standards
+## Pull Requests
 
-Examples of behavior that contributes to creating a positive environment
-include:
+Pull requests must include:
 
--   Using welcoming and inclusive language
--   Being respectful of differing viewpoints and experiences
--   Gracefully accepting constructive criticism
--   Focusing on what is best for the community
--   Showing empathy towards other community members
+- purpose and user-visible behavior
+- tests performed
+- screenshots for UI changes
+- permission changes
+- source fixture changes
+- remaining risks
 
-Examples of unacceptable behavior by participants include:
+## Releases
 
--   The use of sexualized language or imagery and unwelcome sexual attention or
-    advances
--   Trolling, insulting/derogatory comments, and personal or political attacks
--   Public or private harassment
--   Publishing others' private information, such as a physical or electronic
-    address, without explicit permission
--   Other conduct which could reasonably be considered inappropriate in a
-    professional setting
+Releases are automated with [release-please](https://github.com/googleapis/release-please).
 
-### Our Responsibilities
+1. Land PRs to `main` with conventional titles.
+2. release-please maintains a **Release PR** that bumps the version in
+   `package.json` and updates `CHANGELOG.md` from the commit history.
+3. Merging that Release PR tags `vX.Y.Z` and the same workflow builds, checksums,
+   (optionally) signs the Firefox add-on, and uploads the artifacts to the release.
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
-
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
-
-### Scope
-
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
-
-### Enforcement
-
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team. All complaints will be reviewed and
-investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
-
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
-
-### Attribution
-
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at [http://contributor-covenant.org/version/1/4][version]
-
-[homepage]: http://contributor-covenant.org
-[version]: http://contributor-covenant.org/version/1/4/
+Versioning is single-version semver across the monorepo. While pre-1.0, minor bumps
+may contain breaking changes. Firefox AMO signing runs only when the `AMO_JWT_ISSUER`
+and `AMO_JWT_SECRET` repository secrets are set; otherwise it is skipped.
