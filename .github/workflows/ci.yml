@@ -55,6 +55,7 @@ jobs:
               with:
                   name: extension-builds
                   path: apps/extension/.output/
+                  include-hidden-files: true
                   retention-days: 14
 
     browser-smoke:
